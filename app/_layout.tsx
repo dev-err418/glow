@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { NotificationProvider } from "../contexts/NotificationContext";
+import { Colors } from "../constants/Colors";
 
 export default function RootLayout() {
   return (
@@ -7,9 +8,9 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#007AFF',
+            backgroundColor: Colors.secondary,
           },
-          headerTintColor: '#fff',
+          headerTintColor: Colors.text.white,
           headerTitleStyle: {
             fontWeight: 'bold',
           },
@@ -27,6 +28,12 @@ export default function RootLayout() {
           options={{
             title: 'Settings',
             presentation: 'modal'
+          }}
+        />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            headerShown: false
           }}
         />
       </Stack>

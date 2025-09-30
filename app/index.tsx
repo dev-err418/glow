@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
+import { Colors } from '../constants/Colors';
 
 export default function Index() {
   return (
@@ -30,7 +31,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: Colors.background.secondary,
   },
   content: {
     flex: 1,
@@ -41,13 +42,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.text.primary,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.text.secondary,
     fontStyle: 'italic',
     textAlign: 'center',
     marginBottom: 40,
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: Colors.primary,
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -67,14 +68,14 @@ const styles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: Colors.primary,
   },
   buttonText: {
-    color: '#fff',
+    color: Colors.text.white,
     fontSize: 16,
     fontWeight: '600',
   },
   secondaryButtonText: {
-    color: '#007AFF',
+    color: Colors.primary,
   },
 });

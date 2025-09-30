@@ -1,41 +1,257 @@
-import React from 'react';
-import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 export default function Welcome() {
-  const handleContinue = () => {
-    // For now, just go back to the main app
-    // Later this will navigate to the next onboarding screen
-    router.push('/settings');
+  const mascotAnimation = useRef(new Animated.Value(screenHeight * 0.5)).current;
+  const horizontalAnimation = useRef(new Animated.Value(0)).current;
+  const rotationAnimation = useRef(new Animated.Value(0)).current;
+  const scaleAnimation = useRef(new Animated.Value(1)).current;
+
+  // Continuous gentle animations
+  const breathingScale = useRef(new Animated.Value(1)).current;
+  const breathingY = useRef(new Animated.Value(0)).current;
+  const floatingY = useRef(new Animated.Value(0)).current;
+  const swayX = useRef(new Animated.Value(0)).current;
+
+  // Text fade-in animations
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const subtitleOpacity = useRef(new Animated.Value(0)).current;
+  const descriptionOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Start animation after component mounts
+    const timer = setTimeout(() => {
+      playMascotAnimation();
+    }, 500); // Small delay for better effect
+
+    return () => clearTimeout(timer);
+  }, [mascotAnimation]);
+
+  const resetMascotPosition = () => {
+    mascotAnimation.setValue(screenHeight * 0.5);
+    horizontalAnimation.setValue(-30);
+    rotationAnimation.setValue(0);
+    scaleAnimation.setValue(0.8);
+
+    // Reset text opacity
+    titleOpacity.setValue(0);
+    subtitleOpacity.setValue(0);
+    descriptionOpacity.setValue(0);
   };
 
-  const handleSkip = () => {
-    // Skip onboarding and go to main app
-    router.push('/settings');
+  const startContinuousAnimation = () => {
+    // Reset breathing animation values
+    breathingScale.setValue(0);
+    breathingY.setValue(0);
+
+    // Breathing effect - smooth looped animation with scale and movement
+    const breathing = Animated.loop(
+      Animated.timing(breathingScale, {
+        toValue: 1,
+        duration: 5000,
+        useNativeDriver: true,
+      })
+    );
+
+    const breathingMovement = Animated.loop(
+      Animated.timing(breathingY, {
+        toValue: 1,
+        duration: 5000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Reset floating animation value
+    floatingY.setValue(0);
+
+    // Floating effect - smooth looped animation
+    const floating = Animated.loop(
+      Animated.timing(floatingY, {
+        toValue: 1,
+        duration: 6000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Reset swaying animation value
+    swayX.setValue(0);
+
+    // Swaying effect - smooth looped animation
+    const swaying = Animated.loop(
+      Animated.timing(swayX, {
+        toValue: 1,
+        duration: 8000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Start all continuous animations
+    Animated.parallel([breathing, breathingMovement, floating, swaying]).start();
+  };
+
+  const playMascotAnimation = () => {
+    // Reset to starting position
+    resetMascotPosition();
+
+    // Start mascot entrance and title fade-in simultaneously
+    Animated.parallel([
+      // Mascot entrance animations
+      Animated.spring(mascotAnimation, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 12,
+        speed: 2,
+      }),
+      Animated.spring(horizontalAnimation, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 10,
+        speed: 2.5,
+      }),
+      Animated.spring(rotationAnimation, {
+        toValue: 1,
+        useNativeDriver: true,
+        bounciness: 8,
+        speed: 3,
+      }),
+      Animated.spring(scaleAnimation, {
+        toValue: 1,
+        useNativeDriver: true,
+        bounciness: 15,
+        speed: 2,
+      }),
+      // Title fade-in simultaneously with mascot
+      Animated.timing(titleOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      // Start continuous gentle animation after entrance completes
+      startContinuousAnimation();
+    });
+
+    // Start subtitle much sooner - while mascot is still animating
+    setTimeout(() => {
+      Animated.timing(subtitleOpacity, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }).start(() => {
+        // After subtitle appears, show description
+        Animated.timing(descriptionOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }).start(() => {
+          // Explicitly do nothing to prevent animation conflicts
+        });
+      });
+    }, 800); // Start subtitle 800ms after animation begins
+  };
+
+  const handleGetStarted = () => {
+    setTimeout(() => {
+      playMascotAnimation();
+    }, 100);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome to Glow</Text>
-        <Text style={styles.subtitle}>
-          Your journey to mindful daily reminders begins here
-        </Text>
-
-        <Text style={styles.description}>
-          Glow helps you stay present throughout your day with gentle,
-          personalized notifications that encourage mindfulness and self-reflection.
-        </Text>
+      {/* Top Colorful Section */}
+      <View style={styles.topSection}>
+        {/* Animated Mascot */}
+        <Animated.View
+          style={[
+            styles.mascotContainer,
+            {
+              transform: [
+                {
+                  translateY: Animated.add(
+                    mascotAnimation,
+                    floatingY.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [0, -4, 0]
+                    }),
+                    breathingY.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [0, -1.5, 0]
+                    })
+                  )
+                },
+                {
+                  translateX: Animated.add(
+                    horizontalAnimation,
+                    swayX.interpolate({
+                      inputRange: [0, 0.25, 0.5, 0.75, 1],
+                      outputRange: [0, -2, 0, 2, 0]
+                    })
+                  )
+                },
+                {
+                  rotate: rotationAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '10deg']
+                  })
+                },
+                {
+                  scale: Animated.multiply(
+                    scaleAnimation,
+                    breathingScale.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [1, 1.04, 1]
+                    })
+                  )
+                }
+              ],
+              zIndex: 0,
+            }
+          ]}
+        >
+          <Image
+            source={require('../../assets/images/mascot-alone.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"            
+          />
+        </Animated.View>
       </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-          <Text style={styles.continueButtonText}>Continue</Text>
-        </TouchableOpacity>
+      <View style={{
+        height: 1400, width: 1400, backgroundColor: "white", zIndex: 1, borderRadius: 1000, position: "absolute", top: screenHeight * 0.5, alignSelf: "center", shadowColor: Colors.shadow.dark,
+        shadowOffset: {
+          width: 0,
+          height: -2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 5,
+      }} />
 
-        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-          <Text style={styles.skipButtonText}>Skip for now</Text>
-        </TouchableOpacity>
+      {/* Bottom White Curved Section */}
+      <View style={styles.bottomSection}>
+        <View style={styles.contentContainer}>
+          <Animated.Text style={[Typography.title, styles.title, { opacity: titleOpacity }]}>
+            Hey, I&apos;m Glow !
+          </Animated.Text>
+          <Animated.Text style={[Typography.subtitle, styles.subtitle, { opacity: subtitleOpacity }]}>
+            I&apos;m here to brighten your day
+          </Animated.Text>
+          <Animated.Text style={[Typography.description, styles.description, { opacity: descriptionOpacity }]}>
+            Let&apos;s start your journey to mindfulness with gentle daily reminders that help you stay present.
+          </Animated.Text>
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
+            <Text style={[Typography.buttonTextLarge, styles.buttonText]}>
+              Let's get started
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -44,58 +260,75 @@ export default function Welcome() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
+    backgroundColor: Colors.primary,
   },
-  content: {
+  topSection: {
+    height: screenHeight * 0.6,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  mascotContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  mascotImage: {
+    width: screenHeight*0.35,
+    height: screenHeight*0.35,
+    zIndex: 0
+  },
+  bottomSection: {
+    position: 'absolute',
+    top: screenHeight * 0.55,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: Colors.background.primary,
+    paddingHorizontal: 24,    
+    paddingBottom: 40,
+    zIndex: 2
+  },
+  contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 60,
+    paddingHorizontal: 16,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    color: Colors.text.primary,
   },
   subtitle: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
+    marginBottom: 20,
+    color: Colors.text.secondary,
   },
   description: {
-    fontSize: 16,
-    color: '#666',
     textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 20,
+    color: Colors.text.secondary,
+    paddingHorizontal: 8,
   },
   buttonContainer: {
-    paddingBottom: 40,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
-  continueButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    borderRadius: 12,
+  getStartedButton: {
+    backgroundColor: Colors.secondary,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 50,
     alignItems: 'center',
-    marginBottom: 12,
+    shadowColor: Colors.secondary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  continueButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  skipButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  skipButtonText: {
-    color: '#666',
-    fontSize: 16,
+  buttonText: {
+    color: Colors.text.white,
   },
 });

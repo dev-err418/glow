@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Switch, Alert } from 'react-native';
 import { useNotifications } from '../contexts/NotificationContext';
+import { Colors } from '../constants/Colors';
 
 export default function Settings() {
   const {
@@ -118,26 +119,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background.primary,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 30,
     textAlign: 'center',
-    color: '#333',
+    color: Colors.text.primary,
   },
   section: {
     marginBottom: 30,
     padding: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: Colors.background.secondary,
     borderRadius: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 10,
-    color: '#333',
+    color: Colors.text.primary,
   },
   row: {
     flexDirection: 'row',
@@ -146,17 +147,17 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: '#333',
+    color: Colors.text.primary,
     flex: 1,
   },
   permissionStatus: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#666',
+    color: Colors.text.secondary,
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.text.secondary,
     marginBottom: 15,
     lineHeight: 20,
   },
@@ -167,29 +168,29 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   countButton: {
-    backgroundColor: '#e9ecef',
+    backgroundColor: Colors.neutral.gray100,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     fontSize: 16,
     fontWeight: '500',
-    color: '#495057',
+    color: Colors.neutral.gray600,
     minWidth: 40,
     textAlign: 'center',
   },
   countButtonSelected: {
-    backgroundColor: '#007AFF',
-    color: '#fff',
+    backgroundColor: Colors.primary,
+    color: Colors.text.white,
   },
   selectedInfo: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.text.secondary,
     fontStyle: 'italic',
     textAlign: 'center',
   },
   helpText: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.text.secondary,
     marginTop: 8,
     lineHeight: 20,
   },
