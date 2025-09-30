@@ -21,6 +21,7 @@ export default function Welcome() {
   const titleOpacity = useRef(new Animated.Value(0)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
   const descriptionOpacity = useRef(new Animated.Value(0)).current;
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Start animation after component mounts
@@ -41,6 +42,7 @@ export default function Welcome() {
     titleOpacity.setValue(0);
     subtitleOpacity.setValue(0);
     descriptionOpacity.setValue(0);
+    buttonOpacity.setValue(0);
   };
 
   const startContinuousAnimation = () => {
@@ -148,7 +150,12 @@ export default function Welcome() {
           duration: 600,
           useNativeDriver: true,
         }).start(() => {
-          // Explicitly do nothing to prevent animation conflicts
+          // After description appears, show button
+          Animated.timing(buttonOpacity, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }).start();
         });
       });
     }, 800); // Start subtitle 800ms after animation begins
@@ -245,13 +252,13 @@ export default function Welcome() {
           </Animated.Text>
         </View>
 
-        <View style={styles.buttonContainer}>
+        <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity }]}>
           <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
             <Text style={[Typography.buttonTextLarge, styles.buttonText]}>
               Let's get started
             </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </View>
   );
