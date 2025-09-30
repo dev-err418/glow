@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "glow-app",
-    "slug": "glow-app",
+    "name": "glow",
+    "slug": "glow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "glowapp",
+    "scheme": "glow",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
