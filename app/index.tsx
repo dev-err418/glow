@@ -1,29 +1,41 @@
-import React from 'react';
-import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useOnboarding } from '../contexts/OnboardingContext';
 import { Colors } from '../constants/Colors';
 
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Glow App</Text>
-        <Text style={styles.subtitle}>Mindful Daily Reminders</Text>
+  const router = useRouter();
+  const { onboardingData } = useOnboarding();
 
-        <View style={styles.buttonContainer}>
-          <Link href="/onboarding/welcome" asChild>
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Get Started</Text>
-            </TouchableOpacity>
-          </Link>
+  useEffect(() => {
+    // Delay navigation to ensure Stack is mounted
+    const timer = setTimeout(() => {
+      if (!onboardingData.completed) {
+        // User hasn't completed onboarding - go to welcome screen
+        router.replace('/onboarding/welcome');
+      }
+    }, 100);
 
-          <Link href="/settings" asChild>
-            <TouchableOpacity style={[styles.button, styles.secondaryButton]}>
-              <Text style={[styles.buttonText, styles.secondaryButtonText]}>Settings</Text>
-            </TouchableOpacity>
-          </Link>
+    return () => clearTimeout(timer);
+  }, []);
+
+  // If onboarding is completed, show home screen
+  if (onboardingData.completed) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Welcome back!</Text>
+          <Text style={styles.subtitle}>Your daily affirmations await</Text>
         </View>
       </View>
+    );
+  }
+
+  // Show loading while checking/redirecting
+  return (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color={Colors.primary} />
     </View>
   );
 }
@@ -31,7 +43,9 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.secondary,
+    backgroundColor: Colors.background.default,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
@@ -49,33 +63,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: Colors.text.secondary,
-    fontStyle: 'italic',
     textAlign: 'center',
-    marginBottom: 40,
-  },
-  buttonContainer: {
-    width: '100%',
-    maxWidth: 300,
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  buttonText: {
-    color: Colors.text.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButtonText: {
-    color: Colors.primary,
   },
 });

@@ -31,24 +31,24 @@ export default function BenefitsScreen() {
           <Text style={styles.title}>The benefits of daily affirmations</Text>
 
           <View style={styles.benefitsContainer}>
-            <BenefitItem
+            {/* <BenefitItem
               emoji="💪"
-              title="Boost Self-Confidence"
+              title="Boost self-confidence"
               description="Regular affirmations help build a positive self-image and strengthen your belief in yourself"
-            />
+            /> */}
             <BenefitItem
               emoji="🧘"
-              title="Reduce Stress"
+              title="Reduce stress"
               description="Mindful moments throughout the day help you stay grounded and manage anxiety"
             />
             <BenefitItem
               emoji="✨"
-              title="Increase Positivity"
+              title="Increase positivity"
               description="Daily reminders shift your mindset toward gratitude and optimism"
             />
             <BenefitItem
               emoji="🎯"
-              title="Achieve Your Goals"
+              title="Achieve your goals"
               description="Positive self-talk reinforces your capabilities and motivates action"
             />
           </View>

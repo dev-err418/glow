@@ -29,7 +29,7 @@ const STORAGE_KEYS = {
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notificationsPerDay, setNotificationsPerDay] = useState(3);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [startHour, setStartHour] = useState(6);
+  const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(22);
   const [permissionStatus, setPermissionStatus] = useState('unknown');
 
