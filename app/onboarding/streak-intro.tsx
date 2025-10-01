@@ -1,10 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
-import { Button } from '../../components/Button';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -85,7 +85,7 @@ export default function StreakIntroScreen() {
       Animated.spring(mascotAnimation, {
         toValue: 0,
         useNativeDriver: true,
-        bounciness: 12,
+        bounciness: 8,
         speed: 2,
       }),
       Animated.spring(horizontalAnimation, {

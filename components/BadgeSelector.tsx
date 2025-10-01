@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
@@ -21,9 +21,11 @@ export function BadgeSelector({ label, selected, onPress, style }: BadgeSelector
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Text style={[styles.icon, selected && styles.iconSelected]}>
-        {selected ? '✓' : '+'}
-      </Text>
+      <View style={styles.iconContainer}>
+        <Text style={[styles.icon, selected && styles.iconSelected]}>
+          {selected ? '✓' : '+'}
+        </Text>
+      </View>
       <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
     </TouchableOpacity>
   );
@@ -88,12 +90,14 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background.primary,
+    backgroundColor: Colors.background.default,
     borderRadius: 30,
     paddingVertical: 12,
     paddingHorizontal: 20,
     marginRight: 10,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
     shadowColor: Colors.shadow.light,
     shadowOffset: {
       width: 0,
@@ -104,12 +108,18 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   badgeSelected: {
-    backgroundColor: Colors.background.default,
+    backgroundColor: Colors.background.primary,
+    borderColor: Colors.secondary,
+  },
+  iconContainer: {
+    width: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
   },
   icon: {
     fontSize: 18,
     color: Colors.text.light,
-    marginRight: 8,
     fontWeight: '400',
   },
   iconSelected: {

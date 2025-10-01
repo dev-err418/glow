@@ -3,33 +3,43 @@ import React, { useState, useLayoutEffect } from 'react';
 import { Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Button } from '../../components/Button';
-import { RadioGroup } from '../../components/RadioCard';
+import { BadgeGroup } from '../../components/BadgeSelector';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
-const STREAK_GOAL_OPTIONS = [
-  { label: '3 days in a row - Small start', value: '3' },
-  { label: '7 days in a row - One week', value: '7' },
-  { label: '14 days in a row - Two weeks', value: '14' },
-  { label: '30 days in a row - One month', value: '30' },
+const CATEGORY_OPTIONS = [
+  { label: 'Self-care', value: 'self-care' },
+  { label: 'Mindfulness', value: 'mindfulness' },
+  { label: 'Motivation', value: 'motivation' },
+  { label: 'Gratitude', value: 'gratitude' },
+  { label: 'Confidence', value: 'confidence' },
+  { label: 'Peace', value: 'peace' },
+  { label: 'Growth', value: 'growth' },
+  { label: 'Energy', value: 'energy' },
+  { label: 'Overthinking', value: 'overthinking' },
+  { label: 'Stress Relief', value: 'stress-relief' },
 ];
 
-export default function StreakGoalScreen() {
+export default function CategoriesScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { onboardingData, updateOnboardingData, completeOnboarding } = useOnboarding();
-  const [selectedGoal, setSelectedGoal] = useState(onboardingData.streakGoal?.toString() || '');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    onboardingData.categories || []
+  );
 
   const handleNext = () => {
-    if (selectedGoal) {
-      updateOnboardingData({ streakGoal: parseInt(selectedGoal) });
+    if (selectedCategories.length > 0) {
+      updateOnboardingData({ categories: selectedCategories });
     }
-    router.push('/onboarding/categories');
+    completeOnboarding();
+    router.replace('/');
   };
 
   const handleSkip = () => {
-    router.push('/onboarding/categories');
+    completeOnboarding();
+    router.replace('/');
   };
 
   useLayoutEffect(() => {
@@ -59,16 +69,17 @@ export default function StreakGoalScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>What's your streak goal?</Text>
+          <Text style={styles.title}>What brings you joy?</Text>
           <Text style={styles.subtitle}>
-            Choose your daily commitment to self-care
+            We'll personalize your affirmations based on your interests
           </Text>
 
-          <RadioGroup
-            options={STREAK_GOAL_OPTIONS}
-            selectedValue={selectedGoal}
-            onValueChange={setSelectedGoal}
-            style={styles.radioGroup}
+          <BadgeGroup
+            options={CATEGORY_OPTIONS}
+            selectedValues={selectedCategories}
+            onValuesChange={setSelectedCategories}
+            multiSelect={true}
+            style={styles.badgeGroup}
           />
         </View>
       </KeyboardAwareScrollView>
@@ -78,7 +89,6 @@ export default function StreakGoalScreen() {
           variant="primary"
           size="large"
           onPress={handleNext}
-          disabled={!selectedGoal}
           style={styles.button}
         >
           Get Started
@@ -120,7 +130,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 30,
   },
-  radioGroup: {
+  badgeGroup: {
     marginBottom: 24,
   },
   buttonContainer: {

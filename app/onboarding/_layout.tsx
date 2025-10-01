@@ -71,6 +71,12 @@ export default function OnboardingLayout() {
           title: 'Streak goal',
         }}
       />
+      <Stack.Screen
+        name="categories"
+        options={{
+          title: 'Categories',
+        }}
+      />
     </Stack>
   );
 }
