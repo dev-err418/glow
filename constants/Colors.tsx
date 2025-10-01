@@ -1,13 +1,9 @@
 export const Colors = {
   // Primary Colors
   primary: '#FF7B54',
-  primaryLight: '#FF9A7B',
-  primaryDark: '#E85A3D',
 
   // Secondary Colors
   secondary: '#2C3E5B',
-  secondaryLight: '#4A5F7A',
-  secondaryDark: '#1A2736',
 
   // Neutral Colors
   neutral: {
@@ -35,6 +31,7 @@ export const Colors = {
 
   // Background Colors
   background: {
+    default: '#FFF8F3',
     primary: '#FFFFFF',
     secondary: '#F8F9FA',
     tertiary: '#E9ECEF',

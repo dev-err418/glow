@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
+import { Button } from '../../components/Button';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -179,11 +180,13 @@ export default function Welcome() {
               transform: [
                 {
                   translateY: Animated.add(
-                    mascotAnimation,
-                    floatingY.interpolate({
-                      inputRange: [0, 0.5, 1],
-                      outputRange: [0, -4, 0]
-                    }),
+                    Animated.add(
+                      mascotAnimation,
+                      floatingY.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: [0, -4, 0]
+                      })
+                    ),
                     breathingY.interpolate({
                       inputRange: [0, 0.5, 1],
                       outputRange: [0, -1.5, 0]
@@ -228,7 +231,7 @@ export default function Welcome() {
       </View>
 
       <View style={{
-        height: 1400, width: 1400, backgroundColor: "white", zIndex: 1, borderRadius: 1000, position: "absolute", top: screenHeight * 0.5, alignSelf: "center", shadowColor: Colors.shadow.dark,
+        height: 1400, width: 1400, backgroundColor: Colors.background.default, zIndex: 1, borderRadius: 1000, position: "absolute", top: screenHeight * 0.5, alignSelf: "center", shadowColor: Colors.shadow.dark,
         shadowOffset: {
           width: 0,
           height: -2,
@@ -253,11 +256,13 @@ export default function Welcome() {
         </View>
 
         <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity }]}>
-          <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
-            <Text style={[Typography.buttonTextLarge, styles.buttonText]}>
-              Let's get started
-            </Text>
-          </TouchableOpacity>
+          <Button
+            variant="primary"
+            size="large"
+            onPress={handleGetStarted}
+          >
+            Let's get started
+          </Button>
         </Animated.View>
       </View>
     </View>
@@ -279,7 +284,7 @@ const styles = StyleSheet.create({
   mascotContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 40
   },
   mascotImage: {
     width: screenHeight*0.35,
@@ -292,7 +297,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.background.primary,
+    backgroundColor: Colors.background.default,
     paddingHorizontal: 24,    
     paddingBottom: 40,
     zIndex: 2
@@ -319,23 +324,5 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-  },
-  getStartedButton: {
-    backgroundColor: Colors.secondary,
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 50,
-    alignItems: 'center',
-    shadowColor: Colors.secondary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  buttonText: {
-    color: Colors.text.white,
   },
 });
