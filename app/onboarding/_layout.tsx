@@ -44,7 +44,7 @@ export default function OnboardingLayout() {
       <Stack.Screen
         name="mental-health"
         options={{
-          title: 'Mental Health',
+          title: 'Mental health',
         }}
       />
       <Stack.Screen

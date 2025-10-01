@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { Colors } from '../../constants/Colors';
-import { Typography } from '../../constants/Typography';
 import { Button } from '../../components/Button';
 import { RadioGroup } from '../../components/RadioCard';
+import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
 const MENTAL_HEALTH_OPTIONS = [
-  { label: 'Therapy', value: 'therapy' },
   { label: 'Meditation', value: 'meditation' },
   { label: 'Exercise', value: 'exercise' },
+  { label: 'Socializing', value: 'socializing' },
+  { label: 'Nature', value: 'nature' },
   { label: 'Journaling', value: 'journaling' },
-  { label: 'Talking to friends', value: 'talking-to-friends' },
+  { label: 'Therapy', value: 'therapy' },
   { label: 'Other', value: 'other' },
 ];
 

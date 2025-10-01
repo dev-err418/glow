@@ -56,6 +56,8 @@ export default function NameScreen() {
             autoCorrect={false}
             autoCapitalize="words"
             spellCheck={false}
+            returnKeyType="done"
+            onSubmitEditing={handleNext}
             containerStyle={styles.inputContainer}
           />
         </View>

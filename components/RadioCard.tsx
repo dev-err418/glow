@@ -74,6 +74,8 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 24,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
     shadowColor: Colors.shadow.light,
     shadowOffset: {
       width: 0,
@@ -84,7 +86,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardSelected: {
-    backgroundColor: Colors.background.default,
+    borderColor: Colors.secondary,
   },
   label: {
     ...Typography.body,

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
-import { Colors } from '../../constants/Colors';
-import { Typography } from '../../constants/Typography';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
+import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
@@ -102,7 +102,7 @@ export default function NotificationsScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>Get Affirmations Throughout the Day</Text>
+          <Text style={styles.title}>Get affirmations throughout the day</Text>
           <Text style={styles.subtitle}>
             Let me know when you'd like to hear from me
           </Text>
@@ -116,6 +116,7 @@ export default function NotificationsScreen() {
               keyboardType="number-pad"
               autoCorrect={false}
               spellCheck={false}
+              returnKeyType="done"
               error={errors.count}
               containerStyle={styles.inputContainer}
             />
@@ -133,6 +134,7 @@ export default function NotificationsScreen() {
                   keyboardType="number-pad"
                   autoCorrect={false}
                   spellCheck={false}
+                  returnKeyType="done"
                   error={errors.startHour}
                   containerStyle={styles.timeInputContainer}
                 />
@@ -148,6 +150,8 @@ export default function NotificationsScreen() {
                   keyboardType="number-pad"
                   autoCorrect={false}
                   spellCheck={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleGetStarted}
                   error={errors.endHour}
                   containerStyle={styles.timeInputContainer}
                 />

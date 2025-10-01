@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
-import { Button } from '../../components/Button';
 
 export default function BenefitsScreen() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function BenefitsScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>The Benefits of Daily Affirmations</Text>
+          <Text style={styles.title}>The benefits of daily affirmations</Text>
 
           <View style={styles.benefitsContainer}>
             <BenefitItem
