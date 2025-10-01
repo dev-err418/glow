@@ -225,7 +225,7 @@ export default function StreakIntroScreen() {
           onPress={handleContinue}
           style={styles.button}
         >
-          Continue
+          Next
         </Button>
       </View>
     </View>

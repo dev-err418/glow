@@ -122,7 +122,7 @@ export default function NotificationsScreen() {
           onPress={handleGetStarted}
           style={styles.button}
         >
-          Get Started
+          Next
         </Button>
       </View>
     </View>

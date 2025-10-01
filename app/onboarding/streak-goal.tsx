@@ -81,7 +81,7 @@ export default function StreakGoalScreen() {
           disabled={!selectedGoal}
           style={styles.button}
         >
-          Get Started
+          Next
         </Button>
       </View>
     </View>

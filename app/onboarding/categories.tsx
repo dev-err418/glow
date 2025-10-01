@@ -24,7 +24,7 @@ const CATEGORY_OPTIONS = [
 export default function CategoriesScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { onboardingData, updateOnboardingData, completeOnboarding } = useOnboarding();
+  const { onboardingData, updateOnboardingData } = useOnboarding();
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     onboardingData.categories || []
   );
@@ -33,13 +33,11 @@ export default function CategoriesScreen() {
     if (selectedCategories.length > 0) {
       updateOnboardingData({ categories: selectedCategories });
     }
-    completeOnboarding();
-    router.replace('/');
+    router.push('/onboarding/widget');
   };
 
   const handleSkip = () => {
-    completeOnboarding();
-    router.replace('/');
+    router.push('/onboarding/widget');
   };
 
   useLayoutEffect(() => {
@@ -91,7 +89,7 @@ export default function CategoriesScreen() {
           onPress={handleNext}
           style={styles.button}
         >
-          Get Started
+          Next
         </Button>
       </View>
     </View>

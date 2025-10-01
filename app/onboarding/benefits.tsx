@@ -62,7 +62,7 @@ export default function BenefitsScreen() {
           onPress={handleContinue}
           style={styles.button}
         >
-          Continue
+          Next
         </Button>
       </View>
     </View>

@@ -8,6 +8,7 @@ interface OnboardingData {
   mentalHealthMethod: string;
   streakGoal?: number;
   categories?: string[];
+  premiumTrialStartDate?: string;
   completed: boolean;
 }
 

@@ -77,6 +77,18 @@ export default function OnboardingLayout() {
           title: 'Categories',
         }}
       />
+      <Stack.Screen
+        name="widget"
+        options={{
+          title: 'Widget',
+        }}
+      />
+      <Stack.Screen
+        name="premium"
+        options={{
+          title: 'Offer',
+        }}
+      />
     </Stack>
   );
 }
