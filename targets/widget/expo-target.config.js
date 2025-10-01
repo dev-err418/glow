@@ -8,5 +8,8 @@ module.exports = config => ({
   },
   colors: {
     accent: "#FF7B54",
-  }
+  },
+  resources: [
+    '../../assets/data/quotes.json'
+  ]
 });
