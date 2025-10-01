@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
@@ -104,7 +104,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.background.primary,
     borderRadius: 20,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     shadowColor: Colors.shadow.light,
     shadowOffset: {
       width: 0,

@@ -59,6 +59,18 @@ export default function OnboardingLayout() {
           title: 'Notifications',
         }}
       />
+      <Stack.Screen
+        name="streak-intro"
+        options={{
+          title: 'Build your streak',
+        }}
+      />
+      <Stack.Screen
+        name="streak-goal"
+        options={{
+          title: 'Streak goal',
+        }}
+      />
     </Stack>
   );
 }

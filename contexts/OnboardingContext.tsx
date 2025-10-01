@@ -6,6 +6,7 @@ interface OnboardingData {
   age: string;
   sex: string;
   mentalHealthMethod: string;
+  streakGoal?: number;
   completed: boolean;
 }
 

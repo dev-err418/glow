@@ -11,6 +11,9 @@ interface RadioCardProps {
 }
 
 export function RadioCard({ label, selected, onPress, style }: RadioCardProps) {
+  const parts = label.split(' - ');
+  const hasTwoParts = parts.length === 2;
+
   return (
     <TouchableOpacity
       style={[
@@ -21,7 +24,14 @@ export function RadioCard({ label, selected, onPress, style }: RadioCardProps) {
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
+      {hasTwoParts ? (
+        <Text style={[styles.label, selected && styles.labelSelected]}>
+          {parts[0]}
+          <Text style={styles.labelSecondary}> - {parts[1]}</Text>
+        </Text>
+      ) : (
+        <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
+      )}
       <View style={[styles.radio, selected && styles.radioSelected]}>
         {selected && <View style={styles.radioInner} />}
       </View>
@@ -90,12 +100,17 @@ const styles = StyleSheet.create({
   },
   label: {
     ...Typography.body,
-    fontSize: 18,
+    fontSize: 16,
+    lineHeight: 20,
     color: Colors.text.primary,
     flex: 1,
   },
   labelSelected: {
     fontWeight: '500',
+  },
+  labelSecondary: {
+    color: Colors.text.secondary,
+    fontWeight: '400',
   },
   radio: {
     width: 28,

@@ -61,15 +61,14 @@ export default function NotificationsScreen() {
     const granted = await requestPermissions();
     if (granted) {
       setNotificationsEnabled(true);
-      completeOnboarding();
-      router.replace('/');
+      router.push('/onboarding/streak-intro');
     } else {
       Alert.alert(
         'Notification Permission',
         'To receive daily affirmations, please enable notifications in your device settings.',
         [
-          { text: 'Later', onPress: () => { completeOnboarding(); router.replace('/'); } },
-          { text: 'OK' },
+          { text: 'Later', onPress: () => { router.push('/onboarding/streak-intro'); } },
+          { text: 'OK', onPress: () => { router.push('/onboarding/streak-intro'); } },
         ]
       );
     }
