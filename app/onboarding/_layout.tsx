@@ -6,13 +6,14 @@ export default function OnboardingLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.secondary,
+          backgroundColor: Colors.background.default,
         },
-        headerTintColor: Colors.text.white,
+        headerTintColor: Colors.secondary,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
         headerBackTitle: 'Back',
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen
@@ -20,6 +21,42 @@ export default function OnboardingLayout() {
         options={{
           title: 'Welcome',
           headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="name"
+        options={{
+          title: "What's your name?",
+        }}
+      />
+      <Stack.Screen
+        name="age"
+        options={{
+          title: 'Age',
+        }}
+      />
+      <Stack.Screen
+        name="sex"
+        options={{
+          title: 'Gender',
+        }}
+      />
+      <Stack.Screen
+        name="mental-health"
+        options={{
+          title: 'Mental Health',
+        }}
+      />
+      <Stack.Screen
+        name="benefits"
+        options={{
+          title: 'Benefits',
+        }}
+      />
+      <Stack.Screen
+        name="notifications"
+        options={{
+          title: 'Notifications',
         }}
       />
     </Stack>

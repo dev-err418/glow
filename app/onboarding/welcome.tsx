@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { Button } from '../../components/Button';
@@ -7,6 +8,7 @@ import { Button } from '../../components/Button';
 const { height: screenHeight } = Dimensions.get('window');
 
 export default function Welcome() {
+  const router = useRouter();
   const mascotAnimation = useRef(new Animated.Value(screenHeight * 0.5)).current;
   const horizontalAnimation = useRef(new Animated.Value(0)).current;
   const rotationAnimation = useRef(new Animated.Value(0)).current;
@@ -163,9 +165,7 @@ export default function Welcome() {
   };
 
   const handleGetStarted = () => {
-    setTimeout(() => {
-      playMascotAnimation();
-    }, 100);
+    router.push('/onboarding/name');
   };
 
   return (
@@ -322,7 +322,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   buttonContainer: {
-    paddingHorizontal: 16,
     paddingBottom: 16,
   },
 });

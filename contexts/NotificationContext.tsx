@@ -7,6 +7,10 @@ interface NotificationContextType {
   setNotificationsPerDay: (count: number) => void;
   notificationsEnabled: boolean;
   setNotificationsEnabled: (enabled: boolean) => void;
+  startHour: number;
+  setStartHour: (hour: number) => void;
+  endHour: number;
+  setEndHour: (hour: number) => void;
   permissionStatus: string;
   requestPermissions: () => Promise<boolean>;
   scheduleNotifications: () => void;
@@ -18,11 +22,15 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 const STORAGE_KEYS = {
   NOTIFICATIONS_PER_DAY: 'notificationsPerDay',
   NOTIFICATIONS_ENABLED: 'notificationsEnabled',
+  START_HOUR: 'startHour',
+  END_HOUR: 'endHour',
 };
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notificationsPerDay, setNotificationsPerDay] = useState(3);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [startHour, setStartHour] = useState(6);
+  const [endHour, setEndHour] = useState(22);
   const [permissionStatus, setPermissionStatus] = useState('unknown');
 
   // Load saved preferences on app start
@@ -34,15 +42,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Save preferences when they change
   useEffect(() => {
     savePreferences();
-  }, [notificationsPerDay, notificationsEnabled]);
+  }, [notificationsPerDay, notificationsEnabled, startHour, endHour]);
 
   const loadPreferences = async () => {
     try {
       const savedCount = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS_PER_DAY);
       const savedEnabled = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS_ENABLED);
+      const savedStartHour = await AsyncStorage.getItem(STORAGE_KEYS.START_HOUR);
+      const savedEndHour = await AsyncStorage.getItem(STORAGE_KEYS.END_HOUR);
 
       if (savedCount) setNotificationsPerDay(parseInt(savedCount));
       if (savedEnabled) setNotificationsEnabled(savedEnabled === 'true');
+      if (savedStartHour) setStartHour(parseInt(savedStartHour));
+      if (savedEndHour) setEndHour(parseInt(savedEndHour));
     } catch (error) {
       console.error('Error loading preferences:', error);
     }
@@ -52,6 +64,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS_PER_DAY, notificationsPerDay.toString());
       await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS_ENABLED, notificationsEnabled.toString());
+      await AsyncStorage.setItem(STORAGE_KEYS.START_HOUR, startHour.toString());
+      await AsyncStorage.setItem(STORAGE_KEYS.END_HOUR, endHour.toString());
     } catch (error) {
       console.error('Error saving preferences:', error);
     }
@@ -74,9 +88,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     // Cancel existing notifications first
     await Notifications.cancelAllScheduledNotificationsAsync();
 
-    // Calculate intervals (distribute throughout 16 hour day: 6 AM to 10 PM)
-    const startHour = 6; // 6 AM
-    const endHour = 22; // 10 PM
+    // Calculate intervals using custom start and end hours
     const totalMinutes = (endHour - startHour) * 60;
     const interval = Math.floor(totalMinutes / notificationsPerDay);
 
@@ -122,13 +134,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     } else {
       cancelAllNotifications();
     }
-  }, [notificationsPerDay, notificationsEnabled, permissionStatus]);
+  }, [notificationsPerDay, notificationsEnabled, permissionStatus, startHour, endHour]);
 
   const value = {
     notificationsPerDay,
     setNotificationsPerDay,
     notificationsEnabled,
     setNotificationsEnabled,
+    startHour,
+    setStartHour,
+    endHour,
+    setEndHour,
     permissionStatus,
     requestPermissions,
     scheduleNotifications,

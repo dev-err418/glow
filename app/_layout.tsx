@@ -1,11 +1,15 @@
 import { Stack } from "expo-router";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { NotificationProvider } from "../contexts/NotificationContext";
+import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { Colors } from "../constants/Colors";
 
 export default function RootLayout() {
   return (
-    <NotificationProvider>
-      <Stack
+    <KeyboardProvider>
+      <NotificationProvider>
+        <OnboardingProvider>
+          <Stack
         screenOptions={{
           headerStyle: {
             backgroundColor: Colors.secondary,
@@ -37,6 +41,8 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-    </NotificationProvider>
+        </OnboardingProvider>
+      </NotificationProvider>
+    </KeyboardProvider>
   );
 }
