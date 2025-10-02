@@ -9,6 +9,12 @@ interface OnboardingData {
   streakGoal?: number;
   categories?: string[];
   premiumTrialStartDate?: string;
+  premiumPaywallAction?: 'started_trial' | 'skipped';
+  notificationsEnabled?: boolean;
+  notificationsPerDay?: number;
+  notificationStartTime?: string;
+  notificationEndTime?: string;
+  widgetInstalled?: boolean;
   completed: boolean;
 }
 
@@ -17,6 +23,7 @@ interface OnboardingContextType {
   updateOnboardingData: (data: Partial<OnboardingData>) => void;
   completeOnboarding: () => void;
   isOnboardingComplete: boolean;
+  isLoading: boolean;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -34,6 +41,7 @@ const defaultOnboardingData: OnboardingData = {
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [onboardingData, setOnboardingData] = useState<OnboardingData>(defaultOnboardingData);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load saved onboarding data on app start
   useEffect(() => {
@@ -54,6 +62,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       }
     } catch (error) {
       console.error('Error loading onboarding data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -78,6 +88,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     updateOnboardingData,
     completeOnboarding,
     isOnboardingComplete,
+    isLoading,
   };
 
   return (

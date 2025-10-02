@@ -35,13 +35,17 @@ export default function PremiumScreen() {
   const handleStartTrial = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const trialStartDate = new Date().toISOString();
-    updateOnboardingData({ premiumTrialStartDate: trialStartDate });
+    updateOnboardingData({
+      premiumTrialStartDate: trialStartDate,
+      premiumPaywallAction: 'started_trial'
+    });
     await schedulePremiumReminder();
     completeOnboarding();
     router.replace('/');
   };
 
   const handleSkip = () => {
+    updateOnboardingData({ premiumPaywallAction: 'skipped' });
     completeOnboarding();
     router.replace('/');
   };

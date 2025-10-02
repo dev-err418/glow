@@ -7,10 +7,12 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
+import { useOnboarding } from '../../contexts/OnboardingContext';
 
 export default function NotificationPermissionScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { updateOnboardingData } = useOnboarding();
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
@@ -18,6 +20,7 @@ export default function NotificationPermissionScreen() {
         // Check if permissions were granted while in settings
         const { status } = await Notifications.getPermissionsAsync();
         if (status === 'granted') {
+          updateOnboardingData({ notificationsEnabled: true });
           router.push('/onboarding/streak-intro');
         }
       }

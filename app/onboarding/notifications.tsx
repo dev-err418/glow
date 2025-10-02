@@ -12,7 +12,7 @@ import { useOnboarding } from '../../contexts/OnboardingContext';
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding, updateOnboardingData } = useOnboarding();
   const {
     setNotificationsPerDay,
     setStartHour,
@@ -64,9 +64,22 @@ export default function NotificationsScreen() {
     const granted = await requestPermissions();
     if (granted) {
       setNotificationsEnabled(true);
+      // Save notification settings to onboarding data
+      updateOnboardingData({
+        notificationsEnabled: true,
+        notificationsPerDay: localCount,
+        notificationStartTime: localStartTime.toISOString(),
+        notificationEndTime: localEndTime.toISOString(),
+      });
       router.push('/onboarding/streak-intro');
     } else {
       // User denied permissions, show encouragement screen
+      updateOnboardingData({
+        notificationsEnabled: false,
+        notificationsPerDay: localCount,
+        notificationStartTime: localStartTime.toISOString(),
+        notificationEndTime: localEndTime.toISOString(),
+      });
       router.push('/onboarding/notification-permission');
     }
   };

@@ -5,10 +5,12 @@ import { Alert, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
+import { useOnboarding } from '../../contexts/OnboardingContext';
 
 export default function WidgetScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { updateOnboardingData } = useOnboarding();
 
   const handleInstallWidget = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -21,6 +23,7 @@ export default function WidgetScreen() {
           {
             text: 'Got it!',
             onPress: () => {
+              updateOnboardingData({ widgetInstalled: true });
               router.push('/onboarding/premium');
             },
           },
@@ -28,6 +31,7 @@ export default function WidgetScreen() {
       );
     } else {
       // Android widget setup (future implementation)
+      updateOnboardingData({ widgetInstalled: true });
       router.push('/onboarding/premium');
     }
   };
