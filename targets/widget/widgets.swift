@@ -151,7 +151,7 @@ struct SmallQuoteWidget: Widget {
             SmallQuoteWidgetView(entry: entry)
                 .containerBackground(Color(hex: "FFF8F3"), for: .widget)
         }
-        .configurationDisplayName("Glow Quote")
+        .configurationDisplayName("Glow Quote - Small")
         .description("Daily motivation in a small widget")
         .supportedFamilies([.systemSmall])
     }
@@ -165,7 +165,7 @@ struct MediumQuoteWidget: Widget {
             MediumQuoteWidgetView(entry: entry)
                 .containerBackground(Color(hex: "FFF8F3"), for: .widget)
         }
-        .configurationDisplayName("Glow Quote")
+        .configurationDisplayName("Glow Quote - Medium")
         .description("Daily motivation in a medium widget")
         .supportedFamilies([.systemMedium])
     }

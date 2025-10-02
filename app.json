@@ -12,6 +12,7 @@
       "appleTeamId": "53AJ925PGL",
       "entitlements": {
         "com.apple.security.application-groups": [
+          "group.com.arthurbuildsstuff.glow.widget",
           "group.com.arthurbuildsstuff.glow.widget"
         ]
       },
@@ -40,7 +41,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/mascot-alone.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -67,6 +68,7 @@
                   "targetName": "widget",
                   "entitlements": {
                     "com.apple.security.application-groups": [
+                      "group.com.arthurbuildsstuff.glow.widget",
                       "group.com.arthurbuildsstuff.glow.widget"
                     ]
                   }

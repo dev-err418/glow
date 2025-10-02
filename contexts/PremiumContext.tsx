@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesOffering } from 'react-native-purchases';
-import { presentPaywallIfNeeded, PAYWALL_RESULT } from 'react-native-purchases-ui';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 interface PremiumContextType {
   isPremium: boolean;
@@ -53,7 +53,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
 
   const showPaywall = async (): Promise<PAYWALL_RESULT> => {
     try {
-      const paywallResult = await presentPaywallIfNeeded({
+      const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
         requiredEntitlementIdentifier: 'Premium',
       });
 

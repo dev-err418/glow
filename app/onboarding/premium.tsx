@@ -56,8 +56,11 @@ export default function PremiumScreen() {
         completeOnboarding();
         router.replace('/');
       } else if (result === PAYWALL_RESULT.CANCELLED) {
-        // User cancelled the paywall - don't navigate away
+        // User cancelled the paywall - proceed anyway
+        updateOnboardingData({ premiumPaywallAction: 'dismissed' });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        completeOnboarding();
+        router.replace('/');
       } else if (result === PAYWALL_RESULT.NOT_PRESENTED) {
         // User already has premium
         updateOnboardingData({

@@ -9,7 +9,7 @@ interface OnboardingData {
   streakGoal?: number;
   categories?: string[];
   premiumTrialStartDate?: string;
-  premiumPaywallAction?: 'started_trial' | 'skipped';
+  premiumPaywallAction?: 'started_trial' | 'skipped' | 'dismissed';
   notificationsEnabled?: boolean;
   notificationsPerDay?: number;
   notificationStartTime?: string;
