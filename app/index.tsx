@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { Text, View, ActivityIndicator, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useOnboarding } from '../contexts/OnboardingContext';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { useOnboarding } from '../contexts/OnboardingContext';
+import { usePremium } from '../contexts/PremiumContext';
+import { submitOnboardingData } from '../services/supabaseService';
 
 export default function Index() {
   const router = useRouter();
   const { onboardingData, isLoading } = useOnboarding();
+  const { customerInfo } = usePremium();
   const [showData, setShowData] = useState(false);
+  const [isSubmittingTest, setIsSubmittingTest] = useState(false);
 
   useEffect(() => {
     // Wait for data to load before making navigation decisions
@@ -27,6 +31,50 @@ export default function Index() {
   const handleResetOnboarding = async () => {
     await AsyncStorage.removeItem('onboardingData');
     router.replace('/onboarding/welcome');
+  };
+
+  const handleTestOnboarding = async () => {
+    if (!customerInfo) {
+      Alert.alert('Error', 'Customer info not available yet. Please wait.');
+      return;
+    }
+
+    setIsSubmittingTest(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      console.log('🧪 Testing with RevenueCat User ID:', customerInfo.originalAppUserId);
+
+      // Full onboarding data test
+      const result = await submitOnboardingData(
+        customerInfo.originalAppUserId,
+        {
+          name: 'Test User',
+          age: '25-34',
+          sex: 'female',
+          mental_health_methods: ['meditation', 'exercise', 'yoga'],
+          streak_goal: 7,
+          categories: ['mindfulness', 'gratitude', 'self-care'],
+          notifications_enabled: true,
+          notifications_per_day: 3,
+          notification_start_time: '09:00',
+          notification_end_time: '21:00',
+          widget_installed: true,
+          premium_trial_start_date: new Date().toISOString(),
+          premium_paywall_action: 'started_trial',
+        }
+      );
+
+      if (result.success) {
+        Alert.alert('Success!', 'Test onboarding data submitted successfully to Supabase!');
+      } else {
+        Alert.alert('Error', `Failed to submit onboarding: ${result.error}`);
+      }
+    } catch (error) {
+      Alert.alert('Error', `Exception: ${error}`);
+    } finally {
+      setIsSubmittingTest(false);
+    }
   };
 
   // Show loading spinner while data is loading
@@ -73,7 +121,7 @@ export default function Index() {
                 <Text style={styles.dataText}>Name: {onboardingData.name || 'Not set'}</Text>
                 <Text style={styles.dataText}>Age: {onboardingData.age || 'Not set'}</Text>
                 <Text style={styles.dataText}>Sex: {onboardingData.sex || 'Not set'}</Text>
-                <Text style={styles.dataText}>Mental Health: {onboardingData.mentalHealthMethod || 'Not set'}</Text>
+                <Text style={styles.dataText}>Mental Health: {onboardingData.mentalHealthMethods || 'Not set'}</Text>
                 <Text style={styles.dataText}>Streak Goal: {onboardingData.streakGoal || 'Not set'}</Text>
                 <Text style={styles.dataText}>Categories: {onboardingData.categories?.join(', ') || 'None'}</Text>
                 <Text style={styles.dataText}>Notifications Enabled: {onboardingData.notificationsEnabled ? 'Yes' : 'No'}</Text>
@@ -86,6 +134,18 @@ export default function Index() {
                 <Text style={styles.dataText}>Completed: {onboardingData.completed ? 'Yes' : 'No'}</Text>
               </View>
             )}
+
+            <TouchableOpacity
+              style={[styles.button, styles.testButton]}
+              onPress={handleTestOnboarding}
+              disabled={isSubmittingTest}
+            >
+              {isSubmittingTest ? (
+                <ActivityIndicator size="small" color={Colors.text.white} />
+              ) : (
+                <Text style={styles.buttonText}>Test Supabase Onboarding</Text>
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, styles.resetButton]}
@@ -165,6 +225,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     marginTop: 20,
+  },
+  testButton: {
+    backgroundColor: Colors.secondary,
   },
   resetButton: {
     backgroundColor: Colors.status.error,

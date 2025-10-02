@@ -18,8 +18,7 @@ const CATEGORY_OPTIONS = [
   { label: 'Peace', value: 'peace' },
   { label: 'Growth', value: 'growth' },
   { label: 'Energy', value: 'energy' },
-  { label: 'Overthinking', value: 'overthinking' },
-  { label: 'Stress Relief', value: 'stress-relief' },
+  { label: 'Stress relief', value: 'stress-relief' },
 ];
 
 export default function CategoriesScreen() {

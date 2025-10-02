@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Purchases from 'react-native-purchases';
+import { submitOnboardingData } from '../services/supabaseService';
 
 interface OnboardingData {
   name: string;
   age: string;
   sex: string;
-  mentalHealthMethod: string;
+  mentalHealthMethods?: string[];
   streakGoal?: number;
   categories?: string[];
   premiumTrialStartDate?: string;
@@ -34,7 +36,6 @@ const defaultOnboardingData: OnboardingData = {
   name: '',
   age: '',
   sex: '',
-  mentalHealthMethod: '',
   completed: false,
 };
 
@@ -79,8 +80,34 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setOnboardingData((prev) => ({ ...prev, ...data }));
   };
 
-  const completeOnboarding = () => {
+  const completeOnboarding = async () => {
     setOnboardingData((prev) => ({ ...prev, completed: true }));
+
+    // Submit onboarding data to Supabase (non-blocking)
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      const revenuecatUserId = customerInfo.originalAppUserId;
+
+      // Convert camelCase to snake_case for Supabase
+      await submitOnboardingData(revenuecatUserId, {
+        name: onboardingData.name,
+        age: onboardingData.age,
+        sex: onboardingData.sex,
+        mental_health_methods: onboardingData.mentalHealthMethods,
+        streak_goal: onboardingData.streakGoal,
+        categories: onboardingData.categories,
+        notifications_enabled: onboardingData.notificationsEnabled,
+        notifications_per_day: onboardingData.notificationsPerDay,
+        notification_start_time: onboardingData.notificationStartTime,
+        notification_end_time: onboardingData.notificationEndTime,
+        widget_installed: onboardingData.widgetInstalled,
+        premium_trial_start_date: onboardingData.premiumTrialStartDate,
+        premium_paywall_action: onboardingData.premiumPaywallAction,
+      });
+    } catch (error) {
+      // Fail silently - don't block user flow if Supabase submission fails
+      console.error('Failed to submit onboarding data to Supabase:', error);
+    }
   };
 
   const value = {

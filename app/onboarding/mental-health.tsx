@@ -3,31 +3,37 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { BadgeGroup } from '../../components/BadgeSelector';
 import { Button } from '../../components/Button';
-import { RadioGroup } from '../../components/RadioCard';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
 const MENTAL_HEALTH_OPTIONS = [
-  { label: 'Meditation', value: 'meditation' },
-  { label: 'Exercise', value: 'exercise' },
-  { label: 'Socializing', value: 'socializing' },
-  { label: 'Nature', value: 'nature' },
-  { label: 'Journaling', value: 'journaling' },
-  { label: 'Therapy', value: 'therapy' },
-  { label: 'Other', value: 'other' },
+  { label: '🧘 Meditation', value: 'meditation' },
+  { label: '💪 Exercise', value: 'exercise' },  
+  { label: '👥 Socializing', value: 'socializing' },
+  { label: '🌿 Nature', value: 'nature' },
+  { label: '📝 Journaling', value: 'journaling' },
+  { label: '🧠 Therapy', value: 'therapy' },
+  { label: '📚 Reading', value: 'reading' },
+  { label: '🎵 Music', value: 'music' },
+  { label: '🎨 Art', value: 'art' },
+  { label: '🌬️ Breathing exercises', value: 'breathing' },
+  { label: '✨ Other', value: 'other' },
 ];
 
 export default function MentalHealthScreen() {
   const router = useRouter();
   const { onboardingData, updateOnboardingData } = useOnboarding();
-  const [selectedMethod, setSelectedMethod] = useState(onboardingData.mentalHealthMethod || '');
+  const [selectedMethods, setSelectedMethods] = useState<string[]>(
+    onboardingData.mentalHealthMethods || []
+  );
 
   const handleNext = () => {
-    if (!selectedMethod) return;
+    if (selectedMethods.length === 0) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    updateOnboardingData({ mentalHealthMethod: selectedMethod });
+    updateOnboardingData({ mentalHealthMethods: selectedMethods });
     router.push('/onboarding/benefits');
   };
 
@@ -48,14 +54,15 @@ export default function MentalHealthScreen() {
         <View style={styles.content}>
           <Text style={styles.title}>How do you improve your mental health?</Text>
           <Text style={styles.subtitle}>
-            I'm curious about what works for you
+            Select all that work for you
           </Text>
 
-          <RadioGroup
+          <BadgeGroup
             options={MENTAL_HEALTH_OPTIONS}
-            selectedValue={selectedMethod}
-            onValueChange={setSelectedMethod}
-            style={styles.radioGroup}
+            selectedValues={selectedMethods}
+            onValuesChange={setSelectedMethods}
+            multiSelect={true}
+            style={styles.badgeGroup}
           />
         </View>
       </KeyboardAwareScrollView>
@@ -65,7 +72,7 @@ export default function MentalHealthScreen() {
           variant="primary"
           size="large"
           onPress={handleNext}
-          disabled={!selectedMethod}
+          disabled={selectedMethods.length === 0}
           style={styles.button}
         >
           Next
@@ -107,7 +114,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 30,
   },
-  radioGroup: {
+  badgeGroup: {
     marginBottom: 24,
   },
   buttonContainer: {
