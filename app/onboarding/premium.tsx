@@ -19,16 +19,16 @@ export default function PremiumScreen() {
 
   const schedulePremiumReminder = async () => {
     try {
-      // Schedule notification for 2 days from now (48 hours)
+      // Schedule notification for 6 days from now (1 day before 7-day trial ends)
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Your free trial ends tomorrow 💫",
-          body: "No surprise, no pressure! Just a friendly reminder about your 3-day premium trial.",
+          body: "No surprise, no pressure! Just a friendly reminder about your 7-day premium trial.",
           sound: true,
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 2 * 24 * 60 * 60, // 2 days in seconds
+          seconds: 6 * 24 * 60 * 60, // 6 days in seconds
         },
       });
     } catch (error) {
@@ -112,7 +112,7 @@ export default function PremiumScreen() {
           A special offer, just for you
         </Text>
         <Text style={styles.subtitle}>
-          Because you're here, enjoy 3 days of Premium, on us. We'll remind you the day before it ends.
+          Because you&apos;re here, enjoy 7 days of Premium, on us. We&apos;ll remind you the day before it ends.
         </Text>
       </View>
 
