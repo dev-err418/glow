@@ -73,6 +73,12 @@ export default function OnboardingLayout() {
         }}
       />
       <Stack.Screen
+        name="notification-permission"
+        options={{
+          title: 'Enable notifications',
+        }}
+      />
+      <Stack.Screen
         name="streak-intro"
         options={{
           title: 'Build your streak',

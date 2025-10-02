@@ -1,8 +1,8 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import * as Haptics from 'expo-haptics';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
@@ -18,8 +18,7 @@ export default function BenefitsScreen() {
   return (
     <View style={styles.container}>
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.scrollContent}
-        bottomOffset={40}
+        contentContainerStyle={styles.scrollContent}        
       >
         <View style={styles.mascotContainer}>
           <Image
@@ -32,12 +31,7 @@ export default function BenefitsScreen() {
         <View style={styles.content}>
           <Text style={styles.title}>The benefits of daily affirmations</Text>
 
-          <View style={styles.benefitsContainer}>
-            {/* <BenefitItem
-              emoji="💪"
-              title="Boost self-confidence"
-              description="Regular affirmations help build a positive self-image and strengthen your belief in yourself"
-            /> */}
+          <View style={styles.benefitsContainer}>            
             <BenefitItem
               emoji="🧘"
               title="Reduce stress"
@@ -97,7 +91,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 50,
   },
   mascotContainer: {
     alignItems: 'center',

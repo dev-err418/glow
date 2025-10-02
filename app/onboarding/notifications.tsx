@@ -66,14 +66,8 @@ export default function NotificationsScreen() {
       setNotificationsEnabled(true);
       router.push('/onboarding/streak-intro');
     } else {
-      Alert.alert(
-        'Notification Permission',
-        'To receive daily affirmations, please enable notifications in your device settings.',
-        [
-          { text: 'Later', onPress: () => { router.push('/onboarding/streak-intro'); } },
-          { text: 'OK', onPress: () => { router.push('/onboarding/streak-intro'); } },
-        ]
-      );
+      // User denied permissions, show encouragement screen
+      router.push('/onboarding/notification-permission');
     }
   };
 
@@ -139,8 +133,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 40,
+    paddingTop: 20,
+    paddingBottom: 50,
   },
   title: {
     ...Typography.h2,
