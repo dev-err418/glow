@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useLayoutEffect } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
@@ -12,7 +12,24 @@ export default function WidgetScreen() {
 
   const handleInstallWidget = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/onboarding/premium');
+
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'How to add a widget',
+        '1. Long press on your home screen\n\n2. Tap the "+" button in the top corner\n\n3. Search for "Glow"\n\n4. Select your preferred widget size\n\n5. Tap "Add Widget"',
+        [
+          {
+            text: 'Got it!',
+            onPress: () => {
+              router.push('/onboarding/premium');
+            },
+          },
+        ]
+      );
+    } else {
+      // Android widget setup (future implementation)
+      router.push('/onboarding/premium');
+    }
   };
 
   const handleSkip = () => {
