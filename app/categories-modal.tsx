@@ -1,12 +1,14 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { AnimatedMascot } from '../components/AnimatedMascot';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
+import { usePremium } from '../contexts/PremiumContext';
 
 interface CategoryCardProps {
   title: string;
@@ -16,16 +18,36 @@ interface CategoryCardProps {
 }
 
 function CategoryCard({ title, icon, isLocked, onPress }: CategoryCardProps) {
+  const { isPremium, showPaywall } = usePremium();
+  const shouldShowLock = isLocked && !isPremium;
+
+  const handlePress = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (shouldShowLock) {
+      // Show paywall for locked categories
+      try {
+        const result = await showPaywall();
+        if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          // Category will be unlocked after premium status updates
+          onPress?.();
+        }
+      } catch (error) {
+        console.error('Error showing paywall:', error);
+      }
+    } else {
+      onPress?.();
+    }
+  };
+
   return (
     <TouchableOpacity
       style={styles.categoryCard}
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress?.();
-      }}
+      onPress={handlePress}
       activeOpacity={0.7}
     >
-      {isLocked && (
+      {shouldShowLock && (
         <View style={styles.lockIconContainer}>
           <Ionicons name="lock-closed" size={16} color={Colors.text.light} />
         </View>
@@ -42,10 +64,26 @@ function CategoryCard({ title, icon, isLocked, onPress }: CategoryCardProps) {
 
 export default function CategoriesModal() {
   const router = useRouter();
+  const { isPremium, showPaywall } = usePremium();
+  const [isProcessingPaywall, setIsProcessingPaywall] = useState(false);
 
-  const handleUnlockAll = () => {
+  const handleUnlockAll = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // TODO: Implement unlock all functionality
+
+    if (!isPremium) {
+      // Show paywall for non-premium users
+      setIsProcessingPaywall(true);
+      try {
+        const result = await showPaywall();
+        if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } catch (error) {
+        console.error('Error showing paywall:', error);
+      } finally {
+        setIsProcessingPaywall(false);
+      }
+    }
   };
 
   const mostPopular = [
@@ -103,14 +141,39 @@ export default function CategoriesModal() {
             {/* Create My Own Mix Button */}
             <TouchableOpacity
               style={styles.createMixButton}
-              onPress={() => {
+              onPress={async () => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push('/mix-modal');
+
+                if (!isPremium) {
+                  // Show paywall for non-premium users
+                  setIsProcessingPaywall(true);
+                  try {
+                    const result = await showPaywall();
+                    if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      router.push('/mix-modal');
+                    }
+                  } catch (error) {
+                    console.error('Error showing paywall:', error);
+                  } finally {
+                    setIsProcessingPaywall(false);
+                  }
+                } else {
+                  // Premium users can access directly
+                  router.push('/mix-modal');
+                }
               }}
               activeOpacity={0.7}
+              disabled={isProcessingPaywall}
             >
-              <Ionicons name="add-circle" size={24} color={Colors.text.white} />
-              <Text style={styles.createMixText}>Create my own mix</Text>
+              {isProcessingPaywall ? (
+                <ActivityIndicator color={Colors.text.white} size="small" />
+              ) : (
+                <>
+                  <Ionicons name="add-circle" size={24} color={Colors.text.white} />
+                  <Text style={styles.createMixText}>Create my own mix</Text>
+                </>
+              )}
             </TouchableOpacity>
 
             {/* Most Popular Section */}

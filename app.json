@@ -2,21 +2,23 @@
   "expo": {
     "name": "Glow",
     "slug": "glow",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "glow",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "appleTeamId": "9UM2PH25RQ",
+      "appleTeamId": "53AJ925PGL",
       "entitlements": {
         "com.apple.security.application-groups": [
-          "group.com.glow.widget",
-          "group.com.glow.widget"
+          "group.com.arthurbuildsstuff.glow.widget"
         ]
       },
-      "bundleIdentifier": "com.anonymous.glow"
+      "bundleIdentifier": "com.arthurbuildsstuff.glow",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +29,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.glow"
+      "package": "com.arthurbuildsstuff.glow"
     },
     "web": {
       "output": "static",
@@ -52,6 +54,30 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "bundleIdentifier": "com.arthurbuildsstuff.glow.widget",
+                  "targetName": "widget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.arthurbuildsstuff.glow.widget"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "b242ebda-9b6d-43d0-b69e-c48980b0210e"
+      }
+    },
+    "owner": "arthursdev"
   }
 }

@@ -1,17 +1,21 @@
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
 import { useNavigation, useRouter } from 'expo-router';
-import React, { useLayoutEffect } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useLayoutEffect, useState } from 'react';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
+import { usePremium } from '../../contexts/PremiumContext';
 
 export default function PremiumScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { completeOnboarding, updateOnboardingData } = useOnboarding();
+  const { showPaywall } = usePremium();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const schedulePremiumReminder = async () => {
     try {
@@ -33,18 +37,49 @@ export default function PremiumScreen() {
   };
 
   const handleStartTrial = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const trialStartDate = new Date().toISOString();
-    updateOnboardingData({
-      premiumTrialStartDate: trialStartDate,
-      premiumPaywallAction: 'started_trial'
-    });
-    await schedulePremiumReminder();
-    completeOnboarding();
-    router.replace('/');
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setIsProcessing(true);
+
+      // Show RevenueCat paywall
+      const result = await showPaywall();
+
+      if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
+        // User purchased or restored premium
+        const trialStartDate = new Date().toISOString();
+        updateOnboardingData({
+          premiumTrialStartDate: trialStartDate,
+          premiumPaywallAction: 'started_trial'
+        });
+        await schedulePremiumReminder();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        completeOnboarding();
+        router.replace('/');
+      } else if (result === PAYWALL_RESULT.CANCELLED) {
+        // User cancelled the paywall - don't navigate away
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else if (result === PAYWALL_RESULT.NOT_PRESENTED) {
+        // User already has premium
+        updateOnboardingData({
+          premiumPaywallAction: 'started_trial'
+        });
+        completeOnboarding();
+        router.replace('/');
+      } else if (result === PAYWALL_RESULT.ERROR) {
+        // Handle error
+        console.error('Error showing paywall');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } catch (error) {
+      console.error('Error in handleStartTrial:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     updateOnboardingData({ premiumPaywallAction: 'skipped' });
     completeOnboarding();
     router.replace('/');
@@ -87,8 +122,13 @@ export default function PremiumScreen() {
           size="large"
           onPress={handleStartTrial}
           style={styles.button}
+          disabled={isProcessing}
         >
-          Start free trial
+          {isProcessing ? (
+            <ActivityIndicator color={Colors.text.white} />
+          ) : (
+            'Start free trial'
+          )}
         </Button>
       </View>
     </View>

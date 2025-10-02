@@ -4,14 +4,17 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Colors } from "../constants/Colors";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import { OnboardingProvider } from "../contexts/OnboardingContext";
+import { PremiumProvider } from "../contexts/PremiumContext";
 
 export default function RootLayout() {
+
   return (
     <KeyboardProvider>
-      <NotificationProvider>
-        <OnboardingProvider>
-          <StatusBar barStyle={"dark-content"} />
-          <Stack
+      <PremiumProvider>
+        <NotificationProvider>
+          <OnboardingProvider>
+            <StatusBar barStyle={"dark-content"} />
+            <Stack
         screenOptions={{
           headerStyle: {
             backgroundColor: Colors.secondary,
@@ -57,8 +60,9 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-        </OnboardingProvider>
-      </NotificationProvider>
+          </OnboardingProvider>
+        </NotificationProvider>
+      </PremiumProvider>
     </KeyboardProvider>
   );
 }
