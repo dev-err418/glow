@@ -1,6 +1,7 @@
-import { useRouter, useNavigation } from 'expo-router';
-import React, { useState, useLayoutEffect } from 'react';
-import { Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useLayoutEffect, useState } from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Button } from '../../components/Button';
 import { RadioGroup } from '../../components/RadioCard';
@@ -25,6 +26,7 @@ export default function StreakGoalScreen() {
     if (selectedGoal) {
       updateOnboardingData({ streakGoal: parseInt(selectedGoal) });
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/onboarding/categories');
   };
 
@@ -35,7 +37,7 @@ export default function StreakGoalScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={handleSkip} style={{ marginRight: 8 }}>
+        <TouchableOpacity onPress={handleSkip} style={{ marginHorizontal: 4 }}>
           <Text style={{ color: Colors.text.secondary, fontSize: 16 }}>
             Skip
           </Text>
@@ -96,11 +98,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   mascotContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 30,
   },
   mascot: {
@@ -124,8 +126,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

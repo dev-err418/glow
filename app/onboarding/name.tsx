@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -19,6 +20,7 @@ export default function NameScreen() {
       setError('Please enter your name');
       return;
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     updateOnboardingData({ name: name.trim() });
     router.push('/onboarding/age');
   };
@@ -63,7 +65,7 @@ export default function NameScreen() {
         </View>
       </KeyboardAwareScrollView>
 
-      <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+      <KeyboardStickyView offset={{ closed: 0, opened: 15 }}>
         <View style={styles.buttonContainer}>
           <Button
             variant="primary"
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
   },
   mascotContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 30,
   },
   mascot: {
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 24,
     paddingVertical: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

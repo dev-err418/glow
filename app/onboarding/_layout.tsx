@@ -1,7 +1,11 @@
-import { Stack } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { TouchableOpacity } from "react-native";
 import { Colors } from "../../constants/Colors";
 
 export default function OnboardingLayout() {
+  const router = useRouter();
+
   return (
     <Stack
       screenOptions={{
@@ -12,8 +16,17 @@ export default function OnboardingLayout() {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-        headerBackTitle: 'Back',
+        headerBackTitle: '',
         headerShadowVisible: false,
+        headerLeft: ({ canGoBack }) =>
+          canGoBack ? (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginLeft: 2 }}
+            >
+              <Ionicons name="chevron-back" size={28} color={Colors.secondary} />
+            </TouchableOpacity>
+          ) : null,
       }}
     >
       <Stack.Screen

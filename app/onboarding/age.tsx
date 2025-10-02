@@ -1,10 +1,11 @@
+import { Button } from '@/components/Button';
+import { RadioGroup } from '@/components/RadioCard';
+import { Colors } from '@/constants/Colors';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { Button } from '../../components/Button';
-import { RadioGroup } from '../../components/RadioCard';
-import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
@@ -23,6 +24,7 @@ export default function AgeScreen() {
 
   const handleNext = () => {
     if (!selectedAge) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     updateOnboardingData({ age: selectedAge });
     router.push('/onboarding/sex');
   };
@@ -52,7 +54,7 @@ export default function AgeScreen() {
             selectedValue={selectedAge}
             onValueChange={setSelectedAge}
             style={styles.radioGroup}
-          />
+          />           
         </View>
       </KeyboardAwareScrollView>
 
@@ -77,13 +79,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.default,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   mascotContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 30,
   },
   mascot: {
@@ -107,8 +110,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

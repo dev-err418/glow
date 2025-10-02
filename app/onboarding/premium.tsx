@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useLayoutEffect } from 'react';
@@ -32,6 +33,7 @@ export default function PremiumScreen() {
   };
 
   const handleStartTrial = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const trialStartDate = new Date().toISOString();
     updateOnboardingData({ premiumTrialStartDate: trialStartDate });
     await schedulePremiumReminder();
@@ -47,7 +49,7 @@ export default function PremiumScreen() {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={handleSkip} style={{ marginRight: 8 }}>
+        <TouchableOpacity onPress={handleSkip} style={{ marginHorizontal: 4 }}>
           <Text style={{ color: Colors.text.secondary, fontSize: 16 }}>
             Skip
           </Text>
@@ -97,6 +99,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    paddingBottom: 100,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -119,8 +122,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

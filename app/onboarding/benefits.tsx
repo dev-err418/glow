@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import * as Haptics from 'expo-haptics';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
@@ -10,6 +11,7 @@ export default function BenefitsScreen() {
   const router = useRouter();
 
   const handleContinue = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/onboarding/notifications');
   };
 
@@ -95,11 +97,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   mascotContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 30,
   },
   mascot: {
@@ -148,8 +150,11 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

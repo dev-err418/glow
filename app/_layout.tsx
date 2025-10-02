@@ -1,14 +1,16 @@
 import { Stack } from "expo-router";
+import { StatusBar } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { Colors } from "../constants/Colors";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import { OnboardingProvider } from "../contexts/OnboardingContext";
-import { Colors } from "../constants/Colors";
 
 export default function RootLayout() {
   return (
     <KeyboardProvider>
       <NotificationProvider>
         <OnboardingProvider>
+          <StatusBar barStyle={"dark-content"} />
           <Stack
         screenOptions={{
           headerStyle: {

@@ -1,7 +1,8 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../../components/Button';
 import { NotificationSettings } from '../../components/NotificationSettings';
 import { Colors } from '../../constants/Colors';
@@ -51,6 +52,8 @@ export default function NotificationsScreen() {
       Alert.alert('Invalid Time Range', 'End time must be after start time');
       return;
     }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     // Update notification settings
     setNotificationsPerDay(localCount);
@@ -147,7 +150,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...Typography.subtitle,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 15,
   },
   animationContainer: {
     alignItems: 'center',
@@ -166,9 +169,11 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
   },
   buttonContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    backgroundColor: Colors.background.default,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
   },
   button: {
     width: '100%',

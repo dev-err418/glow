@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import * as Haptics from 'expo-haptics';
 import { Button } from '../../components/Button';
 import { RadioGroup } from '../../components/RadioCard';
 import { Colors } from '../../constants/Colors';
@@ -25,6 +26,7 @@ export default function MentalHealthScreen() {
 
   const handleNext = () => {
     if (!selectedMethod) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     updateOnboardingData({ mentalHealthMethod: selectedMethod });
     router.push('/onboarding/benefits');
   };
@@ -81,11 +83,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   mascotContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 30,
   },
   mascot: {
@@ -109,8 +111,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

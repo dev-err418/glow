@@ -2,20 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 export default function StreakIntroScreen() {
   const router = useRouter();
 
   // Entrance animations
-  const mascotAnimation = useRef(new Animated.Value(screenHeight * 0.3)).current;
-  const horizontalAnimation = useRef(new Animated.Value(0)).current;
+  const mascotAnimation = useRef(new Animated.Value(screenHeight * 0.2)).current;
+  const horizontalAnimation = useRef(new Animated.Value(-screenWidth)).current;
   const rotationAnimation = useRef(new Animated.Value(0)).current;
-  const scaleAnimation = useRef(new Animated.Value(1)).current;
+  const scaleAnimation = useRef(new Animated.Value(0.8)).current;
 
   // Continuous gentle animations
   const breathingScale = useRef(new Animated.Value(1)).current;
@@ -31,8 +32,8 @@ export default function StreakIntroScreen() {
   }, []);
 
   const resetMascotPosition = () => {
-    mascotAnimation.setValue(screenHeight * 0.3);
-    horizontalAnimation.setValue(-30);
+    mascotAnimation.setValue(screenHeight * 0.2);
+    horizontalAnimation.setValue(-screenWidth);
     rotationAnimation.setValue(0);
     scaleAnimation.setValue(0.8);
   };
@@ -112,6 +113,7 @@ export default function StreakIntroScreen() {
   };
 
   const handleContinue = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/onboarding/streak-goal');
   };
 
@@ -349,8 +351,11 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

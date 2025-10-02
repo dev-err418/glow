@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
@@ -14,6 +15,11 @@ export function RadioCard({ label, selected, onPress, style }: RadioCardProps) {
   const parts = label.split(' - ');
   const hasTwoParts = parts.length === 2;
 
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -21,7 +27,7 @@ export function RadioCard({ label, selected, onPress, style }: RadioCardProps) {
         selected && styles.cardSelected,
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       activeOpacity={0.7}
     >
       {hasTwoParts ? (
@@ -132,6 +138,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.secondary,
   },
   group: {
+    flex: 1,
     width: '100%',
   },
 });

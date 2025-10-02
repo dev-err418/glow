@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { Button } from '../../components/Button';
@@ -22,6 +23,7 @@ export default function SexScreen() {
 
   const handleNext = () => {
     if (!selectedSex) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     updateOnboardingData({ sex: selectedSex });
     router.push('/onboarding/mental-health');
   };
@@ -76,13 +78,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.default,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   mascotContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 30,
   },
   mascot: {
@@ -106,8 +109,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 24,
-    backgroundColor: Colors.background.default,
   },
   button: {
     width: '100%',

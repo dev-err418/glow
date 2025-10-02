@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { Button } from '../../components/Button';
@@ -165,6 +166,7 @@ export default function Welcome() {
   };
 
   const handleGetStarted = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/onboarding/name');
   };
 
@@ -323,5 +325,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     paddingBottom: 16,
+    backgroundColor: 'transparent',
   },
 });
