@@ -37,6 +37,20 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="categories-modal"
+          options={{
+            presentation: 'modal',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="mix-modal"
+          options={{
+            presentation: 'modal',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
           name="onboarding"
           options={{
             headerShown: false

@@ -1,8 +1,8 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import * as Haptics from 'expo-haptics';
 import { Button } from '../../components/Button';
 import { RadioGroup } from '../../components/RadioCard';
 import { Colors } from '../../constants/Colors';
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 70,
   },
   mascotContainer: {
     alignItems: 'center',

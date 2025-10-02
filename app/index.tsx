@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, ActivityIndicator, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { Colors } from '../constants/Colors';
@@ -44,6 +46,17 @@ export default function Index() {
           <View style={styles.content}>
             <Text style={styles.title}>Welcome back!</Text>
             <Text style={styles.subtitle}>Your daily affirmations await</Text>
+
+            <TouchableOpacity
+              style={styles.categoriesButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push('/categories-modal');
+              }}
+            >
+              <Ionicons name="grid" size={24} color={Colors.text.white} />
+              <Text style={styles.categoriesButtonText}>Browse Categories</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.button}
@@ -121,6 +134,30 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
     marginBottom: 30,
+  },
+  categoriesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+    shadowColor: Colors.shadow.medium,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  categoriesButtonText: {
+    color: Colors.text.white,
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   button: {
     backgroundColor: Colors.primary,
