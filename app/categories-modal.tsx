@@ -107,18 +107,15 @@ export default function CategoriesModal() {
       return;
     }
 
-    setLocalSelectedCategories((prev) => {
-      if (prev.includes(categoryValue)) {
-        // Remove if already selected (unless it's the last one)
-        if (prev.length === 1) {
-          return prev; // Keep at least one category selected
-        }
-        return prev.filter((c) => c !== categoryValue);
-      } else {
-        // Add if not selected
-        return [...prev, categoryValue];
-      }
-    });
+    // Single selection mode: replace with new selection
+    const newSelection = [categoryValue];
+    setLocalSelectedCategories(newSelection);
+
+    // Auto-save and close modal
+    updateSelectedCategories(newSelection);
+    setTimeout(() => {
+      router.back();
+    }, 150); // Small delay for visual feedback
   };
 
   const handleClose = () => {

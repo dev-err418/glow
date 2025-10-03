@@ -114,7 +114,7 @@ export default function Index() {
   const router = useRouter();
   const { onboardingData, isLoading: isOnboardingLoading } = useOnboarding();
   const { selectedCategories, isLoading: isCategoriesLoading } = useCategories();
-  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { addFavorite, removeFavorite, isFavorite, favorites } = useFavorites();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -157,18 +157,25 @@ export default function Index() {
     if (!isCategoriesLoading && selectedCategories.length > 0) {
       initializeQuotePool();
     }
-  }, [selectedCategories, isCategoriesLoading]);
+  }, [selectedCategories, isCategoriesLoading, favorites]);
 
   const initializeQuotePool = () => {
     const allQuotes: Quote[] = [];
 
     // Gather quotes from selected categories
     selectedCategories.forEach((category) => {
-      const categoryQuotes = quotesData[category];
-      if (categoryQuotes && Array.isArray(categoryQuotes)) {
-        categoryQuotes.forEach((text: string) => {
-          allQuotes.push({ text, category });
+      if (category === 'favorites') {
+        // Special handling for favorites category
+        favorites.forEach((favorite) => {
+          allQuotes.push(favorite);
         });
+      } else {
+        const categoryQuotes = quotesData[category];
+        if (categoryQuotes && Array.isArray(categoryQuotes)) {
+          categoryQuotes.forEach((text: string) => {
+            allQuotes.push({ text, category });
+          });
+        }
       }
     });
 
@@ -349,11 +356,18 @@ export default function Index() {
     />
   );
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0 && viewableItems[0].item) {
-      setCurrentCategory(viewableItems[0].item.category);
+  // Update category badge when selected category changes
+  useEffect(() => {
+    if (selectedCategories.length > 0) {
+      const categoryName = selectedCategories[0];
+      // Format for display: capitalize first letter and handle hyphens
+      const formatted = categoryName
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      setCurrentCategory(formatted);
     }
-  }).current;
+  }, [selectedCategories]);
 
   const resetIdleTimer = () => {
     // Clear existing timer
@@ -462,8 +476,6 @@ export default function Index() {
             bounces={true}
             onEndReached={loadMoreQuotes}
             onEndReachedThreshold={0.5}
-            onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
             onScroll={resetIdleTimer}
             scrollEventThrottle={400}
           />
@@ -590,7 +602,7 @@ export default function Index() {
   // Show loading while checking/redirecting
   return (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={Colors.primary} />
+      <ActivityIndicator color={Colors.primary} />
     </View>
   );
 }
