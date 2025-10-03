@@ -140,34 +140,43 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const totalMinutes = (endHour - startHour) * 60;
       const interval = Math.floor(totalMinutes / notificationsPerDay);
 
-      for (let i = 0; i < notificationsPerDay; i++) {
-        const triggerTime = startHour * 60 + (interval * i) + Math.random() * 30;
-        const hours = Math.floor(triggerTime / 60);
-        const minutes = Math.floor(triggerTime % 60);
+      // Schedule for multiple days to ensure proper distribution
+      const daysToSchedule = 7; // Schedule for a week
 
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "✨ Daily Affirmation",
-            body: getRandomQuote(selectedCategories),
-            sound: true,
-          },
-          trigger: {
-            hour: hours,
-            minute: minutes,
-            repeats: true,
-          },
-        });
+      for (let day = 0; day < daysToSchedule; day++) {
+        for (let i = 0; i < notificationsPerDay; i++) {
+          // Calculate trigger time with randomization
+          const baseMinutes = startHour * 60 + (interval * i);
+          const randomOffset = Math.floor(Math.random() * (interval * 0.8)); // Randomize within 80% of interval
+          const triggerTime = baseMinutes + randomOffset;
+          const hours = Math.floor(triggerTime / 60);
+          const minutes = Math.floor(triggerTime % 60);
+
+          // Calculate trigger date
+          const triggerDate = new Date();
+          triggerDate.setDate(triggerDate.getDate() + day);
+          triggerDate.setHours(hours, minutes, 0, 0);
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "⤵",
+              body: getRandomQuote(selectedCategories),
+              sound: true,
+            },
+            trigger: triggerDate,
+          });
+        }
       }
     }
 
-    // Schedule evening streak reminder (8-9 PM)
+    // Schedule evening streak reminder once per day (8 PM)
     if (streakReminderEnabled) {
       const reminderHour = 20; // 8 PM
       const reminderMinute = Math.floor(Math.random() * 60); // Random minute
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "🔥 Streak Reminder",
+          title: "Streak reminder",
           body: STREAK_REMINDERS[Math.floor(Math.random() * STREAK_REMINDERS.length)],
           sound: true,
         },
