@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ExtensionStorage } from '@bacons/apple-targets';
 
 export interface FavoriteQuote {
   text: string;
@@ -18,6 +19,9 @@ const FavoritesContext = createContext<FavoritesContextType | undefined>(undefin
 
 const STORAGE_KEY = 'favoriteQuotes';
 
+// Create extension storage for sharing data with widget
+const widgetStorage = new ExtensionStorage('group.com.arthurbuildsstuff.glow.widget');
+
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<FavoriteQuote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,10 +31,11 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     loadFavorites();
   }, []);
 
-  // Save favorites when they change
+  // Save favorites when they change (both to AsyncStorage and widget storage)
   useEffect(() => {
     if (!isLoading) {
       saveFavorites();
+      shareFavoritesWithWidget();
     }
   }, [favorites, isLoading]);
 
@@ -41,10 +46,18 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(savedFavorites);
         if (Array.isArray(parsed)) {
           setFavorites(parsed);
+          // Share initial favorites with widget
+          try {
+            console.log('📤 App: Loading initial favorites for widget, count:', parsed.length);
+            widgetStorage.set('favoriteQuotes', JSON.stringify(parsed));
+            console.log('✅ App: Initial favorites set in shared storage');
+          } catch (error) {
+            console.log('❌ App: Error sharing initial favorites with widget:', error);
+          }
         }
       }
     } catch (error) {
-      console.error('Error loading favorites:', error);
+      console.error('❌ App: Error loading favorites:', error);
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +68,18 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
     } catch (error) {
       console.error('Error saving favorites:', error);
+    }
+  };
+
+  const shareFavoritesWithWidget = () => {
+    try {
+      console.log('📤 App: Sharing favorites with widget, count:', favorites.length);
+      widgetStorage.set('favoriteQuotes', JSON.stringify(favorites));
+      console.log('✅ App: Favorites successfully shared with widget');
+      // Note: Widget reload removed to prevent app from reloading on every like/unlike
+      // Widget will get updated data on its next natural refresh or when category changes
+    } catch (error) {
+      console.log('❌ App: Error sharing favorites with widget:', error);
     }
   };
 

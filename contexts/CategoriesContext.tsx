@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ExtensionStorage } from '@bacons/apple-targets';
 
 interface CategoriesContextType {
   selectedCategories: string[];
@@ -11,6 +12,9 @@ const CategoriesContext = createContext<CategoriesContextType | undefined>(undef
 
 const STORAGE_KEY = 'selectedCategories';
 const DEFAULT_CATEGORIES = ['general'];
+
+// Create extension storage for sharing data with widget
+const widgetStorage = new ExtensionStorage('group.com.arthurbuildsstuff.glow.widget');
 
 export function CategoriesProvider({ children }: { children: React.ReactNode }) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -35,10 +39,18 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
         const parsed = JSON.parse(savedCategories);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setSelectedCategories(parsed);
+          // Share initial category with widget
+          try {
+            console.log('📤 App: Loading initial category for widget:', parsed[0]);
+            widgetStorage.set('selectedCategory', parsed[0]);
+            console.log('✅ App: Initial category set in shared storage');
+          } catch (error) {
+            console.log('❌ App: Error sharing initial category with widget:', error);
+          }
         }
       }
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.error('❌ App: Error loading categories:', error);
     } finally {
       setIsLoading(false);
     }
@@ -54,10 +66,19 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
 
   const updateSelectedCategories = (categories: string[]) => {
     // Ensure at least one category is selected
-    if (categories.length === 0) {
-      setSelectedCategories(DEFAULT_CATEGORIES);
-    } else {
-      setSelectedCategories(categories);
+    const newCategories = categories.length === 0 ? DEFAULT_CATEGORIES : categories;
+    setSelectedCategories(newCategories);
+
+    // Share selected category with widget
+    try {
+      const categoryToShare = newCategories[0];
+      console.log('📤 App: Setting widget category to:', categoryToShare);
+      widgetStorage.set('selectedCategory', categoryToShare);
+      console.log('✅ App: Successfully set selectedCategory in shared storage');
+      ExtensionStorage.reloadWidget();
+      console.log('🔄 App: Widget reload triggered');
+    } catch (error) {
+      console.log('❌ App: Error sharing category with widget:', error);
     }
   };
 

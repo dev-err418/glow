@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -136,6 +137,12 @@ export default function Index() {
   // Store base pool of all available quotes
   const quotePoolRef = useRef<Quote[]>([]);
 
+  // FlatList ref for scrolling to specific quote
+  const flatListRef = useRef<FlatList>(null);
+
+  // Track if we've handled the initial deep link URL
+  const hasHandledInitialUrl = useRef(false);
+
   // Animated values for mascot position (left and bottom)
   const mascotLeft = useRef(new Animated.Value(MASCOT_HIDDEN.left)).current;
   const mascotBottom = useRef(new Animated.Value(MASCOT_HIDDEN.bottom)).current;
@@ -157,7 +164,16 @@ export default function Index() {
     if (!isCategoriesLoading && selectedCategories.length > 0) {
       initializeQuotePool();
     }
-  }, [selectedCategories, isCategoriesLoading, favorites]);
+  }, [selectedCategories, isCategoriesLoading]);
+
+  // Separate effect to handle favorites changes when viewing favorites category
+  useEffect(() => {
+    // Only reload quotes if currently viewing favorites category
+    if (!isCategoriesLoading && selectedCategories.includes('favorites')) {
+      console.log('♥️ Favorites changed while viewing favorites category, reloading quotes');
+      initializeQuotePool();
+    }
+  }, [favorites]);
 
   const initializeQuotePool = () => {
     const allQuotes: Quote[] = [];
@@ -444,6 +460,59 @@ export default function Index() {
     };
   }, []);
 
+  // Handle deep links from widget
+  useEffect(() => {
+    // Handle initial URL when app is opened from widget
+    const handleInitialURL = async () => {
+      if (hasHandledInitialUrl.current) return;
+
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        hasHandledInitialUrl.current = true;
+        handleDeepLink(initialUrl);
+      }
+    };
+
+    // Handle URL when app is already open
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      handleDeepLink(url);
+    });
+
+    handleInitialURL();
+
+    return () => {
+      subscription.remove();
+    };
+  }, []); // Remove quotes dependency to prevent re-running on quote updates
+
+  const handleDeepLink = (url: string) => {
+    const parsed = Linking.parse(url);
+
+    // Check if it's a quote deep link
+    if (parsed.hostname === 'quote' && parsed.queryParams) {
+      const quoteText = parsed.queryParams.text as string;
+      const category = parsed.queryParams.category as string;
+
+      console.log('📱 Deep link received:', { quoteText, category });
+
+      // Find the quote in our quotes array
+      const quoteIndex = quotes.findIndex(q => q.text === quoteText);
+
+      if (quoteIndex !== -1) {
+        // Scroll to the quote
+        flatListRef.current?.scrollToIndex({
+          index: quoteIndex,
+          animated: true,
+        });
+        console.log('✅ Scrolled to quote at index:', quoteIndex);
+      } else {
+        // Quote not found in current feed, show it in an alert or add to top
+        console.log('⚠️ Quote not found in feed, showing alert');
+        Alert.alert('Quote from Widget', quoteText);
+      }
+    }
+  };
+
   // Show loading spinner while data is loading
   if (isOnboardingLoading || isCategoriesLoading) {
     return (
@@ -465,6 +534,7 @@ export default function Index() {
           }}
         >
           <FlatList
+            ref={flatListRef}
             data={quotes}
             renderItem={renderQuote}
             keyExtractor={(item, index) => `quote-${index}`}
@@ -478,6 +548,16 @@ export default function Index() {
             onEndReachedThreshold={0.5}
             onScroll={resetIdleTimer}
             scrollEventThrottle={400}
+            onScrollToIndexFailed={(info) => {
+              console.log('⚠️ Scroll to index failed:', info);
+              // Retry after a delay
+              setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: true,
+                });
+              }, 100);
+            }}
           />
         </Animated.View>
 

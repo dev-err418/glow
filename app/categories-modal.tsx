@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PAYWALL_RESULT } from 'react-native-purchases-ui';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedMascot } from '../components/AnimatedMascot';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
-import { usePremium } from '../contexts/PremiumContext';
 import { useCategories } from '../contexts/CategoriesContext';
+import { useFavorites } from '../contexts/FavoritesContext';
+import { usePremium } from '../contexts/PremiumContext';
 
 interface CategoryCardProps {
   title: string;
@@ -18,9 +19,10 @@ interface CategoryCardProps {
   isLocked?: boolean;
   isSelected?: boolean;
   onPress?: () => void;
+  subtitle?: string;
 }
 
-function CategoryCard({ title, value, icon, isLocked, isSelected, onPress }: CategoryCardProps) {
+function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subtitle }: CategoryCardProps) {
   const { isPremium, showPaywall } = usePremium();
   const shouldShowLock = isLocked && !isPremium;
 
@@ -61,7 +63,12 @@ function CategoryCard({ title, value, icon, isLocked, isSelected, onPress }: Cat
         </View>
       )}
       <View style={styles.categoryContent}>
-        <Text style={styles.categoryTitle}>{title}</Text>
+        <View>
+          <Text style={styles.categoryTitle}>{title}</Text>
+          {subtitle && (
+            <Text style={styles.categorySubtitle}>{subtitle}</Text>
+          )}
+        </View>
         <View style={styles.iconContainer}>
           <Ionicons name={icon} size={24} color={Colors.primary} />
         </View>
@@ -74,6 +81,7 @@ export default function CategoriesModal() {
   const router = useRouter();
   const { isPremium, showPaywall } = usePremium();
   const { selectedCategories, updateSelectedCategories } = useCategories();
+  const { favorites } = useFavorites();
   const [isProcessingPaywall, setIsProcessingPaywall] = useState(false);
   const [localSelectedCategories, setLocalSelectedCategories] = useState<string[]>(selectedCategories);
 
@@ -102,10 +110,27 @@ export default function CategoriesModal() {
   };
 
   const handleCategoryToggle = (categoryValue: string, isLocked: boolean) => {
+    console.log('🔍 Category toggle:', categoryValue, 'Locked:', isLocked, 'Favorites count:', favorites.length);
+
     if (isLocked && !isPremium) {
       // Already handled in CategoryCard
+      console.log('⚠️ Category is locked and user is not premium');
       return;
     }
+
+    // Check if favorites has minimum required quotes
+    if (categoryValue === 'favorites' && favorites.length < 5) {
+      console.log('⚠️ Not enough favorites:', favorites.length, '< 5');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Alert.alert(
+        'Not enough favorites',
+        'You need at least 5 favorite quotes to use this category. Keep liking quotes you love!',
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
+    console.log('✅ Category check passed, proceeding with selection');
 
     // Single selection mode: replace with new selection
     const newSelection = [categoryValue];
@@ -128,7 +153,13 @@ export default function CategoriesModal() {
   const mostPopular = [
     { title: 'General', value: 'general', icon: 'sparkles' as const, isLocked: false },
     { title: 'My own quotes', value: 'custom', icon: 'create' as const, isLocked: false },
-    { title: 'My favorites', value: 'favorites', icon: 'heart' as const, isLocked: false },
+    {
+      title: 'My favorites',
+      value: 'favorites',
+      icon: 'heart' as const,
+      isLocked: false,
+      subtitle: `${favorites.length} ${favorites.length === 1 ? 'quote' : 'quotes'}`
+    },
     { title: 'Winter', value: 'winter', icon: 'snow' as const, isLocked: true },
   ];
 
@@ -156,13 +187,15 @@ export default function CategoriesModal() {
           <Ionicons name="close" size={28} color={Colors.text.primary} />
         </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={handleUnlockAll}
-              style={styles.headerButton}
-            >
-              <Text style={styles.unlockText}>Unlock all</Text>
-            </TouchableOpacity>
-          </View>
+        {!isPremium && (
+          <TouchableOpacity
+            onPress={handleUnlockAll}
+            style={styles.headerButton}
+          >
+            <Text style={styles.unlockText}>Unlock all</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
           {/* Title */}
           <Text style={styles.pageTitle}>Categories</Text>
@@ -225,6 +258,7 @@ export default function CategoriesModal() {
                     isLocked={category.isLocked}
                     isSelected={localSelectedCategories.includes(category.value)}
                     onPress={() => handleCategoryToggle(category.value, category.isLocked)}
+                    subtitle={'subtitle' in category ? category.subtitle : undefined}
                   />
                 ))}
               </View>
@@ -364,8 +398,13 @@ const styles = StyleSheet.create({
     ...Typography.body,
     fontWeight: '600',
     color: Colors.text.primary,
-    marginBottom: 8,
+    marginBottom: 4,
     flexWrap: 'wrap',
+  },
+  categorySubtitle: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    marginTop: 2,
   },
   iconContainer: {
     alignSelf: 'flex-end',
