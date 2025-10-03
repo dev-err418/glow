@@ -17,6 +17,7 @@ interface NotificationContextType {
   requestPermissions: () => Promise<boolean>;
   scheduleNotifications: (selectedCategories?: string[]) => void;
   cancelAllNotifications: () => void;
+  getAllScheduledNotifications: () => Promise<Notifications.NotificationRequest[]>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -142,6 +143,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       // Schedule for multiple days to ensure proper distribution
       const daysToSchedule = 7; // Schedule for a week
+      const now = new Date();
 
       for (let day = 0; day < daysToSchedule; day++) {
         for (let i = 0; i < notificationsPerDay; i++) {
@@ -157,13 +159,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           triggerDate.setDate(triggerDate.getDate() + day);
           triggerDate.setHours(hours, minutes, 0, 0);
 
+          // Skip if the notification time is in the past
+          if (triggerDate <= now) {
+            console.log('Skipping past notification:', triggerDate);
+            continue;
+          }
+
           await Notifications.scheduleNotificationAsync({
             content: {
               title: "⤵",
               body: getRandomQuote(selectedCategories),
               sound: true,
             },
-            trigger: triggerDate,
+            trigger: { type: 'date', date: triggerDate },
           });
         }
       }
@@ -193,6 +201,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     await Notifications.cancelAllScheduledNotificationsAsync();
   };
 
+  const getAllScheduledNotifications = async (): Promise<Notifications.NotificationRequest[]> => {
+    return await Notifications.getAllScheduledNotificationsAsync();
+  };
+
   // Re-schedule when settings change
   useEffect(() => {
     if ((notificationsEnabled || streakReminderEnabled) && permissionStatus === 'granted') {
@@ -217,6 +229,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     requestPermissions,
     scheduleNotifications,
     cancelAllNotifications,
+    getAllScheduledNotifications,
   };
 
   return (

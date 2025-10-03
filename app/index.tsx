@@ -11,7 +11,6 @@ import {
   Dimensions,
   Easing,
   FlatList,
-  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -377,15 +376,15 @@ export default function Index() {
     resetIdleTimer();
   };
 
-  const handleShare = async (quote: Quote) => {
+  const handleShare = (quote: Quote) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await Share.share({
-        message: `"${quote.text}"\n\n— ${quote.category}`,
-      });
-    } catch (error) {
-      console.error('Error sharing quote:', error);
-    }
+    router.push({
+      pathname: '/share-modal',
+      params: {
+        text: quote.text,
+        category: quote.category,
+      },
+    });
   };
 
   const handleMascotPress = () => {

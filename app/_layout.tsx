@@ -55,6 +55,13 @@ export default function RootLayout() {
                         }}
                       />
                       <Stack.Screen
+                        name="share-modal"
+                        options={{
+                          presentation: 'modal',
+                          headerShown: false
+                        }}
+                      />
+                      <Stack.Screen
                         name="settings"
                         options={{
                           presentation: 'modal',
