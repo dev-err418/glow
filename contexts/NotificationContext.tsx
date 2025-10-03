@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { AppState } from 'react-native';
+import { useStreak } from './StreakContext';
+import { useCategories } from './CategoriesContext';
 
 interface NotificationContextType {
   notificationsPerDay: number;
@@ -39,15 +42,17 @@ const STREAK_REMINDERS = [
   "Your streak is waiting! Keep the momentum going ✨",
   "End your day strong! Swipe a quote to keep your streak 💪",
   "Almost bedtime! Don't forget your daily dose of positivity 🌙",
-  "5 minutes to maintain your streak! You've got this 🌟",
   "Keep that fire burning! 🔥 One swipe keeps your streak alive",
   "Your daily glow moment awaits! Don't let your streak fade ⭐",
   "Bedtime check-in! Maintain your beautiful streak tonight 💫",
   "Quick reminder: Your streak needs you! 💝 Take a moment",
-  "End the day with intention! Keep your streak going strong 🌺"
+  "End the day with intention! Keep your streak going strong 🌺",
+  "Time to glow! Keep your streak alive with one swipe 🌟"
 ];
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const { streakDays } = useStreak();
+  const { selectedCategories } = useCategories();
   const [notificationsPerDay, setNotificationsPerDay] = useState(3);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [streakReminderEnabled, setStreakReminderEnabled] = useState(true);
@@ -107,15 +112,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return status === 'granted';
   };
 
-  const getRandomQuote = (categories: string[] = ['general']): string => {
-    const allQuotes: string[] = [];
+  const getRandomQuote = (categories: string[] = ['general']): { id: string; text: string } => {
+    const allQuotes: { id: string; text: string }[] = [];
 
     categories.forEach((category) => {
       const categoryQuotes = quotesData[category];
       if (categoryQuotes && Array.isArray(categoryQuotes)) {
-        // Extract text from quote objects
-        const quoteTexts = categoryQuotes.map((q: any) => q.text);
-        allQuotes.push(...quoteTexts);
+        // Extract full quote objects with IDs
+        allQuotes.push(...categoryQuotes);
       }
     });
 
@@ -123,21 +127,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Fallback to general quotes
       const generalQuotes = quotesData['general'];
       if (generalQuotes && Array.isArray(generalQuotes)) {
-        const quoteTexts = generalQuotes.map((q: any) => q.text);
-        allQuotes.push(...quoteTexts);
+        allQuotes.push(...generalQuotes);
       }
     }
 
     return allQuotes.length > 0
       ? allQuotes[Math.floor(Math.random() * allQuotes.length)]
-      : "Take a moment to appreciate yourself 🌸";
+      : { id: 'general-1', text: "Take a moment to appreciate yourself 🌸" };
   };
 
   const scheduleNotifications = async (selectedCategories: string[] = ['general']) => {
     if (permissionStatus !== 'granted') return;
 
-    // Cancel existing notifications first
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    console.log('🔔 Scheduling notifications for categories:', selectedCategories);
 
     // Schedule daily affirmation notifications
     if (notificationsEnabled && notificationsPerDay > 0) {
@@ -157,46 +159,77 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           const hours = Math.floor(triggerTime / 60);
           const minutes = Math.floor(triggerTime % 60);
 
-          // Calculate trigger date
-          const triggerDate = new Date();
-          triggerDate.setDate(triggerDate.getDate() + day);
+          // Calculate trigger date - create base date from 'now' to ensure consistency
+          const triggerDate = new Date(now);
+          triggerDate.setDate(now.getDate() + day);
           triggerDate.setHours(hours, minutes, 0, 0);
 
-          // Skip if the notification time is in the past
-          if (triggerDate <= now) {
+          // Skip if the notification time is in the past (with 1 minute buffer)
+          if (triggerDate.getTime() <= now.getTime() + 60000) {
             console.log('Skipping past notification:', triggerDate);
             continue;
           }
 
+          const quote = getRandomQuote(selectedCategories);
+
           await Notifications.scheduleNotificationAsync({
             content: {
               title: "⤵",
-              body: getRandomQuote(selectedCategories),
+              body: quote.text,
               sound: true,
+              data: { quoteId: quote.id },
             },
-            trigger: { type: 'date', date: triggerDate },
+            trigger: {
+              type: 'date',
+              date: triggerDate,
+            },
           });
         }
       }
     }
 
-    // Schedule evening streak reminder once per day (8 PM)
+    // Schedule streak reminders (max 2 per day, only if today's streak not completed)
     if (streakReminderEnabled) {
-      const reminderHour = 20; // 8 PM
-      const reminderMinute = Math.floor(Math.random() * 60); // Random minute
+      const today = new Date().toISOString().split('T')[0];
+      const hasCompletedToday = streakDays.includes(today);
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Streak reminder",
-          body: STREAK_REMINDERS[Math.floor(Math.random() * STREAK_REMINDERS.length)],
-          sound: true,
-        },
-        trigger: {
-          hour: reminderHour,
-          minute: reminderMinute,
-          repeats: true,
-        },
-      });
+      if (!hasCompletedToday) {
+        // Calculate reminder times: 2 hours and 1 hour before end time
+        const reminder1Hour = endHour - 2;
+        const reminder2Hour = endHour - 1;
+
+        // Schedule first reminder (2 hours before end) if it's after start time
+        if (reminder1Hour >= startHour) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Streak reminder",
+              body: STREAK_REMINDERS[Math.floor(Math.random() * STREAK_REMINDERS.length)],
+              sound: true,
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DAILY,
+              hour: reminder1Hour,
+              minute: Math.floor(Math.random() * 60),
+            },
+          });
+        }
+
+        // Schedule second reminder (1 hour before end) if it's after start time
+        if (reminder2Hour >= startHour) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Streak reminder",
+              body: STREAK_REMINDERS[Math.floor(Math.random() * STREAK_REMINDERS.length)],
+              sound: true,
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DAILY,
+              hour: reminder2Hour,
+              minute: Math.floor(Math.random() * 60),
+            },
+          });
+        }
+      }
     }
   };
 
@@ -208,14 +241,52 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return await Notifications.getAllScheduledNotificationsAsync();
   };
 
-  // Re-schedule when settings change
+  // Check and reschedule notifications when app comes to foreground
   useEffect(() => {
-    if ((notificationsEnabled || streakReminderEnabled) && permissionStatus === 'granted') {
-      scheduleNotifications();
-    } else if (!notificationsEnabled && !streakReminderEnabled) {
-      cancelAllNotifications();
-    }
-  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, permissionStatus, startHour, endHour]);
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (nextAppState === 'active' && permissionStatus === 'granted') {
+        const scheduled = await getAllScheduledNotifications();
+        const threshold = notificationsPerDay * 5; // 5 days worth
+
+        console.log(`🔍 App opened: ${scheduled.length} notifications scheduled (threshold: ${threshold})`);
+
+        if (scheduled.length < threshold && (notificationsEnabled || streakReminderEnabled)) {
+          console.log('⚠️ Low on notifications, auto-rescheduling...');
+          await cancelAllNotifications();
+          await scheduleNotifications(selectedCategories);
+          const newScheduled = await getAllScheduledNotifications();
+          console.log(`✅ Auto-rescheduled ${newScheduled.length} notifications`);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, permissionStatus, selectedCategories]);
+
+  // Re-schedule when settings change (with debouncing)
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      console.log('📅 Notification settings changed, rescheduling...');
+      console.log('📂 Using categories:', selectedCategories);
+
+      if ((notificationsEnabled || streakReminderEnabled) && permissionStatus === 'granted') {
+        // Cancel all first to ensure clean slate
+        await cancelAllNotifications();
+        await scheduleNotifications(selectedCategories);
+
+        // Log count for debugging
+        const scheduled = await getAllScheduledNotifications();
+        console.log(`✅ Scheduled ${scheduled.length} notifications`);
+      } else if (!notificationsEnabled && !streakReminderEnabled) {
+        await cancelAllNotifications();
+        console.log('🗑️ All notifications canceled');
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, permissionStatus, startHour, endHour, streakDays, selectedCategories]);
 
   const value = {
     notificationsPerDay,

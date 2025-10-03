@@ -10,6 +10,7 @@ import { CategoriesProvider } from "../contexts/CategoriesContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { StreakProvider } from "../contexts/StreakContext";
+import "../services/notificationService"; // Configure notification handler
 
 function RootLayoutContent() {
   const router = useRouter();
@@ -87,21 +88,21 @@ export default function RootLayout() {
   return (
     <KeyboardProvider>
       <PremiumProvider>
-      <NotificationProvider>
-        <OnboardingProvider>
+        <StreakProvider>
           <CategoriesProvider>
-            <FavoritesProvider>
-              <CustomQuotesProvider>
-                <StreakProvider>
-                  <StatusBar barStyle={"dark-content"} />
-                  <RootLayoutContent />
-                </StreakProvider>
-              </CustomQuotesProvider>
-            </FavoritesProvider>
+            <NotificationProvider>
+              <OnboardingProvider>
+                <FavoritesProvider>
+                  <CustomQuotesProvider>
+                    <StatusBar barStyle={"dark-content"} />
+                    <RootLayoutContent />
+                  </CustomQuotesProvider>
+                </FavoritesProvider>
+              </OnboardingProvider>
+            </NotificationProvider>
           </CategoriesProvider>
-        </OnboardingProvider>
-      </NotificationProvider>
-    </PremiumProvider>
-  </KeyboardProvider>
+        </StreakProvider>
+      </PremiumProvider>
+    </KeyboardProvider>
   );
 }

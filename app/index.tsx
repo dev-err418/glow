@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -174,6 +175,23 @@ export default function Index() {
       return () => clearTimeout(timer);
     }
   }, [isOnboardingLoading, onboardingData.completed]);
+
+  // Handle notification taps to deep link to specific quote
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const quoteId = response.notification.request.content.data?.quoteId as string | undefined;
+
+      if (quoteId) {
+        console.log('📬 Notification tapped with quote ID:', quoteId);
+        // Replace entire navigation stack with index route including quote ID
+        router.replace(`/?id=${quoteId}`);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
 
   // Record streak activity when onboarding completes or when user views quotes
   useEffect(() => {

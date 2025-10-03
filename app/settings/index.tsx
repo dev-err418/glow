@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedMascot } from '../../components/AnimatedMascot';
@@ -10,8 +10,6 @@ import { StreakDisplay } from '../../components/StreakDisplay';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
-import { useNotifications } from '../../contexts/NotificationContext';
-import { useCategories } from '../../contexts/CategoriesContext';
 
 interface SettingsRowProps {
   label: string;
@@ -46,10 +44,6 @@ function SettingsRow({ label, value, icon, onPress, showDivider = true }: Settin
 export default function SettingsIndex() {
   const router = useRouter();
   const { onboardingData } = useOnboarding();
-  const { getAllScheduledNotifications, cancelAllNotifications, scheduleNotifications } = useNotifications();
-  const { selectedCategories } = useCategories();
-  const [showDebugInfo, setShowDebugInfo] = useState(false);
-  const [debugNotifications, setDebugNotifications] = useState<any[]>([]);
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -93,112 +87,6 @@ export default function SettingsIndex() {
       default:
         return 'Not set';
     }
-  };
-
-  const handleViewNotifications = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      const notifications = await getAllScheduledNotifications();
-      setDebugNotifications(notifications);
-      setShowDebugInfo(!showDebugInfo);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      Alert.alert('Error', 'Failed to fetch scheduled notifications');
-    }
-  };
-
-  const handleClearAndReschedule = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Clear & Reschedule Notifications',
-      'This will cancel all existing notifications and create fresh ones based on your current settings. Continue?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Clear & Reschedule',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await cancelAllNotifications();
-              await scheduleNotifications(selectedCategories);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert('Success', 'Notifications have been rescheduled!');
-              // Refresh the list
-              const notifications = await getAllScheduledNotifications();
-              setDebugNotifications(notifications);
-            } catch (error) {
-              console.error('Error rescheduling notifications:', error);
-              Alert.alert('Error', 'Failed to reschedule notifications');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const formatTriggerTime = (trigger: any): string => {
-    if (trigger.type === 'date') {
-      const date = new Date(trigger.value);
-      const now = new Date();
-
-      // Calculate time difference
-      const diffMs = date.getTime() - now.getTime();
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffHours / 24);
-
-      // Format the date with day of week
-      const formattedDate = date.toLocaleString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
-
-      // Add relative time
-      let relativeTime = '';
-      if (diffHours < 1) {
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
-        relativeTime = ` (in ${diffMinutes}m)`;
-      } else if (diffHours < 24) {
-        relativeTime = ` (in ${diffHours}h)`;
-      } else if (diffDays === 1) {
-        relativeTime = ' (tomorrow)';
-      } else if (diffDays < 7) {
-        relativeTime = ` (in ${diffDays}d)`;
-      }
-
-      return formattedDate + relativeTime;
-    } else if (trigger.type === 'daily' || trigger.type === 'timeInterval') {
-      if (trigger.hour !== undefined && trigger.minute !== undefined) {
-        // Calculate next occurrence
-        const now = new Date();
-        const nextOccurrence = new Date();
-        nextOccurrence.setHours(trigger.hour, trigger.minute, 0, 0);
-
-        // If time has passed today, set to tomorrow
-        if (nextOccurrence <= now) {
-          nextOccurrence.setDate(nextOccurrence.getDate() + 1);
-        }
-
-        const formattedTime = nextOccurrence.toLocaleString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        });
-
-        return `${formattedTime} (repeats daily)`;
-      }
-      return 'Repeating';
-    }
-    return 'Unknown trigger';
   };
 
   return (
@@ -286,69 +174,6 @@ export default function SettingsIndex() {
             />
           </View>
         </View>
-
-        {/* Debug Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Debug</Text>
-          <View style={styles.settingsCard}>
-            <TouchableOpacity
-              style={styles.settingRow}
-              onPress={handleViewNotifications}
-              activeOpacity={0.7}
-            >
-              <View style={styles.settingLeft}>
-                <Ionicons name="bug-outline" size={20} color={Colors.secondary} />
-                <Text style={styles.settingLabel}>View Notifications</Text>
-              </View>
-              <View style={styles.settingRight}>
-                <Text style={styles.settingValue}>{debugNotifications.length} scheduled</Text>
-                <Ionicons
-                  name={showDebugInfo ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color={Colors.text.light}
-                />
-              </View>
-            </TouchableOpacity>
-
-            {/* Debug Info - Expandable */}
-            {showDebugInfo && (
-              <View style={styles.debugContainer}>
-                {debugNotifications.length === 0 ? (
-                  <Text style={styles.debugEmptyText}>No notifications scheduled</Text>
-                ) : (
-                  <>
-                    <ScrollView style={styles.notificationsList} nestedScrollEnabled>
-                      {debugNotifications.map((notif, index) => (
-                        <View key={notif.identifier || index} style={styles.notificationItem}>
-                          <View style={styles.notificationHeader}>
-                            <Text style={styles.notificationTitle}>
-                              {notif.content.title || 'No Title'}
-                            </Text>
-                            <Text style={styles.notificationTime}>
-                              {formatTriggerTime(notif.trigger)}
-                            </Text>
-                          </View>
-                          <Text style={styles.notificationBody} numberOfLines={2}>
-                            {notif.content.body}
-                          </Text>
-                          <Text style={styles.notificationId}>ID: {notif.identifier}</Text>
-                        </View>
-                      ))}
-                    </ScrollView>
-                    <TouchableOpacity
-                      style={styles.clearButton}
-                      onPress={handleClearAndReschedule}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="refresh-outline" size={20} color={Colors.text.white} />
-                      <Text style={styles.clearButtonText}>Clear & Reschedule</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            )}
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -431,77 +256,5 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border.light,
     marginLeft: 16,
-  },
-  debugContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: Colors.background.secondary,
-  },
-  debugEmptyText: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
-  notificationsList: {
-    maxHeight: 300,
-    marginTop: 12,
-  },
-  notificationItem: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.primary,
-  },
-  notificationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 6,
-  },
-  notificationTitle: {
-    ...Typography.body,
-    fontWeight: '600',
-    color: Colors.text.primary,
-    flex: 1,
-    marginRight: 8,
-  },
-  notificationTime: {
-    ...Typography.body,
-    fontSize: 12,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  notificationBody: {
-    ...Typography.body,
-    fontSize: 13,
-    color: Colors.text.secondary,
-    marginBottom: 6,
-    lineHeight: 18,
-  },
-  notificationId: {
-    ...Typography.body,
-    fontSize: 10,
-    color: Colors.text.light,
-    fontFamily: 'monospace',
-  },
-  clearButton: {
-    backgroundColor: Colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginTop: 16,
-    gap: 8,
-  },
-  clearButtonText: {
-    ...Typography.button,
-    color: Colors.text.white,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
