@@ -5,6 +5,8 @@ import { Colors } from "../constants/Colors";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
+import { CategoriesProvider } from "../contexts/CategoriesContext";
+import { FavoritesProvider } from "../contexts/FavoritesContext";
 
 export default function RootLayout() {
 
@@ -13,6 +15,8 @@ export default function RootLayout() {
       <PremiumProvider>
         <NotificationProvider>
           <OnboardingProvider>
+            <CategoriesProvider>
+              <FavoritesProvider>
             <StatusBar barStyle={"dark-content"} />
             <Stack
         screenOptions={{
@@ -53,6 +57,8 @@ export default function RootLayout() {
           }}
         />
       </Stack>
+              </FavoritesProvider>
+            </CategoriesProvider>
           </OnboardingProvider>
         </NotificationProvider>
       </PremiumProvider>

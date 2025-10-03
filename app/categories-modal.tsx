@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -9,15 +9,18 @@ import { AnimatedMascot } from '../components/AnimatedMascot';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { usePremium } from '../contexts/PremiumContext';
+import { useCategories } from '../contexts/CategoriesContext';
 
 interface CategoryCardProps {
   title: string;
+  value: string;
   icon: keyof typeof Ionicons.glyphMap;
   isLocked?: boolean;
+  isSelected?: boolean;
   onPress?: () => void;
 }
 
-function CategoryCard({ title, icon, isLocked, onPress }: CategoryCardProps) {
+function CategoryCard({ title, value, icon, isLocked, isSelected, onPress }: CategoryCardProps) {
   const { isPremium, showPaywall } = usePremium();
   const shouldShowLock = isLocked && !isPremium;
 
@@ -43,13 +46,18 @@ function CategoryCard({ title, icon, isLocked, onPress }: CategoryCardProps) {
 
   return (
     <TouchableOpacity
-      style={styles.categoryCard}
+      style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
       {shouldShowLock && (
         <View style={styles.lockIconContainer}>
           <Ionicons name="lock-closed" size={16} color={Colors.text.light} />
+        </View>
+      )}
+      {isSelected && !shouldShowLock && (
+        <View style={styles.checkIconContainer}>
+          <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
         </View>
       )}
       <View style={styles.categoryContent}>
@@ -65,7 +73,14 @@ function CategoryCard({ title, icon, isLocked, onPress }: CategoryCardProps) {
 export default function CategoriesModal() {
   const router = useRouter();
   const { isPremium, showPaywall } = usePremium();
+  const { selectedCategories, updateSelectedCategories } = useCategories();
   const [isProcessingPaywall, setIsProcessingPaywall] = useState(false);
+  const [localSelectedCategories, setLocalSelectedCategories] = useState<string[]>(selectedCategories);
+
+  // Sync with context when it changes
+  useEffect(() => {
+    setLocalSelectedCategories(selectedCategories);
+  }, [selectedCategories]);
 
   const handleUnlockAll = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -86,24 +101,51 @@ export default function CategoriesModal() {
     }
   };
 
+  const handleCategoryToggle = (categoryValue: string, isLocked: boolean) => {
+    if (isLocked && !isPremium) {
+      // Already handled in CategoryCard
+      return;
+    }
+
+    setLocalSelectedCategories((prev) => {
+      if (prev.includes(categoryValue)) {
+        // Remove if already selected (unless it's the last one)
+        if (prev.length === 1) {
+          return prev; // Keep at least one category selected
+        }
+        return prev.filter((c) => c !== categoryValue);
+      } else {
+        // Add if not selected
+        return [...prev, categoryValue];
+      }
+    });
+  };
+
+  const handleClose = () => {
+    // Save selections before closing
+    updateSelectedCategories(localSelectedCategories);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
+  };
+
   const mostPopular = [
-    { title: 'General', icon: 'sparkles' as const, isLocked: false },
-    { title: 'My own quotes', icon: 'create' as const, isLocked: false },
-    { title: 'My favorites', icon: 'heart' as const, isLocked: false },
-    { title: 'Winter', icon: 'snow' as const, isLocked: true },
+    { title: 'General', value: 'general', icon: 'sparkles' as const, isLocked: false },
+    { title: 'My own quotes', value: 'custom', icon: 'create' as const, isLocked: false },
+    { title: 'My favorites', value: 'favorites', icon: 'heart' as const, isLocked: false },
+    { title: 'Winter', value: 'winter', icon: 'snow' as const, isLocked: true },
   ];
 
   const forYou = [
-    { title: 'Self-care', icon: 'flower' as const, isLocked: true },
-    { title: 'Mindfulness', icon: 'leaf' as const, isLocked: true },
-    { title: 'Motivation', icon: 'rocket' as const, isLocked: true },
-    { title: 'Gratitude', icon: 'heart-circle' as const, isLocked: true },
-    { title: 'Confidence', icon: 'star' as const, isLocked: true },
-    { title: 'Peace', icon: 'sunny' as const, isLocked: true },
-    { title: 'Growth', icon: 'trending-up' as const, isLocked: true },
-    { title: 'Energy', icon: 'flash' as const, isLocked: true },
-    { title: 'Overthinking', icon: 'infinite' as const, isLocked: true },
-    { title: 'Stress relief', icon: 'happy' as const, isLocked: true },
+    { title: 'Self-care', value: 'self-care', icon: 'flower' as const, isLocked: true },
+    { title: 'Mindfulness', value: 'mindfulness', icon: 'leaf' as const, isLocked: true },
+    { title: 'Motivation', value: 'motivation', icon: 'rocket' as const, isLocked: true },
+    { title: 'Gratitude', value: 'gratitude', icon: 'heart-circle' as const, isLocked: true },
+    { title: 'Confidence', value: 'confidence', icon: 'star' as const, isLocked: true },
+    { title: 'Peace', value: 'peace', icon: 'sunny' as const, isLocked: true },
+    { title: 'Growth', value: 'growth', icon: 'trending-up' as const, isLocked: true },
+    { title: 'Energy', value: 'energy', icon: 'flash' as const, isLocked: true },
+    { title: 'Overthinking', value: 'overthinking', icon: 'infinite' as const, isLocked: true },
+    { title: 'Stress relief', value: 'stress-relief', icon: 'happy' as const, isLocked: true },
   ];
 
   return (
@@ -111,14 +153,11 @@ export default function CategoriesModal() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.back();
-          }}
+          onPress={handleClose}
           style={styles.headerButton}
         >
-              <Ionicons name="close" size={28} color={Colors.text.primary} />
-            </TouchableOpacity>
+          <Ionicons name="close" size={28} color={Colors.text.primary} />
+        </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleUnlockAll}
@@ -184,8 +223,11 @@ export default function CategoriesModal() {
                   <CategoryCard
                     key={index}
                     title={category.title}
+                    value={category.value}
                     icon={category.icon}
                     isLocked={category.isLocked}
+                    isSelected={localSelectedCategories.includes(category.value)}
+                    onPress={() => handleCategoryToggle(category.value, category.isLocked)}
                   />
                 ))}
               </View>
@@ -199,8 +241,11 @@ export default function CategoriesModal() {
                   <CategoryCard
                     key={index}
                     title={category.title}
+                    value={category.value}
                     icon={category.icon}
                     isLocked={category.isLocked}
+                    isSelected={localSelectedCategories.includes(category.value)}
+                    onPress={() => handleCategoryToggle(category.value, category.isLocked)}
                   />
                 ))}
               </View>
@@ -303,6 +348,16 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     zIndex: 1,
+  },
+  checkIconContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+  },
+  categoryCardSelected: {
+    borderWidth: 2,
+    borderColor: Colors.primary,
   },
   categoryContent: {
     flex: 1,
