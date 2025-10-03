@@ -450,7 +450,7 @@ export default function Index() {
   useEffect(() => {
     if (selectedCategories.length > 1) {
       // Multiple categories = mix mode
-      setCurrentCategory('My mix');
+      setCurrentCategory('my mix');
     } else if (selectedCategories.length === 1) {
       const categoryName = selectedCategories[0];
       // Format for display: capitalize first letter and handle hyphens

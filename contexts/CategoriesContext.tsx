@@ -39,13 +39,14 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
         const parsed = JSON.parse(savedCategories);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setSelectedCategories(parsed);
-          // Share initial category with widget
+          // Share initial categories with widget
           try {
-            console.log('📤 App: Loading initial category for widget:', parsed[0]);
-            widgetStorage.set('selectedCategory', parsed[0]);
-            console.log('✅ App: Initial category set in shared storage');
+            const categoriesJSON = JSON.stringify(parsed);
+            console.log('📤 App: Loading initial categories for widget:', parsed);
+            widgetStorage.set('selectedCategories', categoriesJSON);
+            console.log('✅ App: Initial categories set in shared storage');
           } catch (error) {
-            console.log('❌ App: Error sharing initial category with widget:', error);
+            console.log('❌ App: Error sharing initial categories with widget:', error);
           }
         }
       }
@@ -69,16 +70,16 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
     const newCategories = categories.length === 0 ? DEFAULT_CATEGORIES : categories;
     setSelectedCategories(newCategories);
 
-    // Share selected category with widget
+    // Share selected categories array with widget
     try {
-      const categoryToShare = newCategories[0];
-      console.log('📤 App: Setting widget category to:', categoryToShare);
-      widgetStorage.set('selectedCategory', categoryToShare);
-      console.log('✅ App: Successfully set selectedCategory in shared storage');
+      const categoriesJSON = JSON.stringify(newCategories);
+      console.log('📤 App: Setting widget categories to:', newCategories);
+      widgetStorage.set('selectedCategories', categoriesJSON);
+      console.log('✅ App: Successfully set selectedCategories in shared storage');
       ExtensionStorage.reloadWidget();
       console.log('🔄 App: Widget reload triggered');
     } catch (error) {
-      console.log('❌ App: Error sharing category with widget:', error);
+      console.log('❌ App: Error sharing categories with widget:', error);
     }
   };
 

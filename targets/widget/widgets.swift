@@ -91,52 +91,65 @@ struct Provider: TimelineProvider {
             return ("You are amazing", "error")
         }
 
-        // Read selected category from App Group shared storage
+        // Read selected categories array from App Group shared storage
         let defaults = UserDefaults(suiteName: "group.com.arthurbuildsstuff.glow.widget")
-        let selectedCategory = defaults?.string(forKey: "selectedCategory") ?? "general"
+        var selectedCategories: [String] = ["general"]
 
-        print("✅ Widget: Successfully read category from shared storage: '\(selectedCategory)'")
+        if let categoriesJSON = defaults?.string(forKey: "selectedCategories"),
+           let categoriesData = categoriesJSON.data(using: .utf8),
+           let categories = try? JSONDecoder().decode([String].self, from: categoriesData),
+           !categories.isEmpty {
+            selectedCategories = categories
+        }
+
+        print("✅ Widget: Successfully read categories from shared storage: \(selectedCategories)")
         print("📚 Widget: Available categories: \(quotesData.categories.keys.sorted())")
 
-        // Get quotes based on selected category
+        // Collect quotes from all selected categories
         var quotesToUse: [String] = []
-        var actualCategory = selectedCategory
+        var categoryLabels: [String] = []
 
-        if selectedCategory == "favorites" {
-            // Read favorites from shared storage
-            if let favoritesJSON = defaults?.string(forKey: "favoriteQuotes"),
-               let favoritesData = favoritesJSON.data(using: .utf8),
-               let favorites = try? JSONDecoder().decode([FavoriteQuote].self, from: favoritesData) {
-                print("✅ Widget: Found \(favorites.count) favorites in shared storage")
-                quotesToUse = favorites.map { $0.text }
-                actualCategory = "favorites (\(favorites.count))"
+        for category in selectedCategories {
+            if category == "favorites" {
+                // Read favorites from shared storage
+                if let favoritesJSON = defaults?.string(forKey: "favoriteQuotes"),
+                   let favoritesData = favoritesJSON.data(using: .utf8),
+                   let favorites = try? JSONDecoder().decode([FavoriteQuote].self, from: favoritesData) {
+                    print("✅ Widget: Found \(favorites.count) favorites in shared storage")
+                    quotesToUse.append(contentsOf: favorites.map { $0.text })
+                    categoryLabels.append("favorites")
+                } else {
+                    print("⚠️ Widget: No favorites found in shared storage")
+                }
+            } else if category == "custom" {
+                // Read custom quotes from shared storage
+                if let customJSON = defaults?.string(forKey: "customQuotes"),
+                   let customData = customJSON.data(using: .utf8),
+                   let customQuotes = try? JSONDecoder().decode([CustomQuote].self, from: customData) {
+                    print("✅ Widget: Found \(customQuotes.count) custom quotes in shared storage")
+                    quotesToUse.append(contentsOf: customQuotes.map { $0.text })
+                    categoryLabels.append("custom")
+                } else {
+                    print("⚠️ Widget: No custom quotes found in shared storage")
+                }
+            } else if let categoryQuotes = quotesData.categories[category] {
+                print("✅ Widget: Found \(categoryQuotes.count) quotes in '\(category)' category")
+                quotesToUse.append(contentsOf: categoryQuotes)
+                categoryLabels.append(category)
             } else {
-                print("⚠️ Widget: No favorites found in shared storage, falling back to general")
-                quotesToUse = quotesData.categories["general"] ?? []
-                actualCategory = "general (no favorites)"
+                print("⚠️ Widget: Category '\(category)' not found")
             }
-        } else if selectedCategory == "custom" {
-            // Read custom quotes from shared storage
-            if let customJSON = defaults?.string(forKey: "customQuotes"),
-               let customData = customJSON.data(using: .utf8),
-               let customQuotes = try? JSONDecoder().decode([CustomQuote].self, from: customData) {
-                print("✅ Widget: Found \(customQuotes.count) custom quotes in shared storage")
-                quotesToUse = customQuotes.map { $0.text }
-                actualCategory = "custom (\(customQuotes.count))"
-            } else {
-                print("⚠️ Widget: No custom quotes found in shared storage, falling back to general")
-                quotesToUse = quotesData.categories["general"] ?? []
-                actualCategory = "general (no custom)"
-            }
-        } else if let categoryQuotes = quotesData.categories[selectedCategory] {
-            print("✅ Widget: Found \(categoryQuotes.count) quotes in '\(selectedCategory)' category")
-            quotesToUse = categoryQuotes
-        } else {
-            // Fallback to general if category not found
-            print("⚠️ Widget: Category '\(selectedCategory)' not found, falling back to general")
-            quotesToUse = quotesData.categories["general"] ?? []
-            actualCategory = "general (fallback)"
         }
+
+        // If no quotes found, fallback to general
+        if quotesToUse.isEmpty {
+            print("⚠️ Widget: No quotes found in selected categories, falling back to general")
+            quotesToUse = quotesData.categories["general"] ?? []
+            categoryLabels = ["general"]
+        }
+
+        // Determine display label
+        let actualCategory = selectedCategories.count > 1 ? "My mix" : (categoryLabels.first ?? "general")
 
         guard !quotesToUse.isEmpty else {
             print("❌ Widget: No quotes available")
@@ -144,7 +157,7 @@ struct Provider: TimelineProvider {
         }
 
         let selectedQuote = quotesToUse.randomElement() ?? "You are amazing"
-        print("💬 Widget: Selected quote: '\(selectedQuote)'")
+        print("💬 Widget: Selected quote from \(quotesToUse.count) quotes: '\(selectedQuote)'")
         return (selectedQuote, actualCategory)
     }
 }

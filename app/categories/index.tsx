@@ -268,7 +268,7 @@ export default function CategoriesIndex() {
             )}
 
             {/* Most Popular Section */}
-            <View style={styles.section}>
+            <View style={[styles.section, selectedCategories.length === 1 && { marginTop: 16 }]}>
               <Text style={styles.sectionTitle}>Most Popular</Text>
               <View style={styles.grid}>
                 {mostPopular.map((category, index) => (
