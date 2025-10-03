@@ -448,7 +448,10 @@ export default function Index() {
 
   // Update category badge when selected category changes
   useEffect(() => {
-    if (selectedCategories.length > 0) {
+    if (selectedCategories.length > 1) {
+      // Multiple categories = mix mode
+      setCurrentCategory('My mix');
+    } else if (selectedCategories.length === 1) {
       const categoryName = selectedCategories[0];
       // Format for display: capitalize first letter and handle hyphens
       const formatted = categoryName

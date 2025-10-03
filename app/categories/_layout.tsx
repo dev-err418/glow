@@ -28,6 +28,13 @@ export default function CategoriesLayout() {
           headerBackTitle: 'Back',
         }}
       />
+      <Stack.Screen
+        name="create-mix"
+        options={{
+          title: '',
+          headerBackTitle: 'Back',
+        }}
+      />
     </Stack>
   );
 }

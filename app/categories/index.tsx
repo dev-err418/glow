@@ -9,8 +9,8 @@ import { AnimatedMascot } from '../../components/AnimatedMascot';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useCategories } from '../../contexts/CategoriesContext';
-import { useFavorites } from '../../contexts/FavoritesContext';
 import { useCustomQuotes } from '../../contexts/CustomQuotesContext';
+import { useFavorites } from '../../contexts/FavoritesContext';
 import { usePremium } from '../../contexts/PremiumContext';
 
 interface CategoryCardProps {
@@ -229,7 +229,7 @@ export default function CategoriesIndex() {
                     const result = await showPaywall();
                     if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
                       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                      router.push('/mix-modal');
+                      router.push('/categories/create-mix');
                     }
                   } catch (error) {
                     console.error('Error showing paywall:', error);
@@ -238,7 +238,7 @@ export default function CategoriesIndex() {
                   }
                 } else {
                   // Premium users can access directly
-                  router.push('/mix-modal');
+                  router.push('/categories/create-mix');
                 }
               }}
               activeOpacity={0.7}
@@ -248,11 +248,24 @@ export default function CategoriesIndex() {
                 <ActivityIndicator color={Colors.text.white} size="small" />
               ) : (
                 <>
-                  <Ionicons name="add-circle" size={24} color={Colors.text.white} />
-                  <Text style={styles.createMixText}>Create my own mix</Text>
+                  <Ionicons
+                    name={selectedCategories.length > 1 ? "create" : "add-circle"}
+                    size={24}
+                    color={Colors.text.white}
+                  />
+                  <Text style={styles.createMixText}>
+                    {selectedCategories.length > 1 ? "Edit my mix" : "Create my own mix"}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
+
+            {/* Mix Info Text */}
+            {selectedCategories.length > 1 && (
+              <Text style={styles.mixInfoText}>
+                Your feed is currently showing your mix. Select a category below to switch.
+              </Text>
+            )}
 
             {/* Most Popular Section */}
             <View style={styles.section}>
@@ -265,7 +278,11 @@ export default function CategoriesIndex() {
                     value={category.value}
                     icon={category.icon}
                     isLocked={category.isLocked}
-                    isSelected={localSelectedCategories.includes(category.value)}
+                    isSelected={
+                      // Only show as selected if NOT in mix mode (single category)
+                      localSelectedCategories.length === 1 &&
+                      localSelectedCategories.includes(category.value)
+                    }
                     onPress={() => {
                       // Navigate to custom screen if it has navigateTo
                       if ('navigateTo' in category && category.navigateTo) {
@@ -292,7 +309,11 @@ export default function CategoriesIndex() {
                     value={category.value}
                     icon={category.icon}
                     isLocked={category.isLocked}
-                    isSelected={localSelectedCategories.includes(category.value)}
+                    isSelected={
+                      // Only show as selected if NOT in mix mode (single category)
+                      localSelectedCategories.length === 1 &&
+                      localSelectedCategories.includes(category.value)
+                    }
                     onPress={() => handleCategoryToggle(category.value, category.isLocked)}
                   />
                 ))}
@@ -345,7 +366,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 24,
-    marginBottom: 32,
+    marginBottom: 16,
     shadowColor: Colors.shadow.medium,
     shadowOffset: {
       width: 0,
@@ -431,5 +452,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 8,
+  },
+  mixInfoText: {
+    ...Typography.bodySmall,
+    fontSize: 13,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    // marginTop: 12,
+    marginBottom: 32,
+    paddingHorizontal: 24,
   },
 });
