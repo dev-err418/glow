@@ -44,3 +44,5 @@ app-example
 
 *.tar.gz
 *.ipa
+
+.env.local
