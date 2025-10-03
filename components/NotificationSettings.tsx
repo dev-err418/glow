@@ -45,7 +45,7 @@ export function NotificationSettings({
               <Ionicons
                 name="remove"
                 size={28}
-                color={count <= 0 ? Colors.text.light : Colors.background.primary}
+                color={count <= 0 ? Colors.text.light : Colors.text.white}
               />
             </TouchableOpacity>
             <Text style={styles.countText}>{count}x</Text>
@@ -57,7 +57,7 @@ export function NotificationSettings({
               <Ionicons
                 name="add"
                 size={28}
-                color={count >= 20 ? Colors.text.light : Colors.background.primary}
+                color={count >= 20 ? Colors.text.light : Colors.text.white}
               />
             </TouchableOpacity>
           </View>

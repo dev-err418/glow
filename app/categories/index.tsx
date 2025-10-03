@@ -5,13 +5,13 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AnimatedMascot } from '../components/AnimatedMascot';
-import { Colors } from '../constants/Colors';
-import { Typography } from '../constants/Typography';
-import { useCategories } from '../contexts/CategoriesContext';
-import { useFavorites } from '../contexts/FavoritesContext';
-import { useCustomQuotes } from '../contexts/CustomQuotesContext';
-import { usePremium } from '../contexts/PremiumContext';
+import { AnimatedMascot } from '../../components/AnimatedMascot';
+import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
+import { useCategories } from '../../contexts/CategoriesContext';
+import { useFavorites } from '../../contexts/FavoritesContext';
+import { useCustomQuotes } from '../../contexts/CustomQuotesContext';
+import { usePremium } from '../../contexts/PremiumContext';
 
 interface CategoryCardProps {
   title: string;
@@ -78,7 +78,7 @@ function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subti
   );
 }
 
-export default function CategoriesModal() {
+export default function CategoriesIndex() {
   const router = useRouter();
   const { isPremium, showPaywall } = usePremium();
   const { selectedCategories, updateSelectedCategories } = useCategories();
@@ -160,7 +160,7 @@ export default function CategoriesModal() {
       icon: 'create' as const,
       isLocked: false,
       subtitle: `${customQuotes.length} ${customQuotes.length === 1 ? 'quote' : 'quotes'}`,
-      navigateTo: '/custom-quotes-modal'
+      navigateTo: '/categories/custom-quotes'
     },
     {
       title: 'My favorites',

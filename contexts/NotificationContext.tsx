@@ -7,13 +7,15 @@ interface NotificationContextType {
   setNotificationsPerDay: (count: number) => void;
   notificationsEnabled: boolean;
   setNotificationsEnabled: (enabled: boolean) => void;
+  streakReminderEnabled: boolean;
+  setStreakReminderEnabled: (enabled: boolean) => void;
   startHour: number;
   setStartHour: (hour: number) => void;
   endHour: number;
   setEndHour: (hour: number) => void;
   permissionStatus: string;
   requestPermissions: () => Promise<boolean>;
-  scheduleNotifications: () => void;
+  scheduleNotifications: (selectedCategories?: string[]) => void;
   cancelAllNotifications: () => void;
 }
 
@@ -22,13 +24,32 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 const STORAGE_KEYS = {
   NOTIFICATIONS_PER_DAY: 'notificationsPerDay',
   NOTIFICATIONS_ENABLED: 'notificationsEnabled',
+  STREAK_REMINDER_ENABLED: 'streakReminderEnabled',
   START_HOUR: 'startHour',
   END_HOUR: 'endHour',
 };
 
+// Import quotes data
+const quotesData = require('../assets/data/quotes.json');
+
+// Streak reminder messages
+const STREAK_REMINDERS = [
+  "Don't break the streak! 🔥 Check in before bed",
+  "Your streak is waiting! Keep the momentum going ✨",
+  "End your day strong! Swipe a quote to keep your streak 💪",
+  "Almost bedtime! Don't forget your daily dose of positivity 🌙",
+  "5 minutes to maintain your streak! You've got this 🌟",
+  "Keep that fire burning! 🔥 One swipe keeps your streak alive",
+  "Your daily glow moment awaits! Don't let your streak fade ⭐",
+  "Bedtime check-in! Maintain your beautiful streak tonight 💫",
+  "Quick reminder: Your streak needs you! 💝 Take a moment",
+  "End the day with intention! Keep your streak going strong 🌺"
+];
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notificationsPerDay, setNotificationsPerDay] = useState(3);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [streakReminderEnabled, setStreakReminderEnabled] = useState(true);
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(22);
   const [permissionStatus, setPermissionStatus] = useState('unknown');
@@ -42,17 +63,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Save preferences when they change
   useEffect(() => {
     savePreferences();
-  }, [notificationsPerDay, notificationsEnabled, startHour, endHour]);
+  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, startHour, endHour]);
 
   const loadPreferences = async () => {
     try {
       const savedCount = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS_PER_DAY);
       const savedEnabled = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS_ENABLED);
+      const savedStreakReminder = await AsyncStorage.getItem(STORAGE_KEYS.STREAK_REMINDER_ENABLED);
       const savedStartHour = await AsyncStorage.getItem(STORAGE_KEYS.START_HOUR);
       const savedEndHour = await AsyncStorage.getItem(STORAGE_KEYS.END_HOUR);
 
       if (savedCount) setNotificationsPerDay(parseInt(savedCount));
       if (savedEnabled) setNotificationsEnabled(savedEnabled === 'true');
+      if (savedStreakReminder) setStreakReminderEnabled(savedStreakReminder === 'true');
       if (savedStartHour) setStartHour(parseInt(savedStartHour));
       if (savedEndHour) setEndHour(parseInt(savedEndHour));
     } catch (error) {
@@ -64,6 +87,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS_PER_DAY, notificationsPerDay.toString());
       await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS_ENABLED, notificationsEnabled.toString());
+      await AsyncStorage.setItem(STORAGE_KEYS.STREAK_REMINDER_ENABLED, streakReminderEnabled.toString());
       await AsyncStorage.setItem(STORAGE_KEYS.START_HOUR, startHour.toString());
       await AsyncStorage.setItem(STORAGE_KEYS.END_HOUR, endHour.toString());
     } catch (error) {
@@ -82,41 +106,74 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return status === 'granted';
   };
 
-  const scheduleNotifications = async () => {
-    if (!notificationsEnabled || permissionStatus !== 'granted') return;
+  const getRandomQuote = (categories: string[] = ['general']): string => {
+    const allQuotes: string[] = [];
+
+    categories.forEach((category) => {
+      const categoryQuotes = quotesData[category];
+      if (categoryQuotes && Array.isArray(categoryQuotes)) {
+        allQuotes.push(...categoryQuotes);
+      }
+    });
+
+    if (allQuotes.length === 0) {
+      // Fallback to general quotes
+      const generalQuotes = quotesData['general'];
+      if (generalQuotes && Array.isArray(generalQuotes)) {
+        allQuotes.push(...generalQuotes);
+      }
+    }
+
+    return allQuotes.length > 0
+      ? allQuotes[Math.floor(Math.random() * allQuotes.length)]
+      : "Take a moment to appreciate yourself 🌸";
+  };
+
+  const scheduleNotifications = async (selectedCategories: string[] = ['general']) => {
+    if (permissionStatus !== 'granted') return;
 
     // Cancel existing notifications first
     await Notifications.cancelAllScheduledNotificationsAsync();
 
-    // Calculate intervals using custom start and end hours
-    const totalMinutes = (endHour - startHour) * 60;
-    const interval = Math.floor(totalMinutes / notificationsPerDay);
+    // Schedule daily affirmation notifications
+    if (notificationsEnabled && notificationsPerDay > 0) {
+      const totalMinutes = (endHour - startHour) * 60;
+      const interval = Math.floor(totalMinutes / notificationsPerDay);
 
-    const messages = [
-      "Time for a mindful moment! 🌟",
-      "Remember to take a deep breath 💫",
-      "You're doing great today! ✨",
-      "Take a moment to appreciate yourself 🌸",
-      "A gentle reminder to stay present 🌿",
-      "You matter and your efforts count 💝",
-      "Time to pause and reflect 🌙",
-      "Sending you positive vibes! ☀️"
-    ];
+      for (let i = 0; i < notificationsPerDay; i++) {
+        const triggerTime = startHour * 60 + (interval * i) + Math.random() * 30;
+        const hours = Math.floor(triggerTime / 60);
+        const minutes = Math.floor(triggerTime % 60);
 
-    for (let i = 0; i < notificationsPerDay; i++) {
-      const triggerTime = startHour * 60 + (interval * i) + Math.random() * 30; // Add some randomness
-      const hours = Math.floor(triggerTime / 60);
-      const minutes = Math.floor(triggerTime % 60);
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "✨ Daily Affirmation",
+            body: getRandomQuote(selectedCategories),
+            sound: true,
+          },
+          trigger: {
+            hour: hours,
+            minute: minutes,
+            repeats: true,
+          },
+        });
+      }
+    }
+
+    // Schedule evening streak reminder (8-9 PM)
+    if (streakReminderEnabled) {
+      const reminderHour = 20; // 8 PM
+      const reminderMinute = Math.floor(Math.random() * 60); // Random minute
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "Glow App",
-          body: messages[Math.floor(Math.random() * messages.length)],
+          title: "🔥 Streak Reminder",
+          body: STREAK_REMINDERS[Math.floor(Math.random() * STREAK_REMINDERS.length)],
           sound: true,
         },
         trigger: {
-          hour: hours,
-          minute: minutes,
+          hour: reminderHour,
+          minute: reminderMinute,
           repeats: true,
         },
       });
@@ -129,18 +186,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Re-schedule when settings change
   useEffect(() => {
-    if (notificationsEnabled && permissionStatus === 'granted') {
+    if ((notificationsEnabled || streakReminderEnabled) && permissionStatus === 'granted') {
       scheduleNotifications();
-    } else {
+    } else if (!notificationsEnabled && !streakReminderEnabled) {
       cancelAllNotifications();
     }
-  }, [notificationsPerDay, notificationsEnabled, permissionStatus, startHour, endHour]);
+  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, permissionStatus, startHour, endHour]);
 
   const value = {
     notificationsPerDay,
     setNotificationsPerDay,
     notificationsEnabled,
     setNotificationsEnabled,
+    streakReminderEnabled,
+    setStreakReminderEnabled,
     startHour,
     setStartHour,
     endHour,

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { useRouter } from 'expo-router';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Colors } from '../../constants/Colors';
-import { Typography } from '../../constants/Typography';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { RadioGroup } from '../../components/RadioCard';
+import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
 const SEX_OPTIONS = [
@@ -16,30 +18,35 @@ const SEX_OPTIONS = [
   { label: 'Prefer not to say', value: 'prefer-not-to-say' },
 ];
 
-export default function SexScreen() {
+export default function EditGenderScreen() {
   const router = useRouter();
   const { onboardingData, updateOnboardingData } = useOnboarding();
   const [selectedSex, setSelectedSex] = useState(onboardingData.sex || '');
 
-  // Check if we're coming from settings (onboarding already completed)
-  const isEditingFromSettings = onboardingData.completed;
+  const handleClose = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
+  };
 
-  const handleNext = () => {
+  const handleSave = () => {
     if (!selectedSex) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     updateOnboardingData({ sex: selectedSex });
-
-    if (isEditingFromSettings) {
-      // If editing from settings, go back
-      router.back();
-    } else {
-      // If in onboarding flow, continue to next screen
-      router.push('/onboarding/mental-health');
-    }
+    router.back();
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Close Button */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={handleClose}
+          style={styles.headerButton}
+        >
+          <Ionicons name="close" size={28} color={Colors.text.primary} />
+        </TouchableOpacity>
+      </View>
+
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}
         bottomOffset={40}
@@ -71,14 +78,14 @@ export default function SexScreen() {
         <Button
           variant="primary"
           size="large"
-          onPress={handleNext}
+          onPress={handleSave}
           disabled={!selectedSex}
           style={styles.button}
         >
-          {isEditingFromSettings ? 'Save' : 'Next'}
+          Save
         </Button>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -86,6 +93,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background.default,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.background.default,
+  },
+  headerButton: {
+    minWidth: 80,
   },
   scrollContent: {
     flexGrow: 1,

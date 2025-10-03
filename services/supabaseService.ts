@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 // Database types
 export interface OnboardingResponse {
@@ -24,7 +24,6 @@ export interface OnboardingResponse {
 
 export interface FeedbackSubmission {
   revenuecat_user_id: string;
-  rating: number; // 1-5
   comment?: string;
   context?: {
     app_version?: string;
@@ -48,10 +47,6 @@ export function getSupabaseClient(): SupabaseClient {
 
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-  console.log('🔧 Supabase URL:', supabaseUrl);
-  console.log('🔧 Supabase Anon Key (first 20 chars):', supabaseAnonKey?.substring(0, 20) + '...');
-  console.log('🔧 Anon Key length:', supabaseAnonKey?.length);
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
@@ -125,17 +120,11 @@ export async function submitOnboardingData(
  */
 export async function submitFeedback(
   revenuecatUserId: string,
-  rating: number,
   comment?: string,
   additionalContext?: Record<string, any>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const client = getSupabaseClient();
-
-    // Validate rating
-    if (rating < 1 || rating > 5) {
-      return { success: false, error: 'Rating must be between 1 and 5' };
-    }
 
     // Build context object with app info
     const context = {
@@ -147,7 +136,6 @@ export async function submitFeedback(
 
     const payload: FeedbackSubmission = {
       revenuecat_user_id: revenuecatUserId,
-      rating,
       comment,
       context,
     };

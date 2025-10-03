@@ -11,6 +11,7 @@ import {
   Dimensions,
   Easing,
   FlatList,
+  Image,
   Share,
   StyleSheet,
   Text,
@@ -23,9 +24,11 @@ import { ParticleTrail } from '../components/ParticleTrail';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useCategories } from '../contexts/CategoriesContext';
-import { useFavorites } from '../contexts/FavoritesContext';
 import { useCustomQuotes } from '../contexts/CustomQuotesContext';
+import { useFavorites } from '../contexts/FavoritesContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import { useStreak } from '../contexts/StreakContext';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -56,25 +59,29 @@ interface QuoteItemProps {
   onLike: (quote: Quote, scaleAnim: Animated.Value) => void;
   onShare: (quote: Quote) => void;
   isFavorite: boolean;
+  onTap: () => void;
 }
 
-function QuoteItem({ item, onLike, onShare, isFavorite }: QuoteItemProps) {
+function QuoteItem({ item, onLike, onShare, isFavorite, onTap }: QuoteItemProps) {
   const likeScaleAnim = useRef(new Animated.Value(1)).current;
   const lastTap = useRef<number>(0);
 
-  const handleDoubleTap = () => {
+  const handleTap = () => {
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
 
     if (now - lastTap.current < DOUBLE_TAP_DELAY) {
-      // Double tap detected
+      // Double tap detected - like the quote
       onLike(item, likeScaleAnim);
+    } else {
+      // Single tap - open categories
+      onTap();
     }
     lastTap.current = now;
   };
 
   return (
-    <TouchableWithoutFeedback onPress={handleDoubleTap}>
+    <TouchableWithoutFeedback onPress={handleTap}>
       <View style={styles.quoteContainer}>
         {/* Quote Text */}
         <View style={styles.quoteTextContainer}>
@@ -118,6 +125,8 @@ export default function Index() {
   const { selectedCategories, isLoading: isCategoriesLoading } = useCategories();
   const { addFavorite, removeFavorite, isFavorite, favorites } = useFavorites();
   const { customQuotes } = useCustomQuotes();
+  const { recordActivity } = useStreak();
+  const { scheduleNotifications } = useNotifications();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -164,11 +173,20 @@ export default function Index() {
     }
   }, [isOnboardingLoading, onboardingData.completed]);
 
+  // Record streak activity when onboarding completes or when user views quotes
+  useEffect(() => {
+    if (!isOnboardingLoading && onboardingData.completed) {
+      recordActivity();
+    }
+  }, [isOnboardingLoading, onboardingData.completed]);
+
   // Load and shuffle quotes based on selected categories
   useEffect(() => {
     if (!isCategoriesLoading && selectedCategories.length > 0) {
       // Use pending deep link quote if available, otherwise initialize normally
       initializeQuotePool(pendingDeepLinkQuote.current);
+      // Update notifications with new categories
+      scheduleNotifications(selectedCategories);
     }
   }, [selectedCategories, isCategoriesLoading]);
 
@@ -413,12 +431,18 @@ export default function Index() {
     resetIdleTimer();
   };
 
+  const handleQuoteTap = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/categories');
+  };
+
   const renderQuote = ({ item }: { item: Quote; index: number }) => (
     <QuoteItem
       item={item}
       onLike={handleLike}
       onShare={handleShare}
       isFavorite={isFavorite(item)}
+      onTap={handleQuoteTap}
     />
   );
 
@@ -635,7 +659,7 @@ export default function Index() {
             style={styles.categoryBadge}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push('/categories-modal');
+              router.push('/categories');
             }}
             activeOpacity={0.7}
           >
@@ -643,40 +667,20 @@ export default function Index() {
           </TouchableOpacity>
         )}
 
-        {/* Floating Browse Categories Button */}
+        {/* Floating Settings Button */}
         <TouchableOpacity
-          style={styles.categoriesButton}
+          style={styles.settingsButton}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/categories-modal');
+            router.push('/settings');
           }}
         >
-          <Ionicons name="grid" size={24} color={Colors.text.white} />
-        </TouchableOpacity>
-
-        {/* Floating Menu Button */}
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            Alert.alert(
-              'Menu',
-              'Choose an option',
-              [
-                {
-                  text: 'Reset Onboarding',
-                  onPress: handleResetOnboarding,
-                  style: 'destructive',
-                },
-                {
-                  text: 'Cancel',
-                  style: 'cancel',
-                },
-              ]
-            );
-          }}
-        >
-          <Ionicons name="menu" size={28} color={Colors.text.primary} />
+          <Image
+          source={require('../assets/images/mascot-alone.png')}
+          style={{height: 40, width: 40}}
+          resizeMode="contain"
+        />
+          {/* <Ionicons name="person" size={24} color={Colors.text.white} /> */}
         </TouchableOpacity>
 
         {/* Particle Trail */}
@@ -777,8 +781,8 @@ const styles = StyleSheet.create({
     top: 80,
     alignSelf: 'center',
     backgroundColor: Colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 20,
     shadowColor: Colors.shadow.medium,
     shadowOffset: {
@@ -792,7 +796,7 @@ const styles = StyleSheet.create({
   },
   categoryBadgeText: {
     color: Colors.text.white,
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -825,6 +829,27 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     bottom: 100,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.shadow.dark,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 10,
+  },
+  settingsButton: {
+    position: 'absolute',
+    right: 25,
+    bottom: 25,
+    // bottom: 100,
     width: 60,
     height: 60,
     borderRadius: 30,

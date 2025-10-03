@@ -9,23 +9,22 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../constants/Colors';
-import { Typography } from '../constants/Typography';
-import { Button } from '../components/Button';
-import { useCategories } from '../contexts/CategoriesContext';
-import { useCustomQuotes } from '../contexts/CustomQuotesContext';
-import { useFavorites } from '../contexts/FavoritesContext';
-import { usePremium } from '../contexts/PremiumContext';
+import { Colors } from '../../constants/Colors';
+import { Typography } from '../../constants/Typography';
+import { Button } from '../../components/Button';
+import { useCategories } from '../../contexts/CategoriesContext';
+import { useCustomQuotes } from '../../contexts/CustomQuotesContext';
+import { useFavorites } from '../../contexts/FavoritesContext';
+import { usePremium } from '../../contexts/PremiumContext';
 
 const MAX_QUOTE_LENGTH = 200;
 
-export default function CustomQuotesModal() {
+export default function CustomQuotesScreen() {
   const router = useRouter();
   const { isPremium, showPaywall } = usePremium();
   const { customQuotes, addCustomQuote, removeCustomQuote, updateCustomQuote, toggleFavorite } = useCustomQuotes();
@@ -46,6 +45,7 @@ export default function CustomQuotesModal() {
           // Select custom category and close modal
           updateSelectedCategories(['custom']);
           router.back();
+          router.back(); // Go back twice to close categories modal
         }
       } catch (error) {
         console.error('Error showing paywall:', error);
@@ -56,6 +56,7 @@ export default function CustomQuotesModal() {
       // Premium users can select directly
       updateSelectedCategories(['custom']);
       router.back();
+      router.back(); // Go back twice to close categories modal
     }
   };
 
@@ -241,14 +242,7 @@ export default function CustomQuotesModal() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-          <Ionicons name="close" size={28} color={Colors.text.primary} />
-        </TouchableOpacity>
-      </View>
-
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       {/* Title */}
       <Text style={styles.pageTitle}>My own quotes</Text>
 
@@ -293,28 +287,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background.default,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-  },
-  headerButton: {
-    minWidth: 80,
-  },
-  selectText: {
-    ...Typography.body,
-    color: Colors.primary,
-    fontWeight: '600',
-    textAlign: 'right',
-  },
   pageTitle: {
     ...Typography.h1,
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 8,
+    paddingHorizontal: 20,
   },
   pageSubtitle: {
     ...Typography.body,
