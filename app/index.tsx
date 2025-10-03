@@ -378,13 +378,18 @@ export default function Index() {
 
   const handleShare = (quote: Quote) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push({
-      pathname: '/share-modal',
-      params: {
-        text: quote.text,
-        category: quote.category,
-      },
-    });
+    console.log('Navigating to share modal with quote:', quote.text);
+    try {
+      router.push({
+        pathname: 'share-modal' as any,
+        params: {
+          text: quote.text,
+          category: quote.category,
+        },
+      });
+    } catch (error) {
+      console.error('Error navigating to share modal:', error);
+    }
   };
 
   const handleMascotPress = () => {
