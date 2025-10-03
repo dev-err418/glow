@@ -66,27 +66,28 @@ function QuoteItem({ item, onLike, onShare, isFavorite, onTap }: QuoteItemProps)
   const likeScaleAnim = useRef(new Animated.Value(1)).current;
   const lastTap = useRef<number>(0);
 
-  const handleTap = () => {
+  const handleDoubleTap = () => {
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
 
     if (now - lastTap.current < DOUBLE_TAP_DELAY) {
       // Double tap detected - like the quote
       onLike(item, likeScaleAnim);
-    } else {
-      // Single tap - open categories
-      onTap();
     }
     lastTap.current = now;
   };
 
   return (
-    <TouchableWithoutFeedback onPress={handleTap}>
+    <TouchableWithoutFeedback onPress={handleDoubleTap}>
       <View style={styles.quoteContainer}>
         {/* Quote Text */}
-        <View style={styles.quoteTextContainer}>
+        <TouchableOpacity
+          style={styles.quoteTextContainer}
+          onPress={onTap}
+          activeOpacity={0.7}
+        >
           <Text style={styles.quoteText}>{item.text}</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>
