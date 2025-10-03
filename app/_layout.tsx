@@ -1,16 +1,17 @@
 import { Stack, useRouter } from "expo-router";
+import { PostHogProvider } from 'posthog-react-native';
 import { useEffect } from "react";
-import { StatusBar, AppState, Linking } from "react-native";
+import { AppState, Linking, StatusBar } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Colors } from "../constants/Colors";
+import { CategoriesProvider } from "../contexts/CategoriesContext";
+import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
+import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
-import { CategoriesProvider } from "../contexts/CategoriesContext";
-import { FavoritesProvider } from "../contexts/FavoritesContext";
-import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { StreakProvider } from "../contexts/StreakContext";
-import "../services/notificationService"; // Configure notification handler
+import "../services/notificationService";
 
 function RootLayoutContent() {
   const router = useRouter();
@@ -119,23 +120,32 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <KeyboardProvider>
-      <PremiumProvider>
-        <StreakProvider>
-          <CategoriesProvider>
-            <NotificationProvider>
-              <OnboardingProvider>
-                <FavoritesProvider>
-                  <CustomQuotesProvider>
-                    <StatusBar barStyle={"dark-content"} />
-                    <RootLayoutContent />
-                  </CustomQuotesProvider>
-                </FavoritesProvider>
-              </OnboardingProvider>
-            </NotificationProvider>
-          </CategoriesProvider>
-        </StreakProvider>
-      </PremiumProvider>
-    </KeyboardProvider>
+    <PostHogProvider
+      apiKey="phc_4NPUazdcWH8ap7z40KAGmADw5yBlZZVtLng0i3e6a5u"
+      options={{
+        host: 'https://eu.i.posthog.com',
+        enableSessionReplay: true,
+      }}
+      autocapture
+    >
+      <KeyboardProvider>
+        <PremiumProvider>
+          <StreakProvider>
+            <CategoriesProvider>
+              <NotificationProvider>
+                <OnboardingProvider>
+                  <FavoritesProvider>
+                    <CustomQuotesProvider>
+                      <StatusBar barStyle={"dark-content"} />
+                      <RootLayoutContent />
+                    </CustomQuotesProvider>
+                  </FavoritesProvider>
+                </OnboardingProvider>
+              </NotificationProvider>
+            </CategoriesProvider>
+          </StreakProvider>
+        </PremiumProvider>
+      </KeyboardProvider>
+    </PostHogProvider>
   );
 }
