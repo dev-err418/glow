@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface StreakContextType {
   streakDays: string[];
   currentStreak: number;
-  recordActivity: () => Promise<void>;
+  recordActivity: () => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -51,10 +51,13 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
 
   const getTodayString = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // YYYY-MM-DD format using local timezone
   };
 
-  const recordActivity = async () => {
+  const recordActivity = async (): Promise<boolean> => {
     const today = getTodayString();
 
     // Check if today is already recorded
@@ -62,7 +65,9 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
       const updatedDays = [...streakDays, today];
       setStreakDays(updatedDays);
       await saveStreakData(updatedDays);
+      return true; // New day was recorded
     }
+    return false; // Today was already recorded
   };
 
   const calculateCurrentStreak = () => {

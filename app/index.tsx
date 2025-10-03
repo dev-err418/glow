@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { InteractiveMascot } from '../components/InteractiveMascot';
 import { ParticleTrail } from '../components/ParticleTrail';
+import { StreakAnimationPopup } from '../components/StreakAnimationPopup';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useCategories } from '../contexts/CategoriesContext';
@@ -137,6 +138,7 @@ export default function Index() {
   const [showLikeHeart, setShowLikeHeart] = useState(false);
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
   const [likeHeartRotationDeg, setLikeHeartRotationDeg] = useState(0);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
 
   // Idle timer and animation values
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -196,7 +198,16 @@ export default function Index() {
   // Record streak activity when onboarding completes or when user views quotes
   useEffect(() => {
     if (!isOnboardingLoading && onboardingData.completed) {
-      recordActivity();
+      const checkAndRecordStreak = async () => {
+        const isNewDay = await recordActivity();
+        if (isNewDay) {
+          // New day! Show the streak animation after a short delay
+          setTimeout(() => {
+            setShowStreakPopup(true);
+          }, 1000);
+        }
+      };
+      checkAndRecordStreak();
     }
   }, [isOnboardingLoading, onboardingData.completed]);
 
@@ -769,6 +780,12 @@ export default function Index() {
             <Ionicons name="heart" size={140} color={Colors.primary} />
           </Animated.View>
         )}
+
+        {/* Streak Animation Popup */}
+        <StreakAnimationPopup
+          visible={showStreakPopup}
+          onComplete={() => setShowStreakPopup(false)}
+        />
       </View>
     );
   }

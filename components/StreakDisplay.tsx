@@ -1,12 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useStreak } from '../contexts/StreakContext';
 
-export function StreakDisplay() {
+interface StreakDisplayProps {
+  animateNewDay?: boolean;
+}
+
+export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
   const { streakDays, currentStreak } = useStreak();
+  const checkmarkScale = useRef(new Animated.Value(1)).current;
+  const dayBoxScale = useRef(new Animated.Value(1)).current;
 
   // Get current day of week (0=Sunday, 1=Monday, etc.)
   // Convert to array index where Monday=0, Sunday=6
@@ -39,6 +45,36 @@ export function StreakDisplay() {
     return streakDays.includes(dateString);
   };
 
+  // Animate today's checkmark and day box when animateNewDay is true
+  useEffect(() => {
+    if (animateNewDay) {
+      // Reset scales
+      checkmarkScale.setValue(0);
+      dayBoxScale.setValue(0);
+
+      // Delay slightly to let popup settle, then smash in
+      setTimeout(() => {
+        // Animate both together
+        Animated.parallel([
+          Animated.spring(checkmarkScale, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 5,
+            overshootClamping: false,
+          }),
+          Animated.spring(dayBoxScale, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 5,
+            overshootClamping: false,
+          }),
+        ]).start();
+      }, 300);
+    }
+  }, [animateNewDay]);
+
   return (
     <View style={styles.container}>
       {/* Streak count on the left */}
@@ -58,15 +94,35 @@ export function StreakDisplay() {
               <Text style={[styles.dayLabel, isToday && styles.dayLabelActive]}>
                 {day}
               </Text>
-              <View style={[styles.dayBox, isToday && styles.dayBoxToday]}>
-                {isActive && (
-                  <Ionicons
-                    name="checkmark"
-                    size={18}
-                    color={isToday ? Colors.background.primary : Colors.primary}
-                  />
-                )}
-              </View>
+              {isToday && animateNewDay ? (
+                <Animated.View
+                  style={[
+                    styles.dayBox,
+                    styles.dayBoxToday,
+                    { transform: [{ scale: dayBoxScale }] }
+                  ]}
+                >
+                  {isActive && (
+                    <Animated.View style={{ transform: [{ scale: checkmarkScale }] }}>
+                      <Ionicons
+                        name="checkmark"
+                        size={18}
+                        color={Colors.background.primary}
+                      />
+                    </Animated.View>
+                  )}
+                </Animated.View>
+              ) : (
+                <View style={[styles.dayBox, isToday && styles.dayBoxToday]}>
+                  {isActive && (
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={isToday ? Colors.background.primary : Colors.primary}
+                    />
+                  )}
+                </View>
+              )}
             </View>
           );
         })}
