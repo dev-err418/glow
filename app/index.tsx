@@ -24,6 +24,7 @@ import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -116,6 +117,7 @@ export default function Index() {
   const { onboardingData, isLoading: isOnboardingLoading } = useOnboarding();
   const { selectedCategories, isLoading: isCategoriesLoading } = useCategories();
   const { addFavorite, removeFavorite, isFavorite, favorites } = useFavorites();
+  const { customQuotes } = useCustomQuotes();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -143,6 +145,9 @@ export default function Index() {
   // Track if we've handled the initial deep link URL
   const hasHandledInitialUrl = useRef(false);
 
+  // Store pending deep link quote to show as first card
+  const pendingDeepLinkQuote = useRef<Quote | null>(null);
+
   // Animated values for mascot position (left and bottom)
   const mascotLeft = useRef(new Animated.Value(MASCOT_HIDDEN.left)).current;
   const mascotBottom = useRef(new Animated.Value(MASCOT_HIDDEN.bottom)).current;
@@ -162,7 +167,8 @@ export default function Index() {
   // Load and shuffle quotes based on selected categories
   useEffect(() => {
     if (!isCategoriesLoading && selectedCategories.length > 0) {
-      initializeQuotePool();
+      // Use pending deep link quote if available, otherwise initialize normally
+      initializeQuotePool(pendingDeepLinkQuote.current);
     }
   }, [selectedCategories, isCategoriesLoading]);
 
@@ -175,7 +181,16 @@ export default function Index() {
     }
   }, [favorites]);
 
-  const initializeQuotePool = () => {
+  // Separate effect to handle custom quotes changes when viewing custom category
+  useEffect(() => {
+    // Only reload quotes if currently viewing custom category
+    if (!isCategoriesLoading && selectedCategories.includes('custom')) {
+      console.log('📝 Custom quotes changed while viewing custom category, reloading quotes');
+      initializeQuotePool();
+    }
+  }, [customQuotes]);
+
+  const initializeQuotePool = (priorityQuote?: Quote | null) => {
     const allQuotes: Quote[] = [];
 
     // Gather quotes from selected categories
@@ -184,6 +199,11 @@ export default function Index() {
         // Special handling for favorites category
         favorites.forEach((favorite) => {
           allQuotes.push(favorite);
+        });
+      } else if (category === 'custom') {
+        // Special handling for custom quotes category
+        customQuotes.forEach((custom) => {
+          allQuotes.push({ text: custom.text, category: 'custom' });
         });
       } else {
         const categoryQuotes = quotesData[category];
@@ -200,11 +220,23 @@ export default function Index() {
 
     // Initialize with 3-4 cycles of shuffled quotes for infinite scroll
     const initialQuotes: Quote[] = [];
+
+    // If we have a priority quote (from deep link), add it first
+    if (priorityQuote) {
+      initialQuotes.push(priorityQuote);
+      console.log('🎯 Added priority quote from deep link as first card:', priorityQuote.text);
+    }
+
     for (let i = 0; i < 4; i++) {
       const shuffled = [...allQuotes].sort(() => Math.random() - 0.5);
       initialQuotes.push(...shuffled);
     }
     setQuotes(initialQuotes);
+
+    // Clear the pending deep link quote after using it
+    if (priorityQuote) {
+      pendingDeepLinkQuote.current = null;
+    }
   };
 
   const loadMoreQuotes = () => {
@@ -241,8 +273,26 @@ export default function Index() {
     const isCurrentlyFavorite = isFavorite(quote);
 
     if (isCurrentlyFavorite) {
+      // Unliking - remove from favorites
       removeFavorite(quote);
+
+      // Animate the button for unlike (simpler animation)
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 0.8,
+          useNativeDriver: true,
+          bounciness: 20,
+          speed: 15,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          bounciness: 15,
+          speed: 12,
+        }),
+      ]).start();
     } else {
+      // Liking - add to favorites
       addFavorite(quote);
 
       // Show large heart animation
@@ -287,23 +337,23 @@ export default function Index() {
       ]).start(() => {
         setShowLikeHeart(false);
       });
-    }
 
-    // Animate scale: scale up to 1.2, then back to 1
-    Animated.sequence([
-      Animated.spring(scaleAnim, {
-        toValue: 1.2,
-        useNativeDriver: true,
-        bounciness: 15,
-        speed: 20,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        bounciness: 10,
-        speed: 15,
-      }),
-    ]).start();
+      // Animate scale: scale up to 1.2, then back to 1
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 1.2,
+          useNativeDriver: true,
+          bounciness: 15,
+          speed: 20,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          bounciness: 10,
+          speed: 15,
+        }),
+      ]).start();
+    }
 
     // Reset idle timer on like interaction
     resetIdleTimer();
@@ -488,27 +538,45 @@ export default function Index() {
   const handleDeepLink = (url: string) => {
     const parsed = Linking.parse(url);
 
-    // Check if it's a quote deep link
-    if (parsed.hostname === 'quote' && parsed.queryParams) {
+    // Check if it's a quote deep link (now using empty hostname with query params)
+    if (parsed.queryParams && parsed.queryParams.text) {
       const quoteText = parsed.queryParams.text as string;
-      const category = parsed.queryParams.category as string;
+      let category = parsed.queryParams.category as string;
 
       console.log('📱 Deep link received:', { quoteText, category });
 
-      // Find the quote in our quotes array
-      const quoteIndex = quotes.findIndex(q => q.text === quoteText);
+      // Check if this quote exists in favorites and use its original category
+      // This ensures isFavorite check works correctly even if widget passes modified category
+      const favoriteMatch = favorites.find(fav => fav.text === quoteText);
+      if (favoriteMatch) {
+        console.log('✅ Found quote in favorites, using original category:', favoriteMatch.category);
+        category = favoriteMatch.category;
+      }
 
-      if (quoteIndex !== -1) {
-        // Scroll to the quote
-        flatListRef.current?.scrollToIndex({
-          index: quoteIndex,
-          animated: true,
-        });
-        console.log('✅ Scrolled to quote at index:', quoteIndex);
+      // Create the quote object from deep link
+      const deepLinkQuote: Quote = { text: quoteText, category };
+
+      // If quotes are already loaded, prepend the quote and scroll to it
+      if (quotes.length > 0) {
+        console.log('🔄 Quotes already loaded, prepending deep link quote to start');
+        setQuotes((prevQuotes) => [deepLinkQuote, ...prevQuotes]);
+
+        // Scroll to the top (index 0) after a brief delay
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({
+            index: 0,
+            animated: true,
+          });
+        }, 100);
       } else {
-        // Quote not found in current feed, show it in an alert or add to top
-        console.log('⚠️ Quote not found in feed, showing alert');
-        Alert.alert('Quote from Widget', quoteText);
+        // Quotes not loaded yet, store for initialization
+        console.log('⏳ Quotes not loaded yet, storing deep link quote for initialization');
+        pendingDeepLinkQuote.current = deepLinkQuote;
+
+        // Trigger initialization if categories are ready
+        if (!isCategoriesLoading && selectedCategories.length > 0) {
+          initializeQuotePool(deepLinkQuote);
+        }
       }
     }
   };
@@ -537,7 +605,7 @@ export default function Index() {
             ref={flatListRef}
             data={quotes}
             renderItem={renderQuote}
-            keyExtractor={(item, index) => `quote-${index}`}
+            keyExtractor={(item, index) => `${item.text}-${index}`}
             pagingEnabled
             snapToInterval={screenHeight}
             snapToAlignment="start"

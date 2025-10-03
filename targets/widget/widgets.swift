@@ -47,6 +47,14 @@ struct FavoriteQuote: Codable {
     let category: String
 }
 
+// MARK: - Custom Quote Model
+struct CustomQuote: Codable {
+    let id: String
+    let text: String
+    let createdAt: String
+    let isFavorited: Bool
+}
+
 // MARK: - Provider
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> QuoteEntry {
@@ -106,6 +114,19 @@ struct Provider: TimelineProvider {
                 print("⚠️ Widget: No favorites found in shared storage, falling back to general")
                 quotesToUse = quotesData.categories["general"] ?? []
                 actualCategory = "general (no favorites)"
+            }
+        } else if selectedCategory == "custom" {
+            // Read custom quotes from shared storage
+            if let customJSON = defaults?.string(forKey: "customQuotes"),
+               let customData = customJSON.data(using: .utf8),
+               let customQuotes = try? JSONDecoder().decode([CustomQuote].self, from: customData) {
+                print("✅ Widget: Found \(customQuotes.count) custom quotes in shared storage")
+                quotesToUse = customQuotes.map { $0.text }
+                actualCategory = "custom (\(customQuotes.count))"
+            } else {
+                print("⚠️ Widget: No custom quotes found in shared storage, falling back to general")
+                quotesToUse = quotesData.categories["general"] ?? []
+                actualCategory = "general (no custom)"
             }
         } else if let categoryQuotes = quotesData.categories[selectedCategory] {
             print("✅ Widget: Found \(categoryQuotes.count) quotes in '\(selectedCategory)' category")
@@ -175,7 +196,7 @@ struct SmallQuoteWidgetView: View {
     private func createDeepLink(quote: String, category: String) -> URL? {
         let encodedQuote = quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let encodedCategory = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        return URL(string: "glow://quote?text=\(encodedQuote)&category=\(encodedCategory)")
+        return URL(string: "glow://?text=\(encodedQuote)&category=\(encodedCategory)")
     }
 }
 
@@ -218,7 +239,7 @@ struct MediumQuoteWidgetView: View {
     private func createDeepLink(quote: String, category: String) -> URL? {
         let encodedQuote = quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let encodedCategory = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        return URL(string: "glow://quote?text=\(encodedQuote)&category=\(encodedCategory)")
+        return URL(string: "glow://?text=\(encodedQuote)&category=\(encodedCategory)")
     }
 }
 

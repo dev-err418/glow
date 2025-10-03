@@ -10,6 +10,7 @@ import { Colors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { usePremium } from '../contexts/PremiumContext';
 
 interface CategoryCardProps {
@@ -82,6 +83,7 @@ export default function CategoriesModal() {
   const { isPremium, showPaywall } = usePremium();
   const { selectedCategories, updateSelectedCategories } = useCategories();
   const { favorites } = useFavorites();
+  const { customQuotes } = useCustomQuotes();
   const [isProcessingPaywall, setIsProcessingPaywall] = useState(false);
   const [localSelectedCategories, setLocalSelectedCategories] = useState<string[]>(selectedCategories);
 
@@ -152,7 +154,14 @@ export default function CategoriesModal() {
 
   const mostPopular = [
     { title: 'General', value: 'general', icon: 'sparkles' as const, isLocked: false },
-    { title: 'My own quotes', value: 'custom', icon: 'create' as const, isLocked: false },
+    {
+      title: 'My own quotes',
+      value: 'custom',
+      icon: 'create' as const,
+      isLocked: false,
+      subtitle: `${customQuotes.length} ${customQuotes.length === 1 ? 'quote' : 'quotes'}`,
+      navigateTo: '/custom-quotes-modal'
+    },
     {
       title: 'My favorites',
       value: 'favorites',
@@ -257,7 +266,15 @@ export default function CategoriesModal() {
                     icon={category.icon}
                     isLocked={category.isLocked}
                     isSelected={localSelectedCategories.includes(category.value)}
-                    onPress={() => handleCategoryToggle(category.value, category.isLocked)}
+                    onPress={() => {
+                      // Navigate to custom screen if it has navigateTo
+                      if ('navigateTo' in category && category.navigateTo) {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        router.push(category.navigateTo as any);
+                      } else {
+                        handleCategoryToggle(category.value, category.isLocked);
+                      }
+                    }}
                     subtitle={'subtitle' in category ? category.subtitle : undefined}
                   />
                 ))}
