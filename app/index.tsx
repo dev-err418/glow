@@ -11,13 +11,12 @@ import {
   Dimensions,
   Easing,
   FlatList,
-  Image,
   Share,
   StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View,
+  View
 } from 'react-native';
 import { InteractiveMascot } from '../components/InteractiveMascot';
 import { ParticleTrail } from '../components/ParticleTrail';
@@ -668,6 +667,17 @@ export default function Index() {
           </TouchableOpacity>
         )}
 
+        {/* Floating Categories Button */}
+        <TouchableOpacity
+          style={styles.categoriesButton}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/categories');
+          }}
+        >
+          <Ionicons name="grid-outline" size={18} color={Colors.text.white} />
+        </TouchableOpacity>
+
         {/* Floating Settings Button */}
         <TouchableOpacity
           style={styles.settingsButton}
@@ -676,12 +686,7 @@ export default function Index() {
             router.push('/settings');
           }}
         >
-          <Image
-          source={require('../assets/images/mascot-alone.png')}
-          style={{height: 40, width: 40}}
-          resizeMode="contain"
-        />
-          {/* <Ionicons name="person" size={24} color={Colors.text.white} /> */}
+          <Ionicons name="person" size={18} color={Colors.text.white} />
         </TouchableOpacity>
 
         {/* Particle Trail */}
@@ -783,7 +788,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: Colors.primary,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    justifyContent: "center"    ,
+    height: 50,
     borderRadius: 20,
     shadowColor: Colors.shadow.medium,
     shadowOffset: {
@@ -828,12 +834,12 @@ const styles = StyleSheet.create({
   },
   categoriesButton: {
     position: 'absolute',
-    right: 20,
-    bottom: 100,
-    width: 60,
-    height: 60,
+    right: 25,
+    bottom: 25,
+    width: 55,
+    height: 55,
     borderRadius: 30,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.shadow.dark,
@@ -849,12 +855,11 @@ const styles = StyleSheet.create({
   settingsButton: {
     position: 'absolute',
     right: 25,
-    bottom: 25,
-    // bottom: 100,
-    width: 60,
-    height: 60,
+    top: 80,
+    width: 55,
+    height: 55,
     borderRadius: 30,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.shadow.dark,
