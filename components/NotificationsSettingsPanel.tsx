@@ -23,6 +23,7 @@ export function NotificationsSettingsPanel() {
     streakReminderEnabled,
     setStreakReminderEnabled,
     requestPermissions,
+    cancelAllNotifications,
   } = useNotifications();
 
   const { selectedCategories } = useCategories();
@@ -229,6 +230,25 @@ export function NotificationsSettingsPanel() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
+  const handleClearAllNotifications = async () => {
+    Alert.alert(
+      'Clear All Notifications',
+      'Are you sure you want to cancel all scheduled notifications?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            await cancelAllNotifications();
+            setScheduledNotifications([]);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+        }
+      ]
+    );
+  };
+
   // Check permission status on mount and auto-disable if denied
   useEffect(() => {
     const checkPermissions = async () => {
@@ -310,6 +330,14 @@ export function NotificationsSettingsPanel() {
         <Text style={styles.debugButtonText}>
           {showDebugPanel ? 'Hide' : 'Show'} Scheduled Notifications ({scheduledNotifications.length})
         </Text>
+      </TouchableOpacity>
+
+      {/* Clear All Notifications Button */}
+      <TouchableOpacity
+        style={styles.clearButton}
+        onPress={handleClearAllNotifications}
+      >
+        <Text style={styles.clearButtonText}>Clear All Scheduled Notifications</Text>
       </TouchableOpacity>
 
       {/* Debug Panel */}
@@ -413,6 +441,18 @@ const styles = StyleSheet.create({
     ...Typography.body,
     fontWeight: '600',
     color: Colors.secondary,
+  },
+  clearButton: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  clearButtonText: {
+    ...Typography.body,
+    fontWeight: '600',
+    color: Colors.text.white,
   },
   debugPanel: {
     backgroundColor: Colors.background.secondary,

@@ -179,10 +179,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               sound: true,
               data: { quoteId: quote.id },
             },
-            trigger: {
-              type: 'date',
-              date: triggerDate,
-            },
+            trigger: { date: triggerDate } as any,
           });
         }
       }
@@ -241,30 +238,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return await Notifications.getAllScheduledNotificationsAsync();
   };
 
-  // Check and reschedule notifications when app comes to foreground
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', async (nextAppState) => {
-      if (nextAppState === 'active' && permissionStatus === 'granted') {
-        const scheduled = await getAllScheduledNotifications();
-        const threshold = notificationsPerDay * 5; // 5 days worth
-
-        console.log(`🔍 App opened: ${scheduled.length} notifications scheduled (threshold: ${threshold})`);
-
-        if (scheduled.length < threshold && (notificationsEnabled || streakReminderEnabled)) {
-          console.log('⚠️ Low on notifications, auto-rescheduling...');
-          await cancelAllNotifications();
-          await scheduleNotifications(selectedCategories);
-          const newScheduled = await getAllScheduledNotifications();
-          console.log(`✅ Auto-rescheduled ${newScheduled.length} notifications`);
-        }
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, permissionStatus, selectedCategories]);
-
   // Re-schedule when settings change (with debouncing)
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
@@ -286,7 +259,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, permissionStatus, startHour, endHour, streakDays, selectedCategories]);
+  }, [notificationsPerDay, notificationsEnabled, streakReminderEnabled, permissionStatus, startHour, endHour]);
 
   const value = {
     notificationsPerDay,
