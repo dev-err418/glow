@@ -686,7 +686,7 @@ export default function Index() {
             router.push('/settings');
           }}
         >
-          <Ionicons name="person" size={18} color={Colors.text.white} />
+          <Ionicons name="person-outline" size={18} color={Colors.text.white} />
         </TouchableOpacity>
 
         {/* Particle Trail */}

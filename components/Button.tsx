@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 50,
+    borderRadius: 16,
     shadowColor: Colors.shadow.medium,
     shadowOffset: {
       width: 0,
@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   buttonMedium: {
-    paddingVertical: 15,
-    paddingHorizontal: 32,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
   },
   buttonLarge: {
     paddingVertical: 18,

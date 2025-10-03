@@ -16,7 +16,6 @@ import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
-import { Button } from '../../components/Button';
 import { useCategories } from '../../contexts/CategoriesContext';
 import { useCustomQuotes } from '../../contexts/CustomQuotesContext';
 import { useFavorites } from '../../contexts/FavoritesContext';
@@ -235,9 +234,7 @@ export default function CustomQuotesScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="create-outline" size={64} color={Colors.text.light} />
-      <Text style={styles.emptyTitle}>No custom quotes yet</Text>
-      <Text style={styles.emptySubtitle}>Tap the + button to add your first quote</Text>
+      <Text style={styles.emptySubtitle}>Tap the + button to add your first affirmation</Text>
     </View>
   );
 
@@ -249,14 +246,18 @@ export default function CustomQuotesScreen() {
       {/* Subtitle */}
       <Text style={styles.pageSubtitle}>Create your own daily affirmations</Text>
 
-      {/* Show in feed button */}
-      <View style={styles.showInFeedContainer}>
-        <Button
-          title="Show in feed"
+      {/* Show in feed button - only show when there are custom quotes */}
+      {customQuotes.length > 0 && (
+        <TouchableOpacity
+          style={styles.showInFeedButton}
           onPress={handleSelectCategory}
           disabled={isProcessing}
-        />
-      </View>
+          activeOpacity={0.7}
+        >
+          <Ionicons name="play" size={24} color={Colors.text.white} />
+          <Text style={styles.showInFeedText}>Show in feed</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Quote List */}
       <FlatList
@@ -272,12 +273,14 @@ export default function CustomQuotesScreen() {
       />
 
       {/* Bottom Add Button */}
-      <View style={styles.bottomButtonContainer}>
-        <Button
-          title="Add my own affirmation"
-          onPress={handleAddQuote}
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={handleAddQuote}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="add-circle" size={24} color={Colors.text.white} />
+        <Text style={styles.addButtonText}>Add my own affirmation</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -301,9 +304,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 40,
   },
-  showInFeedContainer: {
-    paddingHorizontal: 20,
+  showInFeedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.secondary,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    marginHorizontal: 20,
     marginBottom: 24,
+    shadowColor: Colors.shadow.medium,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  showInFeedText: {
+    ...Typography.body,
+    color: Colors.text.white,
+    fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 16,
   },
   listContent: {
     paddingHorizontal: 20,
@@ -370,10 +395,31 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
   },
-  bottomButtonContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 16,
-    backgroundColor: Colors.background.default,
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    marginTop: 16,
+    shadowColor: Colors.shadow.medium,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addButtonText: {
+    ...Typography.body,
+    color: Colors.text.white,
+    fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 16,
   },
 });
