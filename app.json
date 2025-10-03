@@ -44,7 +44,7 @@
           "image": "./assets/images/mascot-alone.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#FFF8F3",
           "dark": {
             "backgroundColor": "#000000"
           }
