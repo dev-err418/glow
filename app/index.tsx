@@ -8,6 +8,7 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Easing,
   FlatList,
   Share,
   StyleSheet,
@@ -118,6 +119,19 @@ export default function Index() {
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [currentCategory, setCurrentCategory] = useState<string>('');
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [showLikeHeart, setShowLikeHeart] = useState(false);
+
+  // Idle timer and animation values
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const bounceAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
+  const hintOpacity = useRef(new Animated.Value(0)).current;
+  const hintTranslateY = useRef(new Animated.Value(0)).current;
+
+  // Like heart animation values
+  const likeHeartScale = useRef(new Animated.Value(0)).current;
+  const likeHeartOpacity = useRef(new Animated.Value(0)).current;
+  const likeHeartRotation = useRef(new Animated.Value(0)).current;
 
   // Store base pool of all available quotes
   const quotePoolRef = useRef<Quote[]>([]);
@@ -207,6 +221,49 @@ export default function Index() {
       removeFavorite(quote);
     } else {
       addFavorite(quote);
+
+      // Show large heart animation
+      setShowLikeHeart(true);
+
+      // Random rotation between -15 and 15 degrees
+      const randomRotation = (Math.random() - 0.5) * 30;
+      likeHeartRotation.setValue(randomRotation);
+
+      // Reset animation values
+      likeHeartScale.setValue(0);
+      likeHeartOpacity.setValue(0);
+
+      // Animate heart: scale up and fade in, then fade out
+      Animated.parallel([
+        Animated.sequence([
+          Animated.spring(likeHeartScale, {
+            toValue: 1,
+            useNativeDriver: true,
+            bounciness: 15,
+            speed: 12,
+          }),
+          Animated.timing(likeHeartScale, {
+            toValue: 1.1,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(likeHeartOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.delay(300),
+          Animated.timing(likeHeartOpacity, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start(() => {
+        setShowLikeHeart(false);
+      });
     }
 
     // Animate scale: scale up to 1.2, then back to 1
@@ -224,6 +281,9 @@ export default function Index() {
         speed: 15,
       }),
     ]).start();
+
+    // Reset idle timer on like interaction
+    resetIdleTimer();
   };
 
   const handleShare = async (quote: Quote) => {
@@ -275,6 +335,9 @@ export default function Index() {
         speed: 8,
       }),
     ]).start();
+
+    // Reset idle timer on mascot interaction
+    resetIdleTimer();
   };
 
   const renderQuote = ({ item }: { item: Quote; index: number }) => (
@@ -292,6 +355,81 @@ export default function Index() {
     }
   }).current;
 
+  const resetIdleTimer = () => {
+    // Clear existing timer
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+
+    // Stop bounce animation if running
+    if (bounceAnimationRef.current) {
+      bounceAnimationRef.current.stop();
+      bounceAnimationRef.current = null;
+    }
+
+    // Reset translateY to 0
+    hintTranslateY.setValue(0);
+
+    // Hide hint if showing
+    if (showSwipeHint) {
+      setShowSwipeHint(false);
+      Animated.timing(hintOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    // Start new 8-second timer
+    idleTimerRef.current = setTimeout(() => {
+      setShowSwipeHint(true);
+
+      // Create and store bounce animation with easing
+      const bounceLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(hintTranslateY, {
+            toValue: -10,
+            duration: 600,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(hintTranslateY, {
+            toValue: 0,
+            duration: 600,
+            easing: Easing.in(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      // Store reference so we can stop it later
+      bounceAnimationRef.current = bounceLoop;
+
+      // Fade in hint and start bounce
+      Animated.parallel([
+        Animated.timing(hintOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        bounceLoop,
+      ]).start();
+    }, 8000);
+  };
+
+  // Start idle timer on mount and clean up on unmount
+  useEffect(() => {
+    resetIdleTimer();
+    return () => {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+      if (bounceAnimationRef.current) {
+        bounceAnimationRef.current.stop();
+      }
+    };
+  }, []);
+
   // Show loading spinner while data is loading
   if (isOnboardingLoading || isCategoriesLoading) {
     return (
@@ -306,27 +444,43 @@ export default function Index() {
     return (
       <View style={styles.container}>
         {/* Quote Feed */}
-        <FlatList
-          data={quotes}
-          renderItem={renderQuote}
-          keyExtractor={(item, index) => `quote-${index}`}
-          pagingEnabled
-          snapToInterval={screenHeight}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-          onEndReached={loadMoreQuotes}
-          onEndReachedThreshold={0.5}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
-        />
+        <Animated.View
+          style={{
+            flex: 1,
+            transform: [{ translateY: hintTranslateY }],
+          }}
+        >
+          <FlatList
+            data={quotes}
+            renderItem={renderQuote}
+            keyExtractor={(item, index) => `quote-${index}`}
+            pagingEnabled
+            snapToInterval={screenHeight}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+            onEndReached={loadMoreQuotes}
+            onEndReachedThreshold={0.5}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
+            onScroll={resetIdleTimer}
+            scrollEventThrottle={400}
+          />
+        </Animated.View>
 
         {/* Fixed Category Badge */}
         {currentCategory && (
-          <View style={styles.categoryBadge}>
+          <TouchableOpacity
+            style={styles.categoryBadge}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/categories-modal');
+            }}
+            activeOpacity={0.7}
+          >
             <Text style={styles.categoryBadgeText}>{currentCategory}</Text>
-          </View>
+          </TouchableOpacity>
         )}
 
         {/* Floating Browse Categories Button */}
@@ -391,6 +545,44 @@ export default function Index() {
             isReading={isMascotVisible}
           />
         </Animated.View>
+
+        {/* Swipe Hint */}
+        {showSwipeHint && (
+          <Animated.View
+            style={[
+              styles.swipeHintContainer,
+              {
+                opacity: hintOpacity,
+                transform: [{ translateY: hintTranslateY }],
+              },
+            ]}
+            pointerEvents="none"
+          >
+            <Ionicons name="chevron-up" size={40} color={Colors.text.secondary} />
+            <Animated.Text style={[styles.swipeHintText, { opacity: hintOpacity }]}>
+              Swipe up for next quote
+            </Animated.Text>
+          </Animated.View>
+        )}
+
+        {/* Large Like Heart Animation */}
+        {showLikeHeart && (
+          <Animated.View
+            style={[
+              styles.likeHeartContainer,
+              {
+                opacity: likeHeartOpacity,
+                transform: [
+                  { scale: likeHeartScale },
+                  { rotate: `${likeHeartRotation._value}deg` },
+                ],
+              },
+            ]}
+            pointerEvents="none"
+          >
+            <Ionicons name="heart" size={140} color={Colors.primary} />
+          </Animated.View>
+        )}
       </View>
     );
   }
@@ -512,5 +704,30 @@ const styles = StyleSheet.create({
   mascotContainer: {
     position: 'absolute',
     zIndex: 10,
+  },
+  swipeHintContainer: {
+    position: 'absolute',
+    bottom: 60,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+  },
+  swipeHintText: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    fontSize: 16,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  likeHeartContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -70,
+    marginLeft: -70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
   },
 });
