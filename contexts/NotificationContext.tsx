@@ -113,7 +113,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     categories.forEach((category) => {
       const categoryQuotes = quotesData[category];
       if (categoryQuotes && Array.isArray(categoryQuotes)) {
-        allQuotes.push(...categoryQuotes);
+        // Extract text from quote objects
+        const quoteTexts = categoryQuotes.map((q: any) => q.text);
+        allQuotes.push(...quoteTexts);
       }
     });
 
@@ -121,7 +123,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Fallback to general quotes
       const generalQuotes = quotesData['general'];
       if (generalQuotes && Array.isArray(generalQuotes)) {
-        allQuotes.push(...generalQuotes);
+        const quoteTexts = generalQuotes.map((q: any) => q.text);
+        allQuotes.push(...quoteTexts);
       }
     }
 

@@ -58,7 +58,6 @@
     },
     "owner": "arthursdev",
     "extra": {
-      "router": {},
       "eas": {
         "build": {
           "experimental": {

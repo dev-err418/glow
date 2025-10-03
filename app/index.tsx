@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -27,6 +26,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
+import { useLocalSearchParams } from 'expo-router';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -34,6 +34,7 @@ const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 const quotesData = require('../assets/data/quotes.json');
 
 interface Quote {
+  id: string;
   text: string;
   category: string;
 }
@@ -120,6 +121,7 @@ function QuoteItem({ item, onLike, onShare, isFavorite, onTap }: QuoteItemProps)
 
 export default function Index() {
   const router = useRouter();
+  const { id: quoteId } = useLocalSearchParams<{ id?: string }>();
   const { onboardingData, isLoading: isOnboardingLoading } = useOnboarding();
   const { selectedCategories, isLoading: isCategoriesLoading } = useCategories();
   const { addFavorite, removeFavorite, isFavorite, favorites } = useFavorites();
@@ -132,6 +134,7 @@ export default function Index() {
   const [currentCategory, setCurrentCategory] = useState<string>('');
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showLikeHeart, setShowLikeHeart] = useState(false);
+  const [currentViewIndex, setCurrentViewIndex] = useState(0);
 
   // Idle timer and animation values
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -220,13 +223,13 @@ export default function Index() {
       } else if (category === 'custom') {
         // Special handling for custom quotes category
         customQuotes.forEach((custom) => {
-          allQuotes.push({ text: custom.text, category: 'custom' });
+          allQuotes.push({ id: custom.id, text: custom.text, category: 'custom' });
         });
       } else {
         const categoryQuotes = quotesData[category];
         if (categoryQuotes && Array.isArray(categoryQuotes)) {
-          categoryQuotes.forEach((text: string) => {
-            allQuotes.push({ text, category });
+          categoryQuotes.forEach((quoteObj: { id: string; text: string }) => {
+            allQuotes.push({ id: quoteObj.id, text: quoteObj.text, category });
           });
         }
       }
@@ -541,76 +544,56 @@ export default function Index() {
     };
   }, []);
 
-  // Handle deep links from widget
+  // Handle deep link via URL params
   useEffect(() => {
-    // Handle initial URL when app is opened from widget
-    const handleInitialURL = async () => {
-      if (hasHandledInitialUrl.current) return;
+    if (quoteId && quotes.length > 0) {
+      console.log('📱 Deep link to quote ID:', quoteId);
 
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        hasHandledInitialUrl.current = true;
-        handleDeepLink(initialUrl);
-      }
-    };
+      let targetQuote: Quote | null = null;
 
-    // Handle URL when app is already open
-    const subscription = Linking.addEventListener('url', ({ url }) => {
-      handleDeepLink(url);
-    });
-
-    handleInitialURL();
-
-    return () => {
-      subscription.remove();
-    };
-  }, []); // Remove quotes dependency to prevent re-running on quote updates
-
-  const handleDeepLink = (url: string) => {
-    const parsed = Linking.parse(url);
-
-    // Check if it's a quote deep link (now using empty hostname with query params)
-    if (parsed.queryParams && parsed.queryParams.text) {
-      const quoteText = parsed.queryParams.text as string;
-      let category = parsed.queryParams.category as string;
-
-      console.log('📱 Deep link received:', { quoteText, category });
-
-      // Check if this quote exists in favorites and use its original category
-      // This ensures isFavorite check works correctly even if widget passes modified category
-      const favoriteMatch = favorites.find(fav => fav.text === quoteText);
-      if (favoriteMatch) {
-        console.log('✅ Found quote in favorites, using original category:', favoriteMatch.category);
-        category = favoriteMatch.category;
-      }
-
-      // Create the quote object from deep link
-      const deepLinkQuote: Quote = { text: quoteText, category };
-
-      // If quotes are already loaded, prepend the quote and scroll to it
-      if (quotes.length > 0) {
-        console.log('🔄 Quotes already loaded, prepending deep link quote to start');
-        setQuotes((prevQuotes) => [deepLinkQuote, ...prevQuotes]);
-
-        // Scroll to the top (index 0) after a brief delay
-        setTimeout(() => {
-          flatListRef.current?.scrollToIndex({
-            index: 0,
-            animated: true,
-          });
-        }, 100);
+      // Check if quote already exists in feed
+      const existingIndex = quotes.findIndex(q => q.id === quoteId);
+      if (existingIndex !== -1) {
+        console.log('✅ Quote already in feed at index:', existingIndex);
+        targetQuote = quotes[existingIndex];
       } else {
-        // Quotes not loaded yet, store for initialization
-        console.log('⏳ Quotes not loaded yet, storing deep link quote for initialization');
-        pendingDeepLinkQuote.current = deepLinkQuote;
-
-        // Trigger initialization if categories are ready
-        if (!isCategoriesLoading && selectedCategories.length > 0) {
-          initializeQuotePool(deepLinkQuote);
+        // Find the quote in quotesData by ID
+        for (const category in quotesData) {
+          const categoryQuotes = quotesData[category];
+          if (Array.isArray(categoryQuotes)) {
+            const quoteObj = categoryQuotes.find((q: any) => q.id === quoteId);
+            if (quoteObj) {
+              targetQuote = { id: quoteObj.id, text: quoteObj.text, category };
+              console.log('✅ Found quote in quotesData:', targetQuote.text);
+              break;
+            }
+          }
         }
       }
+
+      if (targetQuote) {
+        // Remove the quote from its current position if it exists
+        const filteredQuotes = quotes.filter(q => q.id !== quoteId);
+
+        // Insert it at the current viewing position (replace what's there)
+        const newQuotes = [
+          ...filteredQuotes.slice(0, currentViewIndex),
+          targetQuote,
+          ...filteredQuotes.slice(currentViewIndex)
+        ];
+
+        setQuotes(newQuotes);
+
+        console.log('✅ Inserted quote at current position:', currentViewIndex);
+        // No scrolling needed - quote is already at the visible position
+      } else {
+        console.log('⚠️ Quote ID not found');
+      }
+
+      // Clear the param without navigating
+      router.setParams({ id: undefined });
     }
-  };
+  }, [quoteId, quotes.length, router]);
 
   // Show loading spinner while data is loading
   if (isOnboardingLoading || isCategoriesLoading) {
@@ -647,6 +630,14 @@ export default function Index() {
             onEndReachedThreshold={0.5}
             onScroll={resetIdleTimer}
             scrollEventThrottle={400}
+            onViewableItemsChanged={({ viewableItems }) => {
+              if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+                setCurrentViewIndex(viewableItems[0].index);
+              }
+            }}
+            viewabilityConfig={{
+              itemVisiblePercentThreshold: 50,
+            }}
             onScrollToIndexFailed={(info) => {
               console.log('⚠️ Scroll to index failed:', info);
               // Retry after a delay

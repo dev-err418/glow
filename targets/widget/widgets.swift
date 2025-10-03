@@ -1,43 +1,48 @@
 import WidgetKit
 import SwiftUI
 
-// MARK: - Quote Model
-struct Quote: Decodable {
-    let categories: [String: [String]]
+// MARK: - Quote Models
+struct QuoteObject: Codable {
+    let id: String
+    let text: String
+}
+
+struct QuotesData: Decodable {
+    let general: [QuoteObject]?
+    let winter: [QuoteObject]?
+    let selfCare: [QuoteObject]?
+    let mindfulness: [QuoteObject]?
+    let motivation: [QuoteObject]?
+    let gratitude: [QuoteObject]?
+    let confidence: [QuoteObject]?
+    let peace: [QuoteObject]?
+    let growth: [QuoteObject]?
+    let energy: [QuoteObject]?
+    let overthinking: [QuoteObject]?
+    let stressRelief: [QuoteObject]?
 
     enum CodingKeys: String, CodingKey {
-        case general
-        case winter
+        case general, winter, mindfulness, motivation, gratitude, confidence, peace, growth, energy, overthinking
         case selfCare = "self-care"
-        case mindfulness
-        case motivation
-        case gratitude
-        case confidence
-        case peace
-        case growth
-        case energy
-        case overthinking
         case stressRelief = "stress-relief"
     }
 
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        var categoriesDict: [String: [String]] = [:]
-
-        categoriesDict["general"] = try? container.decode([String].self, forKey: .general)
-        categoriesDict["winter"] = try? container.decode([String].self, forKey: .winter)
-        categoriesDict["self-care"] = try? container.decode([String].self, forKey: .selfCare)
-        categoriesDict["mindfulness"] = try? container.decode([String].self, forKey: .mindfulness)
-        categoriesDict["motivation"] = try? container.decode([String].self, forKey: .motivation)
-        categoriesDict["gratitude"] = try? container.decode([String].self, forKey: .gratitude)
-        categoriesDict["confidence"] = try? container.decode([String].self, forKey: .confidence)
-        categoriesDict["peace"] = try? container.decode([String].self, forKey: .peace)
-        categoriesDict["growth"] = try? container.decode([String].self, forKey: .growth)
-        categoriesDict["energy"] = try? container.decode([String].self, forKey: .energy)
-        categoriesDict["overthinking"] = try? container.decode([String].self, forKey: .overthinking)
-        categoriesDict["stress-relief"] = try? container.decode([String].self, forKey: .stressRelief)
-
-        self.categories = categoriesDict
+    func quotes(for category: String) -> [QuoteObject]? {
+        switch category {
+        case "general": return general
+        case "winter": return winter
+        case "self-care": return selfCare
+        case "mindfulness": return mindfulness
+        case "motivation": return motivation
+        case "gratitude": return gratitude
+        case "confidence": return confidence
+        case "peace": return peace
+        case "growth": return growth
+        case "energy": return energy
+        case "overthinking": return overthinking
+        case "stress-relief": return stressRelief
+        default: return nil
+        }
     }
 }
 
@@ -58,12 +63,12 @@ struct CustomQuote: Codable {
 // MARK: - Provider
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> QuoteEntry {
-        QuoteEntry(date: Date(), quote: "You are capable of amazing things", category: "general")
+        QuoteEntry(date: Date(), quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "general")
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QuoteEntry) -> ()) {
-        let result = getRandomQuote()
-        let entry = QuoteEntry(date: Date(), quote: result.quote, category: result.category)
+        let result = getQuoteForCurrentHour()
+        let entry = QuoteEntry(date: Date(), quoteId: result.id, quoteText: result.text, category: result.category)
         completion(entry)
     }
 
@@ -74,8 +79,8 @@ struct Provider: TimelineProvider {
         let currentDate = Date()
         for hourOffset in 0 ..< 24 {
             let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let result = getRandomQuote()
-            let entry = QuoteEntry(date: entryDate, quote: result.quote, category: result.category)
+            let result = getQuoteForHour(entryDate)
+            let entry = QuoteEntry(date: entryDate, quoteId: result.id, quoteText: result.text, category: result.category)
             entries.append(entry)
         }
 
@@ -83,15 +88,19 @@ struct Provider: TimelineProvider {
         completion(timeline)
     }
 
-    private func getRandomQuote() -> (quote: String, category: String) {
+    private func getQuoteForCurrentHour() -> (id: String, text: String, category: String) {
+        return getQuoteForHour(Date())
+    }
+
+    private func getQuoteForHour(_ date: Date) -> (id: String, text: String, category: String) {
         guard let url = Bundle.main.url(forResource: "quotes", withExtension: "json"),
               let data = try? Data(contentsOf: url),
-              let quotesData = try? JSONDecoder().decode(Quote.self, from: data) else {
+              let quotesData = try? JSONDecoder().decode(QuotesData.self, from: data) else {
             print("❌ Widget: Failed to load quotes.json")
-            return ("You are amazing", "error")
+            return ("motivation-1", "You are amazing", "general")
         }
 
-        // Read selected categories array from App Group shared storage
+        // Read selected categories from shared storage
         let defaults = UserDefaults(suiteName: "group.com.arthurbuildsstuff.glow.widget")
         var selectedCategories: [String] = ["general"]
 
@@ -102,70 +111,48 @@ struct Provider: TimelineProvider {
             selectedCategories = categories
         }
 
-        print("✅ Widget: Successfully read categories from shared storage: \(selectedCategories)")
-        print("📚 Widget: Available categories: \(quotesData.categories.keys.sorted())")
-
-        // Collect quotes from all selected categories
-        var quotesToUse: [String] = []
-        var categoryLabels: [String] = []
+        // Collect all quote objects from selected categories
+        var quotesToUse: [QuoteObject] = []
 
         for category in selectedCategories {
             if category == "favorites" {
-                // Read favorites from shared storage
-                if let favoritesJSON = defaults?.string(forKey: "favoriteQuotes"),
-                   let favoritesData = favoritesJSON.data(using: .utf8),
-                   let favorites = try? JSONDecoder().decode([FavoriteQuote].self, from: favoritesData) {
-                    print("✅ Widget: Found \(favorites.count) favorites in shared storage")
-                    quotesToUse.append(contentsOf: favorites.map { $0.text })
-                    categoryLabels.append("favorites")
-                } else {
-                    print("⚠️ Widget: No favorites found in shared storage")
-                }
+                // TODO: Handle favorites with IDs
+                continue
             } else if category == "custom" {
-                // Read custom quotes from shared storage
-                if let customJSON = defaults?.string(forKey: "customQuotes"),
-                   let customData = customJSON.data(using: .utf8),
-                   let customQuotes = try? JSONDecoder().decode([CustomQuote].self, from: customData) {
-                    print("✅ Widget: Found \(customQuotes.count) custom quotes in shared storage")
-                    quotesToUse.append(contentsOf: customQuotes.map { $0.text })
-                    categoryLabels.append("custom")
-                } else {
-                    print("⚠️ Widget: No custom quotes found in shared storage")
-                }
-            } else if let categoryQuotes = quotesData.categories[category] {
-                print("✅ Widget: Found \(categoryQuotes.count) quotes in '\(category)' category")
+                // TODO: Handle custom quotes with IDs
+                continue
+            } else if let categoryQuotes = quotesData.quotes(for: category) {
                 quotesToUse.append(contentsOf: categoryQuotes)
-                categoryLabels.append(category)
-            } else {
-                print("⚠️ Widget: Category '\(category)' not found")
             }
         }
 
-        // If no quotes found, fallback to general
+        // Fallback to general if no quotes
         if quotesToUse.isEmpty {
-            print("⚠️ Widget: No quotes found in selected categories, falling back to general")
-            quotesToUse = quotesData.categories["general"] ?? []
-            categoryLabels = ["general"]
+            quotesToUse = quotesData.general ?? []
         }
-
-        // Determine display label
-        let actualCategory = selectedCategories.count > 1 ? "My mix" : (categoryLabels.first ?? "general")
 
         guard !quotesToUse.isEmpty else {
-            print("❌ Widget: No quotes available")
-            return ("You are amazing", actualCategory)
+            return ("motivation-1", "You are amazing", "general")
         }
 
-        let selectedQuote = quotesToUse.randomElement() ?? "You are amazing"
-        print("💬 Widget: Selected quote from \(quotesToUse.count) quotes: '\(selectedQuote)'")
-        return (selectedQuote, actualCategory)
+        // Use hour-based deterministic selection
+        let hoursSinceEpoch = Int(date.timeIntervalSince1970 / 3600)
+        let index = abs(hoursSinceEpoch) % quotesToUse.count
+        let selectedQuote = quotesToUse[index]
+
+        // Determine category label
+        let categoryLabel = selectedCategories.count > 1 ? "My mix" : (selectedCategories.first ?? "general")
+
+        print("💬 Widget: Selected quote ID \(selectedQuote.id) for hour \(hoursSinceEpoch)")
+        return (selectedQuote.id, selectedQuote.text, categoryLabel)
     }
 }
 
 // MARK: - Timeline Entry
 struct QuoteEntry: TimelineEntry {
     let date: Date
-    let quote: String
+    let quoteId: String
+    let quoteText: String
     let category: String
 }
 
@@ -175,41 +162,31 @@ struct SmallQuoteWidgetView: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            VStack(spacing: 4) {
-                Spacer()
-                Text(entry.quote)
+            VStack(spacing: 0) {
+                Text(entry.quoteText)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2C3E5B"))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 12)
-                    .padding(.top, 12)
-
-                // Debug text showing selected category
-                Text("Category: \(entry.category)")
-                    .font(.system(size: 9, weight: .regular))
-                    .foregroundColor(Color(hex: "2C3E5B").opacity(0.5))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 8)
-
-                Spacer()
+                    .lineLimit(nil)
+                    .minimumScaleFactor(0.7)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             Image("MascotImage")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 65, height: 65)
+                .frame(width: 55, height: 55)
                 .rotationEffect(.degrees(-15))
-                .padding(.leading, -25)
-                .padding(.bottom, -30)
+                .padding(.leading, -20)
+                .padding(.bottom, -25)
         }
-        .widgetURL(createDeepLink(quote: entry.quote, category: entry.category))
+        .widgetURL(createDeepLink(id: entry.quoteId))
     }
 
-    private func createDeepLink(quote: String, category: String) -> URL? {
-        let encodedQuote = quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let encodedCategory = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        return URL(string: "glow://?text=\(encodedQuote)&category=\(encodedCategory)")
+    private func createDeepLink(id: String) -> URL? {
+        return URL(string: "glow://?id=\(id)")
     }
 }
 
@@ -218,41 +195,31 @@ struct MediumQuoteWidgetView: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            VStack(spacing: 6) {
-                Spacer()
-                Text(entry.quote)
+            VStack(spacing: 0) {
+                Text(entry.quoteText)
                     .font(.system(size: 18, weight: .medium))
                     .foregroundColor(Color(hex: "2C3E5B"))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-
-                // Debug text showing selected category
-                Text("Category: \(entry.category)")
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(Color(hex: "2C3E5B").opacity(0.5))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 12)
-
-                Spacer()
+                    .lineLimit(nil)
+                    .minimumScaleFactor(0.75)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             Image("MascotImage")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 90, height: 90)
+                .frame(width: 80, height: 80)
                 .rotationEffect(.degrees(-15))
-                .padding(.leading, -50)
-                .padding(.bottom, -40)
+                .padding(.leading, -40)
+                .padding(.bottom, -35)
         }
-        .widgetURL(createDeepLink(quote: entry.quote, category: entry.category))
+        .widgetURL(createDeepLink(id: entry.quoteId))
     }
 
-    private func createDeepLink(quote: String, category: String) -> URL? {
-        let encodedQuote = quote.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let encodedCategory = category.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        return URL(string: "glow://?text=\(encodedQuote)&category=\(encodedCategory)")
+    private func createDeepLink(id: String) -> URL? {
+        return URL(string: "glow://?id=\(id)")
     }
 }
 
@@ -315,13 +282,13 @@ extension Color {
 #Preview(as: .systemSmall) {
     SmallQuoteWidget()
 } timeline: {
-    QuoteEntry(date: .now, quote: "You are capable of amazing things", category: "motivation")
-    QuoteEntry(date: .now, quote: "Every step forward is progress", category: "growth")
+    QuoteEntry(date: .now, quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "motivation")
+    QuoteEntry(date: .now, quoteId: "growth-2", quoteText: "Every step forward is progress", category: "growth")
 }
 
 #Preview(as: .systemMedium) {
     MediumQuoteWidget()
 } timeline: {
-    QuoteEntry(date: .now, quote: "You are capable of amazing things", category: "motivation")
-    QuoteEntry(date: .now, quote: "Every step forward is progress", category: "growth")
+    QuoteEntry(date: .now, quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "motivation")
+    QuoteEntry(date: .now, quoteId: "growth-2", quoteText: "Every step forward is progress", category: "growth")
 }
