@@ -136,6 +136,7 @@ export default function Index() {
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showLikeHeart, setShowLikeHeart] = useState(false);
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
+  const [likeHeartRotationDeg, setLikeHeartRotationDeg] = useState(0);
 
   // Idle timer and animation values
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -146,7 +147,6 @@ export default function Index() {
   // Like heart animation values
   const likeHeartScale = useRef(new Animated.Value(0)).current;
   const likeHeartOpacity = useRef(new Animated.Value(0)).current;
-  const likeHeartRotation = useRef(new Animated.Value(0)).current;
 
   // Store base pool of all available quotes
   const quotePoolRef = useRef<Quote[]>([]);
@@ -206,7 +206,7 @@ export default function Index() {
       // Use pending deep link quote if available, otherwise initialize normally
       initializeQuotePool(pendingDeepLinkQuote.current);
       // Update notifications with new categories
-      scheduleNotifications(selectedCategories);
+      scheduleNotifications();
     }
   }, [selectedCategories, isCategoriesLoading]);
 
@@ -236,7 +236,7 @@ export default function Index() {
       if (category === 'favorites') {
         // Special handling for favorites category
         favorites.forEach((favorite) => {
-          allQuotes.push(favorite);
+          allQuotes.push({ id: favorite.text, text: favorite.text, category: favorite.category });
         });
       } else if (category === 'custom') {
         // Special handling for custom quotes category
@@ -338,7 +338,7 @@ export default function Index() {
 
       // Random rotation between -15 and 15 degrees
       const randomRotation = (Math.random() - 0.5) * 30;
-      likeHeartRotation.setValue(randomRotation);
+      setLikeHeartRotationDeg(randomRotation);
 
       // Reset animation values
       likeHeartScale.setValue(0);
@@ -546,7 +546,7 @@ export default function Index() {
         }),
         bounceLoop,
       ]).start();
-    }, 8000);
+    }, 8000) as unknown as NodeJS.Timeout;
   };
 
   // Start idle timer on mount and clean up on unmount
@@ -760,7 +760,7 @@ export default function Index() {
                 opacity: likeHeartOpacity,
                 transform: [
                   { scale: likeHeartScale },
-                  { rotate: `${likeHeartRotation._value}deg` },
+                  { rotate: `${likeHeartRotationDeg}deg` },
                 ],
               },
             ]}

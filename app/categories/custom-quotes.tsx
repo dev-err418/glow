@@ -28,7 +28,7 @@ export default function CustomQuotesScreen() {
   const { isPremium, showPaywall } = usePremium();
   const { customQuotes, addCustomQuote, removeCustomQuote, updateCustomQuote, toggleFavorite } = useCustomQuotes();
   const { updateSelectedCategories } = useCategories();
-  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { addFavorite, removeFavorite } = useFavorites();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSelectCategory = async () => {
@@ -72,7 +72,7 @@ export default function CustomQuotesScreen() {
         },
         {
           text: 'Add',
-          onPress: (text) => {
+          onPress: (text?: string) => {
             if (text && text.trim().length > 0) {
               if (text.trim().length > MAX_QUOTE_LENGTH) {
                 Alert.alert('Quote Too Long', `Please keep your quote under ${MAX_QUOTE_LENGTH} characters.`);
@@ -138,7 +138,7 @@ export default function CustomQuotesScreen() {
         },
         {
           text: 'Save',
-          onPress: (text) => {
+          onPress: (text?: string) => {
             if (text && text.trim().length > 0) {
               if (text.trim().length > MAX_QUOTE_LENGTH) {
                 Alert.alert('Quote Too Long', `Please keep your quote under ${MAX_QUOTE_LENGTH} characters.`);
@@ -185,10 +185,10 @@ export default function CustomQuotesScreen() {
     // Sync with global favorites
     if (quote.isFavorited) {
       // If currently favorited, remove from global favorites
-      removeFavorite(quoteText, 'custom');
+      removeFavorite({ text: quoteText, category: 'custom' });
     } else {
       // If not favorited, add to global favorites
-      addFavorite(quoteText, 'custom');
+      addFavorite({ text: quoteText, category: 'custom' });
     }
   };
 
