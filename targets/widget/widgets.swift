@@ -67,19 +67,21 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QuoteEntry) -> ()) {
-        let result = getQuoteForCurrentHour()
+        let displaySizeHash = context.displaySize.hashValue
+        let result = getQuoteForCurrentHour(displaySizeHash: displaySizeHash)
         let entry = QuoteEntry(date: Date(), quoteId: result.id, quoteText: result.text, category: result.category)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [QuoteEntry] = []
+        let displaySizeHash = context.displaySize.hashValue
 
         // Generate entries for the next 24 hours, one per hour
         let currentDate = Date()
         for hourOffset in 0 ..< 24 {
             let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let result = getQuoteForHour(entryDate)
+            let result = getQuoteForHour(entryDate, displaySizeHash: displaySizeHash)
             let entry = QuoteEntry(date: entryDate, quoteId: result.id, quoteText: result.text, category: result.category)
             entries.append(entry)
         }
@@ -88,11 +90,11 @@ struct Provider: TimelineProvider {
         completion(timeline)
     }
 
-    private func getQuoteForCurrentHour() -> (id: String, text: String, category: String) {
-        return getQuoteForHour(Date())
+    private func getQuoteForCurrentHour(displaySizeHash: Int) -> (id: String, text: String, category: String) {
+        return getQuoteForHour(Date(), displaySizeHash: displaySizeHash)
     }
 
-    private func getQuoteForHour(_ date: Date) -> (id: String, text: String, category: String) {
+    private func getQuoteForHour(_ date: Date, displaySizeHash: Int) -> (id: String, text: String, category: String) {
         guard let url = Bundle.main.url(forResource: "quotes", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let quotesData = try? JSONDecoder().decode(QuotesData.self, from: data) else {
@@ -135,15 +137,15 @@ struct Provider: TimelineProvider {
             return ("motivation-1", "You are amazing", "general")
         }
 
-        // Use hour-based deterministic selection
+        // Use hour + displaySize hash for deterministic but unique selection per widget instance
         let hoursSinceEpoch = Int(date.timeIntervalSince1970 / 3600)
-        let index = abs(hoursSinceEpoch) % quotesToUse.count
+        let index = abs(hoursSinceEpoch + displaySizeHash) % quotesToUse.count
         let selectedQuote = quotesToUse[index]
 
         // Determine category label
         let categoryLabel = selectedCategories.count > 1 ? "My mix" : (selectedCategories.first ?? "general")
 
-        print("💬 Widget: Selected quote ID \(selectedQuote.id) for hour \(hoursSinceEpoch)")
+        print("💬 Widget: Selected quote ID \(selectedQuote.id) for hour \(hoursSinceEpoch) with hash \(displaySizeHash)")
         return (selectedQuote.id, selectedQuote.text, categoryLabel)
     }
 }
