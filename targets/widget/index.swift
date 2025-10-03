@@ -7,6 +7,7 @@ struct exportWidgets: WidgetBundle {
         // Export widgets here
         SmallQuoteWidget()
         MediumQuoteWidget()
+        LockScreenQuoteWidget()
         widgetControl()
         WidgetLiveActivity()
     }

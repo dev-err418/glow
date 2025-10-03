@@ -252,6 +252,42 @@ struct MediumQuoteWidget: Widget {
     }
 }
 
+struct LockScreenQuoteWidgetView: View {
+    var entry: Provider.Entry
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(entry.quoteText)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .minimumScaleFactor(0.8)
+        }
+        .widgetURL(createDeepLink(id: entry.quoteId))
+    }
+
+    private func createDeepLink(id: String) -> URL? {
+        return URL(string: "glow://?id=\(id)")
+    }
+}
+
+struct LockScreenQuoteWidget: Widget {
+    let kind: String = "LockScreenQuoteWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+            LockScreenQuoteWidgetView(entry: entry)
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
+        }
+        .configurationDisplayName("Glow Quote - Lock Screen")
+        .description("Daily motivation on your lock screen")
+        .supportedFamilies([.accessoryRectangular])
+    }
+}
+
 // MARK: - Color Extension
 extension Color {
     init(hex: String) {
@@ -288,6 +324,13 @@ extension Color {
 
 #Preview(as: .systemMedium) {
     MediumQuoteWidget()
+} timeline: {
+    QuoteEntry(date: .now, quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "motivation")
+    QuoteEntry(date: .now, quoteId: "growth-2", quoteText: "Every step forward is progress", category: "growth")
+}
+
+#Preview(as: .accessoryRectangular) {
+    LockScreenQuoteWidget()
 } timeline: {
     QuoteEntry(date: .now, quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "motivation")
     QuoteEntry(date: .now, quoteId: "growth-2", quoteText: "Every step forward is progress", category: "growth")
