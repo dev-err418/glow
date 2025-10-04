@@ -120,24 +120,16 @@ const styles = StyleSheet.create({
   icon: {
     fontSize: 18,
     color: Colors.text.light,
-    fontFamily: 'UncutSans',
-    fontWeight: '400',
   },
   iconSelected: {
     color: Colors.secondary,
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
   },
   label: {
     ...Typography.body,
     fontSize: 16,
     color: Colors.text.primary,
-    fontFamily: 'UncutSans',
-    fontWeight: '400',
   },
   labelSelected: {
-    fontFamily: 'UncutSans',
-    fontWeight: '500',
     color: Colors.text.primary,
   },
   group: {

@@ -10,8 +10,6 @@ export default function SettingsLayout() {
         },
         headerTintColor: Colors.text.primary,
         headerTitleStyle: {
-          fontFamily: 'UncutSans',
-          fontWeight: '600',
         },
         headerShadowVisible: false,
       }}

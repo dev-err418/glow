@@ -54,44 +54,8 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/UncutSans-Regular.ttf",
-            "./assets/fonts/UncutSans-Medium.ttf",
-            "./assets/fonts/UncutSans-SemiBold.ttf",
-            "./assets/fonts/UncutSans-Bold.ttf"
-          ],
-          "android": {
-            "fonts": [
-              {
-                "fontFamily": "UncutSans",
-                "fontDefinitions": [
-                  {
-                    "path": "./assets/fonts/UncutSans-Regular.ttf",
-                    "weight": 400
-                  },
-                  {
-                    "path": "./assets/fonts/UncutSans-Medium.ttf",
-                    "weight": 500
-                  },
-                  {
-                    "path": "./assets/fonts/UncutSans-SemiBold.ttf",
-                    "weight": 600
-                  },
-                  {
-                    "path": "./assets/fonts/UncutSans-Bold.ttf",
-                    "weight": 700
-                  }
-                ]
-              }
-            ]
-          },
-          "ios": {
-            "fonts": [
-              "./assets/fonts/UncutSans-Regular.ttf",
-              "./assets/fonts/UncutSans-Medium.ttf",
-              "./assets/fonts/UncutSans-SemiBold.ttf",
-              "./assets/fonts/UncutSans-Bold.ttf"
-            ]
-          }
+            "./assets/fonts/UncutSans-Variable.ttf"
+          ]
         }
       ],
       "@bacons/apple-targets",

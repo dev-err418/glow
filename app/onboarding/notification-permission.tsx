@@ -44,7 +44,7 @@ export default function NotificationPermissionScreen() {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={handleSkip} style={{ marginHorizontal: 4 }}>
-          <Text style={{ color: Colors.text.secondary, fontSize: 16, fontFamily: 'UncutSans', fontWeight: '400' }}>
+          <Text style={{ color: Colors.text.secondary, fontSize: 16 }}>
             Skip
           </Text>
         </TouchableOpacity>

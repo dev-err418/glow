@@ -834,8 +834,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   categoryBadgeText: {
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
     color: Colors.text.white,
     fontSize: 18,
     textTransform: 'capitalize',

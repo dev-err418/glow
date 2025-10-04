@@ -113,8 +113,6 @@ const styles = StyleSheet.create({
 
   // Text styles
   text: {
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
     textAlign: 'center',
   },
   textPrimary: {

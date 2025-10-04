@@ -10,8 +10,6 @@ export default function CategoriesLayout() {
         },
         headerTintColor: Colors.text.primary,
         headerTitleStyle: {
-          fontFamily: 'UncutSans',
-          fontWeight: '600',
         },
         headerShadowVisible: false,
       }}

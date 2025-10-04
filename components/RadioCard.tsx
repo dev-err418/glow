@@ -112,13 +112,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   labelSelected: {
-    fontFamily: 'UncutSans',
-    fontWeight: '500',
   },
   labelSecondary: {
     color: Colors.text.secondary,
-    fontFamily: 'UncutSans',
-    fontWeight: '400',
   },
   radio: {
     width: 28,

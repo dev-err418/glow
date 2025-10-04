@@ -240,8 +240,6 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     ...Typography.body,
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
     color: Colors.text.primary,
   },
   settingRight: {

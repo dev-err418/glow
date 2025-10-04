@@ -237,16 +237,12 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     ...Typography.body,
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
     color: Colors.text.primary,
     marginBottom: 4,
     flexWrap: 'wrap',
   },
   categorySubtitle: {
     fontSize: 12,
-    fontFamily: 'UncutSans',
-    fontWeight: '400',
     color: Colors.text.secondary,
     marginTop: 2,
   },
@@ -265,6 +261,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   buttonContainer: {
+    backgroundColor: Colors.background.default,
     paddingHorizontal: 24,
     paddingVertical: 24,
     position: "absolute",
@@ -292,8 +289,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     ...Typography.body,
     color: Colors.text.white,
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
     fontSize: 16,
   },
   saveButtonDisabled: {

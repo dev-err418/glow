@@ -157,8 +157,6 @@ const styles = StyleSheet.create({
     ...Typography.h2,
     fontSize: 40,
     lineHeight: 45,
-    fontFamily: 'UncutSans',
-    fontWeight: '700',
     color: Colors.primary,
   },
   streakLabel: {
@@ -182,13 +180,9 @@ const styles = StyleSheet.create({
     ...Typography.bodySmall,
     fontSize: 12,
     color: Colors.text.light,
-    fontFamily: 'UncutSans',
-    fontWeight: '500',
   },
   dayLabelActive: {
     color: Colors.text.primary,
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
   },
   dayBox: {
     width: 28,

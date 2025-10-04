@@ -57,8 +57,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 16,
     fontSize: 16,
-    fontFamily: 'UncutSans',
-    fontWeight: '400',
     color: Colors.text.primary,
   },
   inputError: {

@@ -194,8 +194,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...Typography.body,
-    fontFamily: 'UncutSans',
-    fontWeight: '600',
     color: Colors.text.white,
   },
 });
