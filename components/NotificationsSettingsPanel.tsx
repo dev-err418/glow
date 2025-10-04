@@ -396,6 +396,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.primary,
     marginBottom: 4,
@@ -427,6 +428,7 @@ const styles = StyleSheet.create({
   },
   testButtonText: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.white,
   },
@@ -439,6 +441,7 @@ const styles = StyleSheet.create({
   },
   debugButtonText: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.secondary,
   },
@@ -451,6 +454,7 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.white,
   },
@@ -462,6 +466,7 @@ const styles = StyleSheet.create({
   },
   debugTitle: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.primary,
     marginBottom: 12,
@@ -491,6 +496,7 @@ const styles = StyleSheet.create({
   },
   debugNotifTitle: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.primary,
     flex: 1,
@@ -500,6 +506,7 @@ const styles = StyleSheet.create({
     ...Typography.body,
     fontSize: 11,
     color: Colors.primary,
+    fontFamily: 'UncutSans',
     fontWeight: '500',
   },
   debugNotifBody: {

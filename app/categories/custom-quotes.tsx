@@ -325,6 +325,7 @@ const styles = StyleSheet.create({
   showInFeedText: {
     ...Typography.body,
     color: Colors.text.white,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     marginLeft: 8,
     fontSize: 16,
@@ -359,6 +360,7 @@ const styles = StyleSheet.create({
   quoteDate: {
     fontSize: 12,
     color: Colors.text.secondary,
+    fontFamily: 'UncutSans',
     fontWeight: '500',
   },
   quoteActions: {
@@ -417,6 +419,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     ...Typography.body,
     color: Colors.text.white,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     fontSize: 16,
   },

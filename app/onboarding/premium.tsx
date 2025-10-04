@@ -92,7 +92,7 @@ export default function PremiumScreen() {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={handleSkip} style={{ marginHorizontal: 4 }}>
-          <Text style={{ color: Colors.text.secondary, fontSize: 16 }}>
+          <Text style={{ color: Colors.text.secondary, fontSize: 16, fontFamily: 'UncutSans', fontWeight: '400' }}>
             Skip
           </Text>
         </TouchableOpacity>

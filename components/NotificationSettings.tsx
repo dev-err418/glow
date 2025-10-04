@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
     ...Typography.h3,
     fontSize: 32,
     color: Colors.text.primary,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     minWidth: 75,
     textAlign: 'center',

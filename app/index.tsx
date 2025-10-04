@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -28,7 +28,6 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
-import { useLocalSearchParams } from 'expo-router';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -628,7 +627,7 @@ export default function Index() {
   if (isOnboardingLoading || isCategoriesLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator color={Colors.primary} />
       </View>
     );
   }
@@ -835,9 +834,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   categoryBadgeText: {
+    fontFamily: 'UncutSans',
+    fontWeight: '600',
     color: Colors.text.white,
     fontSize: 18,
-    fontWeight: '600',
     textTransform: 'capitalize',
   },
   quoteTextContainer: {
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
     width: 55,
     height: 55,
     borderRadius: 30,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.shadow.dark,

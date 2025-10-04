@@ -14,7 +14,8 @@ export default function OnboardingLayout() {
         },
         headerTintColor: Colors.secondary,
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontFamily: 'UncutSans',
+          fontWeight: '700',
         },
         headerBackTitle: '',
         headerShadowVisible: false,

@@ -344,6 +344,7 @@ const styles = StyleSheet.create({
   unlockText: {
     ...Typography.body,
     color: Colors.primary,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     textAlign: 'right',
   },
@@ -379,6 +380,7 @@ const styles = StyleSheet.create({
   createMixText: {
     ...Typography.body,
     color: Colors.text.white,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     marginLeft: 8,
     fontSize: 16,
@@ -434,6 +436,7 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.primary,
     marginBottom: 4,
@@ -441,6 +444,8 @@ const styles = StyleSheet.create({
   },
   categorySubtitle: {
     fontSize: 12,
+    fontFamily: 'UncutSans',
+    fontWeight: '400',
     color: Colors.text.secondary,
     marginTop: 2,
   },

@@ -164,12 +164,12 @@ export default function SettingsIndex() {
             <SettingsRow
               icon="shield-outline"
               label="Privacy Policy"
-              onPress={() => handleOpenURL('https://yourapp.com/privacy')}
+              onPress={() => handleOpenURL('https://app-glow.vercel.app/privacy')}
             />
             <SettingsRow
               icon="document-text-outline"
               label="Terms of Use"
-              onPress={() => handleOpenURL('https://yourapp.com/terms')}
+              onPress={() => handleOpenURL('https://app-glow.vercel.app/terms')}
               showDivider={false}
             />
           </View>
@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.primary,
   },

@@ -157,13 +157,14 @@ const styles = StyleSheet.create({
     ...Typography.h2,
     fontSize: 40,
     lineHeight: 45,
+    fontFamily: 'UncutSans',
     fontWeight: '700',
     color: Colors.primary,
   },
   streakLabel: {
     ...Typography.bodySmall,
     fontSize: 14,
-    color: Colors.primary,    
+    color: Colors.primary,
     lineHeight: 14
   },
   calendarContainer: {
@@ -181,10 +182,12 @@ const styles = StyleSheet.create({
     ...Typography.bodySmall,
     fontSize: 12,
     color: Colors.text.light,
+    fontFamily: 'UncutSans',
     fontWeight: '500',
   },
   dayLabelActive: {
     color: Colors.text.primary,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
   },
   dayBox: {

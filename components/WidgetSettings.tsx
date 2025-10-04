@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
     ...Typography.bodySmall,
     fontSize: 13,
     color: Colors.primary,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
   },
   steps: {
@@ -99,6 +100,7 @@ const styles = StyleSheet.create({
   },
   stepsTitle: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
     color: Colors.text.primary,
     marginBottom: 12,
@@ -110,6 +112,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     ...Typography.body,
+    fontFamily: 'UncutSans',
     fontWeight: '700',
     color: Colors.primary,
     marginRight: 8,

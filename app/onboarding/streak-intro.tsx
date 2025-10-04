@@ -295,10 +295,12 @@ const styles = StyleSheet.create({
     ...Typography.bodySmall,
     fontSize: 14,
     color: Colors.text.light,
+    fontFamily: 'UncutSans',
     fontWeight: '500',
   },
   dayLabelActive: {
     color: Colors.text.primary,
+    fontFamily: 'UncutSans',
     fontWeight: '600',
   },
   dayBox: {

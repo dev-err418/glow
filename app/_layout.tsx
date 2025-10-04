@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import { Stack, useRouter } from "expo-router";
 import { PostHogProvider } from 'posthog-react-native';
 import { useEffect } from "react";
@@ -12,7 +13,6 @@ import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
 import { StreakProvider } from "../contexts/StreakContext";
 import "../services/notificationService";
-import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
   dsn: 'https://13a334d3dd9bd7fab7d14c26c2214c2b@o4510128131145728.ingest.de.sentry.io/4510128132522064',
@@ -22,7 +22,7 @@ Sentry.init({
   sendDefaultPii: true,
 
   // Enable Logs
-  enableLogs: false,
+  // enableLogs: false,  
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
