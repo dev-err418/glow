@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import RevenueCatUI from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedMascot } from '../../components/AnimatedMascot';
 import { StreakDisplay } from '../../components/StreakDisplay';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
+import { useStreak } from '../../contexts/StreakContext';
 
 interface SettingsRowProps {
   label: string;
@@ -44,6 +45,7 @@ function SettingsRow({ label, value, icon, onPress, showDivider = true }: Settin
 export default function SettingsIndex() {
   const router = useRouter();
   const { onboardingData } = useOnboarding();
+  const { streakDays, currentStreak, isLoading } = useStreak();
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -55,13 +57,9 @@ export default function SettingsIndex() {
     router.push(path as any);
   };
 
-  const handleManageSubscription = async () => {
+  const handleManageSubscription = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      await RevenueCatUI.presentCustomerCenter();
-    } catch (error) {
-      console.error('Error showing customer center:', error);
-    }
+    router.push('/settings/customer-center');
   };
 
   const handleOpenURL = async (url: string) => {
@@ -87,6 +85,20 @@ export default function SettingsIndex() {
       default:
         return 'Not set';
     }
+  };
+
+  const handleDebugStreak = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Get raw AsyncStorage data
+    const rawData = await AsyncStorage.getItem('streakData');
+
+    console.log('=== STREAK DEBUG ===');
+    console.log('Current Streak:', currentStreak);
+    console.log('Streak Days:', streakDays);
+    console.log('Is Loading:', isLoading);
+    console.log('Raw AsyncStorage Data:', rawData);
+    console.log('===================');
   };
 
   return (
@@ -147,6 +159,11 @@ export default function SettingsIndex() {
               icon="card-outline"
               label="Manage subscription"
               onPress={handleManageSubscription}
+            />
+            <SettingsRow
+              icon="bug-outline"
+              label="Debug Streak"
+              onPress={handleDebugStreak}
             />
             <SettingsRow
               icon="chatbubble-outline"

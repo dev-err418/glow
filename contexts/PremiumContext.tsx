@@ -55,6 +55,10 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     try {
       const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
         requiredEntitlementIdentifier: 'Premium',
+        options: {
+          displayCloseButton: true,
+          fontFamily: 'UncutSans-Variable',
+        },
       });
 
       // Refresh customer info after paywall interaction

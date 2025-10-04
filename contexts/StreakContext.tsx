@@ -5,6 +5,7 @@ interface StreakContextType {
   streakDays: string[];
   currentStreak: number;
   recordActivity: () => Promise<boolean>;
+  migrateAndFixDates: () => Promise<{ before: string[], after: string[] }>;
   isLoading: boolean;
 }
 
@@ -49,25 +50,35 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getTodayString = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+  const formatDateToLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`; // YYYY-MM-DD format using local timezone
+  };
+
+  const getTodayString = () => {
+    return formatDateToLocal(new Date());
   };
 
   const recordActivity = async (): Promise<boolean> => {
     const today = getTodayString();
+    let isNewDay = false;
 
-    // Check if today is already recorded
-    if (!streakDays.includes(today)) {
-      const updatedDays = [...streakDays, today];
-      setStreakDays(updatedDays);
-      await saveStreakData(updatedDays);
-      return true; // New day was recorded
-    }
-    return false; // Today was already recorded
+    // Use functional update to ensure we work with latest state
+    setStreakDays((prevDays) => {
+      // Check if today is already recorded
+      if (!prevDays.includes(today)) {
+        isNewDay = true;
+        const updatedDays = [...prevDays, today];
+        // Save to AsyncStorage
+        saveStreakData(updatedDays);
+        return updatedDays;
+      }
+      return prevDays;
+    });
+
+    return isNewDay;
   };
 
   const calculateCurrentStreak = () => {
@@ -86,7 +97,7 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
     const todayDate = new Date(today);
     const yesterdayDate = new Date(todayDate);
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterday = yesterdayDate.toISOString().split('T')[0];
+    const yesterday = formatDateToLocal(yesterdayDate);
 
     let currentDate: Date;
     if (sortedDays[0] === today) {
@@ -105,7 +116,7 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
     for (let i = 1; i < sortedDays.length; i++) {
       const previousDate = new Date(currentDate);
       previousDate.setDate(previousDate.getDate() - 1);
-      const expectedDate = previousDate.toISOString().split('T')[0];
+      const expectedDate = formatDateToLocal(previousDate);
 
       if (sortedDays[i] === expectedDate) {
         streak++;
@@ -118,10 +129,45 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
     setCurrentStreak(streak);
   };
 
+  const migrateAndFixDates = async (): Promise<{ before: string[], after: string[] }> => {
+    try {
+      const savedData = await AsyncStorage.getItem(STORAGE_KEY);
+      const beforeDates = savedData ? JSON.parse(savedData) : [];
+
+      // Convert all dates to proper local format and remove duplicates
+      const fixedDates = [...new Set(
+        beforeDates.map((dateStr: string) => {
+          try {
+            // Parse the date string and convert to local format
+            const date = new Date(dateStr);
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+              return null;
+            }
+            return formatDateToLocal(date);
+          } catch (error) {
+            console.error('Error parsing date:', dateStr, error);
+            return null;
+          }
+        }).filter((date: string | null) => date !== null)
+      )].sort();
+
+      // Save fixed dates
+      await saveStreakData(fixedDates);
+      setStreakDays(fixedDates);
+
+      return { before: beforeDates, after: fixedDates };
+    } catch (error) {
+      console.error('Error migrating dates:', error);
+      return { before: [], after: [] };
+    }
+  };
+
   const value = {
     streakDays,
     currentStreak,
     recordActivity,
+    migrateAndFixDates,
     isLoading,
   };
 

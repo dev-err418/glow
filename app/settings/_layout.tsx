@@ -35,6 +35,13 @@ export default function SettingsLayout() {
         }}
       />
       <Stack.Screen
+        name="customer-center"
+        options={{
+          title: 'Customer Center',
+          headerBackTitle: 'Back',
+        }}
+      />
+      <Stack.Screen
         name="edit-name"
         options={{
           presentation: 'modal',
