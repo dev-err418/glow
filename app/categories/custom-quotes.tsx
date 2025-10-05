@@ -278,6 +278,11 @@ export default function CustomQuotesScreen() {
         onPress={handleAddQuote}
         activeOpacity={0.7}
       >
+        <Ionicons
+          name="add-circle"
+          size={24}
+          color={Colors.text.white}
+        />
         <Text style={styles.addButtonText}>Add my own affirmation</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -415,6 +420,8 @@ const styles = StyleSheet.create({
   addButtonText: {
     ...Typography.body,
     color: Colors.text.white,
+    marginLeft: 8,
     fontSize: 16,
+    fontWeight: 600
   },
 });

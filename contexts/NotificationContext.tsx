@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useCategories } from './CategoriesContext';
 import { useStreak } from './StreakContext';
 
@@ -50,7 +50,7 @@ const getStreakReminderContent = (currentStreak: number): { title: string; body:
   if (currentStreak < 3) {
     const message = EARLY_STREAK_REMINDERS[Math.floor(Math.random() * EARLY_STREAK_REMINDERS.length)];
     return {
-      title: "Daily reminder 💝",
+      title: "Daily streak reminder",
       body: message
     };
   }
