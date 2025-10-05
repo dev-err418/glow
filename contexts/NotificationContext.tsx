@@ -35,19 +35,43 @@ const STORAGE_KEYS = {
 // Import quotes data
 const quotesData = require('../assets/data/quotes.json');
 
-// Streak reminder messages
-const STREAK_REMINDERS = [
-  "Don't break the streak! 🔥 Check in before bed",
-  "Your streak is waiting! Keep the momentum going ✨",
-  "End your day strong! Swipe a quote to keep your streak 💪",
-  "Almost bedtime! Don't forget your daily dose of positivity 🌙",
-  "Keep that fire burning! 🔥 One swipe keeps your streak alive",
-  "Your daily glow moment awaits! Don't let your streak fade ⭐",
-  "Bedtime check-in! Maintain your beautiful streak tonight 💫",
-  "Quick reminder: Your streak needs you! 💝 Take a moment",
-  "End the day with intention! Keep your streak going strong 🌺",
-  "Time to glow! Keep your streak alive with one swipe 🌟"
+// Streak reminder messages for early streaks (0-2 days)
+const EARLY_STREAK_REMINDERS = [
+  "Start your daily glow moment! ✨",
+  "Don't forget your daily check-in 🌟",
+  "Time for your daily dose of positivity 💫",
+  "Keep the momentum going! 💪",
+  "Your daily reminder is here 🌺"
 ];
+
+// Helper function to get streak-aware reminder message and title
+const getStreakReminderContent = (currentStreak: number): { title: string; body: string } => {
+  // For early streaks (0-2 days), use generic friendly messages
+  if (currentStreak < 3) {
+    const message = EARLY_STREAK_REMINDERS[Math.floor(Math.random() * EARLY_STREAK_REMINDERS.length)];
+    return {
+      title: "Daily reminder 💝",
+      body: message
+    };
+  }
+
+  // For established streaks (3+ days), use streak-count-aware messages
+  const messages = [
+    `Don't lose your ${currentStreak} day streak! 🔥`,
+    `You're on a ${currentStreak} day streak! Keep it going 💪`,
+    `${currentStreak} days strong! Don't break the chain ✨`,
+    `Protect your ${currentStreak} day streak! One swipe keeps it alive 🌟`,
+    `${currentStreak} days in a row! Keep the fire burning 🔥`,
+    `Your ${currentStreak} day streak is waiting! ⭐`,
+    `Amazing! ${currentStreak} days! Don't let it fade now 💫`
+  ];
+
+  const message = messages[Math.floor(Math.random() * messages.length)];
+  return {
+    title: "Don't lose your streak! 🔥",
+    body: message
+  };
+};
 
 // Helper function to get a random quote from selected categories
 const getRandomQuote = (categories: string[]): { id: string; text: string } => {
@@ -75,7 +99,7 @@ const getRandomQuote = (categories: string[]): { id: string; text: string } => {
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { selectedCategories } = useCategories();
-  const { streakDays } = useStreak();
+  const { streakDays, currentStreak } = useStreak();
   const [notificationsPerDay, setNotificationsPerDay] = useState(3);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [streakReminderEnabled, setStreakReminderEnabled] = useState(true);
@@ -252,46 +276,71 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         console.log(`  ✅ Scheduled notification ${i + 1} at ${hour}:${minute.toString().padStart(2, '0')}`);
       }
 
-      // Step 5: Schedule streak reminder if enabled
+      // Step 5: Schedule streak reminders if enabled (2 reminders)
       if (streakReminderEnabled) {
         // Check if today's streak is already completed
         const today = new Date().toISOString().split('T')[0];
         const hasCompletedToday = streakDays.includes(today);
 
         // Only schedule if streak NOT completed today
-        // Note: This will reschedule daily, and the notification won't show if streak is done
         if (!hasCompletedToday) {
-          // Calculate reminder time in last 1/4 of time window
           const totalHours = endHour - startHour;
           const lastQuarterStart = endHour - (totalHours * 0.25);
 
-          // Random time within the last quarter
-          const reminderHour = Math.floor(lastQuarterStart);
-          const reminderMinute = Math.floor(Math.random() * 60);
+          // First reminder: Random time within the last quarter of time window
+          const firstReminderHour = Math.floor(lastQuarterStart + Math.random() * (endHour - lastQuarterStart - 0.5));
+          const firstReminderMinute = Math.floor(Math.random() * 60);
 
-          // Get a random streak reminder message
-          const reminderMessage = STREAK_REMINDERS[Math.floor(Math.random() * STREAK_REMINDERS.length)];
+          // Second reminder: Random time in the last 30 minutes before end time
+          const secondReminderHour = endHour - 1;
+          const secondReminderMinute = 30 + Math.floor(Math.random() * 30); // Between :30 and :59 of the hour before end
 
+          // Get streak-aware content (same for both reminders for consistency)
+          const reminderContent = getStreakReminderContent(currentStreak);
+
+          // Schedule first reminder
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: "Streak reminder 🔥",
-              body: reminderMessage,
+              title: reminderContent.title,
+              body: reminderContent.body,
               sound: true,
               data: {
                 type: 'streak_reminder',
+                reminderNumber: 1,
               },
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-              hour: reminderHour,
-              minute: reminderMinute,
+              hour: firstReminderHour,
+              minute: firstReminderMinute,
               repeats: true,
             } as any,
           });
 
-          console.log(`🔥 Scheduled streak reminder at ${reminderHour}:${reminderMinute.toString().padStart(2, '0')}`);
+          console.log(`🔥 Scheduled first streak reminder at ${firstReminderHour}:${firstReminderMinute.toString().padStart(2, '0')}`);
+
+          // Schedule second reminder (backup)
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: reminderContent.title,
+              body: reminderContent.body,
+              sound: true,
+              data: {
+                type: 'streak_reminder',
+                reminderNumber: 2,
+              },
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+              hour: secondReminderHour,
+              minute: secondReminderMinute,
+              repeats: true,
+            } as any,
+          });
+
+          console.log(`🔥 Scheduled second streak reminder at ${secondReminderHour}:${secondReminderMinute.toString().padStart(2, '0')}`);
         } else {
-          console.log('✅ Streak already completed today, streak reminder will show tomorrow');
+          console.log('✅ Streak already completed today, streak reminders will show tomorrow');
         }
       }
 
