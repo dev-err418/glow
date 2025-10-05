@@ -63,22 +63,25 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
 
   const recordActivity = async (): Promise<boolean> => {
     const today = getTodayString();
-    let isNewDay = false;
 
-    // Use functional update to ensure we work with latest state
-    setStreakDays((prevDays) => {
-      // Check if today is already recorded
-      if (!prevDays.includes(today)) {
-        isNewDay = true;
-        const updatedDays = [...prevDays, today];
-        // Save to AsyncStorage
-        saveStreakData(updatedDays);
-        return updatedDays;
-      }
-      return prevDays;
+    // Return a promise that resolves with the correct isNewDay value
+    return new Promise((resolve) => {
+      // Use functional update to ensure we work with latest state
+      setStreakDays((prevDays) => {
+        // Check if today is already recorded
+        if (!prevDays.includes(today)) {
+          const updatedDays = [...prevDays, today];
+          // Save to AsyncStorage
+          saveStreakData(updatedDays);
+          // Resolve with true after state update
+          setTimeout(() => resolve(true), 0);
+          return updatedDays;
+        }
+        // Resolve with false if already recorded
+        setTimeout(() => resolve(false), 0);
+        return prevDays;
+      });
     });
-
-    return isNewDay;
   };
 
   const calculateCurrentStreak = () => {

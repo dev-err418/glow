@@ -48,7 +48,7 @@ export function StreakAnimationPopup({ visible, onComplete }: StreakAnimationPop
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }, 300);
 
-      // Hold for 2.5 seconds, then animate out
+      // Hold for 4 seconds, then animate out
       const timer = setTimeout(() => {
         Animated.parallel([
           Animated.timing(translateY, {
@@ -64,7 +64,7 @@ export function StreakAnimationPopup({ visible, onComplete }: StreakAnimationPop
         ]).start(() => {
           onComplete();
         });
-      }, 2500);
+      }, 4000);
 
       return () => {
         clearTimeout(timer);

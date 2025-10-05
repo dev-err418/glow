@@ -14,24 +14,17 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
   const checkmarkScale = useRef(new Animated.Value(1)).current;
   const dayBoxScale = useRef(new Animated.Value(1)).current;
 
-  // Get current day of week (0=Sunday, 1=Monday, etc.)
-  // Convert to array index where Monday=0, Sunday=6
-  const today = new Date().getDay();
-  const todayIndex = (today + 6) % 7;
+  // Today is always the last day (index 6) in the rolling 7-day view
+  const todayIndex = 6;
 
-  // Get dates for the current week (Monday to Sunday)
+  // Get dates for the last 7 days ending with today
   const getWeekDates = () => {
     const today = new Date();
-    const currentDay = today.getDay();
-    const diff = currentDay === 0 ? -6 : 1 - currentDay; // Calculate days to Monday
-
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + diff);
-
     const weekDates: string[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
       weekDates.push(date.toISOString().split('T')[0]);
     }
 
@@ -39,6 +32,23 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
   };
 
   const weekDates = getWeekDates();
+
+  // Get day abbreviations for the rolling 7-day period
+  const getDayLabels = () => {
+    const dayAbbreviations = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    const today = new Date();
+    const labels: string[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      labels.push(dayAbbreviations[date.getDay()]);
+    }
+
+    return labels;
+  };
+
+  const dayLabels = getDayLabels();
 
   // Check if a specific date has activity
   const hasActivity = (dateString: string) => {
@@ -80,12 +90,12 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
       {/* Streak count on the left */}
       <View style={styles.streakCountContainer}>
         <Text style={styles.streakCount}>{currentStreak}</Text>
-        <Text style={styles.streakLabel}>days</Text>
+        <Text style={styles.streakLabel}>{currentStreak === 1 ? 'day' : 'days'}</Text>
       </View>
 
       {/* Weekly Calendar */}
       <View style={styles.calendarContainer}>
-        {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day, index) => {
+        {dayLabels.map((day, index) => {
           const isToday = index === todayIndex;
           const isActive = hasActivity(weekDates[index]);
 
@@ -113,12 +123,12 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
                   )}
                 </Animated.View>
               ) : (
-                <View style={[styles.dayBox, isToday && styles.dayBoxToday]}>
+                <View style={[styles.dayBox, isActive && styles.dayBoxToday]}>
                   {isActive && (
                     <Ionicons
                       name="checkmark"
                       size={18}
-                      color={isToday ? Colors.background.primary : Colors.primary}
+                      color={Colors.background.primary}
                     />
                   )}
                 </View>
@@ -157,7 +167,7 @@ const styles = StyleSheet.create({
     ...Typography.h2,
     fontSize: 40,
     lineHeight: 45,
-    color: Colors.primary,
+    color: Colors.primary    
   },
   streakLabel: {
     ...Typography.bodySmall,
@@ -183,6 +193,7 @@ const styles = StyleSheet.create({
   },
   dayLabelActive: {
     color: Colors.text.primary,
+    fontWeight: 'bold',
   },
   dayBox: {
     width: 28,

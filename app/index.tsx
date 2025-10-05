@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  AppState,
   Dimensions,
   Easing,
   FlatList,
@@ -209,6 +210,28 @@ export default function Index() {
       checkAndRecordStreak();
     }
   }, [isOnboardingLoading, onboardingData.completed]);
+
+  // Check for new day when app comes to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && !isOnboardingLoading && onboardingData.completed) {
+        const checkAndRecordStreak = async () => {
+          const isNewDay = await recordActivity();
+          if (isNewDay) {
+            // New day! Show the streak animation after a short delay
+            setTimeout(() => {
+              setShowStreakPopup(true);
+            }, 1000);
+          }
+        };
+        checkAndRecordStreak();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isOnboardingLoading, onboardingData.completed, recordActivity]);
 
   // Load and shuffle quotes based on selected categories
   useEffect(() => {

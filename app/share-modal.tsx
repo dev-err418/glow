@@ -226,7 +226,7 @@ export default function ShareModal() {
             activeOpacity={0.7}
           >
             <View style={styles.shareIconCircle}>
-              <Ionicons name="chatbubble" size={22} color={Colors.text.primary} />
+              <Ionicons name="chatbubble-outline" size={22} color={Colors.text.primary} />
             </View>
             <Text style={styles.shareIconLabel}>Messages</Text>
           </TouchableOpacity>
