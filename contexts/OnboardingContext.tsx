@@ -12,6 +12,7 @@ interface OnboardingData {
   categories?: string[];
   premiumTrialStartDate?: string;
   premiumPaywallAction?: 'started_trial' | 'skipped' | 'dismissed';
+  subscriptionType?: 'yearly' | 'monthly' | null;
   notificationsEnabled?: boolean;
   notificationsPerDay?: number;
   notificationStartTime?: string;
@@ -103,6 +104,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         widget_installed: onboardingData.widgetInstalled,
         premium_trial_start_date: onboardingData.premiumTrialStartDate,
         premium_paywall_action: onboardingData.premiumPaywallAction,
+        subscription_type: onboardingData.subscriptionType,
       });
     } catch (error) {
       // Fail silently - don't block user flow if Supabase submission fails

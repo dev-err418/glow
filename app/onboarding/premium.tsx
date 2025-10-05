@@ -45,13 +45,29 @@ export default function PremiumScreen() {
       const result = await showPaywall();
 
       if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
-        // User purchased or restored premium
+        // User purchased or restored premium - check subscription type
+        const Purchases = (await import('react-native-purchases')).default;
+        const customerInfo = await Purchases.getCustomerInfo();
+
+        // Check if user subscribed to yearly plan
+        const isYearlyPlan = customerInfo.entitlements.active['Premium']?.productIdentifier === '$rc_annual';
+        const subscriptionType = isYearlyPlan ? 'yearly' : 'monthly';
+
         const trialStartDate = new Date().toISOString();
         updateOnboardingData({
           premiumTrialStartDate: trialStartDate,
-          premiumPaywallAction: 'started_trial'
+          premiumPaywallAction: 'started_trial',
+          subscriptionType: subscriptionType
         });
-        await schedulePremiumReminder();
+
+        // Only schedule trial reminder for yearly subscribers
+        if (isYearlyPlan) {
+          await schedulePremiumReminder();
+          console.log('📅 Trial reminder scheduled for yearly subscriber');
+        } else {
+          console.log('📅 Skipping trial reminder - monthly subscriber');
+        }
+
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         completeOnboarding();
         router.replace('/');
