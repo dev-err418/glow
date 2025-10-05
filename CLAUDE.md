@@ -31,11 +31,23 @@ npx expo install         # Install Expo SDK packages
 ## Architecture
 
 ### Routing (File-based with expo-router)
-- **app/_layout.tsx**: Root layout with Stack navigator wrapping provider hierarchy
+- **app/_layout.tsx**: Root layout with Stack navigator wrapping provider hierarchy; handles widget deep links (`glow://?id=xyz`) and dismisses modals on background
 - **app/index.tsx**: Main home screen; auto-redirects to onboarding if not completed
 - **app/onboarding/**: Multi-screen onboarding flow (welcome, name, age, sex, mental-health, streak-intro, streak-goal, benefits, notifications, notification-permission, widget, premium, categories)
-- **app/categories-modal.tsx**: Modal for browsing affirmation categories
+- **app/categories/**: Category browsing and management
+  - **index.tsx**: Main categories browser
+  - **custom-quotes.tsx**: Create and manage custom user quotes
+  - **create-mix.tsx**: Create custom category mixes
+- **app/settings/**: Settings screens with nested routes
+  - **index.tsx**: Main settings screen
+  - **notifications.tsx**: Notification preferences
+  - **customer-center.tsx**: RevenueCat customer center (subscription management)
+  - **feedback.tsx**: User feedback submission
+  - **widget.tsx**: Widget installation instructions
+  - **edit-name.tsx**: Edit user name
+  - **edit-gender.tsx**: Edit user gender
 - **app/mix-modal.tsx**: Modal for category mixing/selection
+- **app/share-modal.tsx**: Modal for sharing affirmations (image export with quotes)
 
 Routes use Expo Router's file-based system where file structure defines navigation hierarchy.
 
@@ -43,10 +55,15 @@ Routes use Expo Router's file-based system where file structure defines navigati
 The app uses multiple context providers that wrap the entire application in a specific order (see `app/_layout.tsx`):
 
 **Provider Hierarchy** (outermost to innermost):
-1. **KeyboardProvider** - React Native Keyboard Controller
-2. **PremiumProvider** - RevenueCat integration
-3. **NotificationProvider** - Notification scheduling
-4. **OnboardingProvider** - Onboarding flow state
+1. **PostHogProvider** - Analytics and session replay
+2. **KeyboardProvider** - React Native Keyboard Controller
+3. **PremiumProvider** - RevenueCat integration
+4. **StreakProvider** - Daily activity streak tracking
+5. **CategoriesProvider** - Selected affirmation categories
+6. **NotificationProvider** - Notification scheduling
+7. **OnboardingProvider** - Onboarding flow state
+8. **FavoritesProvider** - Favorited quotes management
+9. **CustomQuotesProvider** - User-created custom quotes
 
 **PremiumContext** (`contexts/PremiumContext.tsx`):
 - Manages RevenueCat integration for premium subscriptions
@@ -69,6 +86,55 @@ The app uses multiple context providers that wrap the entire application in a sp
 - Handles permission requests and notification scheduling
 - Schedules notifications distributed between configurable time windows (default: 6 AM - 10 PM)
 - Access via `useNotifications()` hook
+
+**StreakContext** (`contexts/StreakContext.tsx`):
+- Manages daily activity streak tracking
+- Persists streak data to AsyncStorage (key: 'streakData')
+- Tracks consecutive days of user activity
+- Calculates current streak based on consecutive daily activity (today or yesterday counts as active)
+- Uses local timezone for date tracking (YYYY-MM-DD format)
+- Access via `useStreak()` hook
+
+**CategoriesContext** (`contexts/CategoriesContext.tsx`):
+- Manages selected affirmation categories for the user
+- Persists to AsyncStorage (key: 'selectedCategories')
+- Shares category data with iOS widget via ExtensionStorage (app group: 'group.com.arthurbuildsstuff.glow.widget')
+- Enforces at least one category must be selected (defaults to 'general')
+- Triggers widget reload when categories change
+- Access via `useCategories()` hook
+
+**FavoritesContext** (`contexts/FavoritesContext.tsx`):
+- Manages user's favorited quotes
+- Persists to AsyncStorage (key: 'favoriteQuotes')
+- Shares favorites with iOS widget via ExtensionStorage
+- Favorites identified by text + category combination
+- Access via `useFavorites()` hook
+
+**CustomQuotesContext** (`contexts/CustomQuotesContext.tsx`):
+- Manages user-created custom quotes
+- Persists to AsyncStorage (key: 'customQuotes')
+- Shares custom quotes with iOS widget via ExtensionStorage
+- Each quote has unique ID, text, creation timestamp, and favorite status
+- Access via `useCustomQuotes()` hook
+
+### Third-Party Integrations
+
+**PostHog Analytics** (analytics and session replay):
+- Configured in `app/_layout.tsx` with PostHogProvider
+- API key and host configured directly in code (EU instance)
+- Session replay enabled via `enableSessionReplay: true`
+- Autocapture enabled for automatic event tracking
+- **Important rules** (from `.cursor/rules/posthog-integration.mdc`):
+  - Feature flags: Use sparingly and in as few places as possible; store flag names in TypeScript enums or const objects with UPPERCASE_WITH_UNDERSCORE naming
+  - Custom properties: Use enums/const objects when referenced in multiple files or callsites
+  - Never hallucinate API keys; always use keys from `.env` file
+  - Consult with developer before creating new event/property names to maintain naming consistency
+
+**Sentry Error Tracking**:
+- Initialized in `app/_layout.tsx` with DSN for error monitoring
+- Root layout wrapped with `Sentry.wrap()` for error capture
+- `sendDefaultPii: true` adds additional context (IP, cookies, user data)
+- DSN points to DE region Sentry instance
 
 ### Backend Services
 

@@ -860,6 +860,7 @@ const styles = StyleSheet.create({
     color: Colors.text.white,
     fontSize: 18,
     textTransform: 'capitalize',
+    fontWeight: "500"
   },
   quoteTextContainer: {
     justifyContent: 'center',
