@@ -152,7 +152,7 @@ export default function CategoriesIndex() {
     router.back();
   };
 
-  const mostPopular = [
+  const quickAccess = [
     { title: 'General', value: 'general', icon: 'sparkles' as const, isLocked: false },
     {
       title: 'My own quotes',
@@ -169,20 +169,27 @@ export default function CategoriesIndex() {
       isLocked: false,
       subtitle: `${favorites.length} ${favorites.length === 1 ? 'quote' : 'quotes'}`
     },
-    { title: 'Winter', value: 'winter', icon: 'snow' as const, isLocked: true },
   ];
 
   const forYou = [
-    { title: 'Self-care', value: 'self-care', icon: 'flower' as const, isLocked: true },
-    { title: 'Mindfulness', value: 'mindfulness', icon: 'leaf' as const, isLocked: true },
+    { title: 'Winter', value: 'winter', icon: 'snow' as const, isLocked: false },
+    { title: 'Morning vibes', value: 'morning-vibes', icon: 'sunny' as const, isLocked: true },
+    { title: 'Energy', value: 'energy', icon: 'flash' as const, isLocked: false },
     { title: 'Motivation', value: 'motivation', icon: 'rocket' as const, isLocked: true },
+    { title: 'Self-care', value: 'self-care', icon: 'flower' as const, isLocked: true },
+    { title: 'Mindfulness', value: 'mindfulness', icon: 'leaf' as const, isLocked: false },
+    { title: 'Sleep & rest', value: 'sleep-rest', icon: 'moon' as const, isLocked: true },
+    { title: 'Stress relief', value: 'stress-relief', icon: 'happy' as const, isLocked: true },
+    { title: 'Anxiety', value: 'anxiety', icon: 'alert-circle' as const, isLocked: true },
+    { title: 'Focus', value: 'focus', icon: 'eye' as const, isLocked: true },
+    { title: 'Overthinking', value: 'overthinking', icon: 'infinite' as const, isLocked: true },
+    { title: 'Peace', value: 'peace', icon: 'sunny' as const, isLocked: true },
     { title: 'Gratitude', value: 'gratitude', icon: 'heart-circle' as const, isLocked: true },
     { title: 'Confidence', value: 'confidence', icon: 'star' as const, isLocked: true },
-    { title: 'Peace', value: 'peace', icon: 'sunny' as const, isLocked: true },
     { title: 'Growth', value: 'growth', icon: 'trending-up' as const, isLocked: true },
-    { title: 'Energy', value: 'energy', icon: 'flash' as const, isLocked: true },
-    { title: 'Overthinking', value: 'overthinking', icon: 'infinite' as const, isLocked: true },
-    { title: 'Stress relief', value: 'stress-relief', icon: 'happy' as const, isLocked: true },
+    { title: 'Boundaries', value: 'boundaries', icon: 'shield' as const, isLocked: true },
+    { title: 'Relationships', value: 'relationships', icon: 'people' as const, isLocked: true },
+    { title: 'Change', value: 'change', icon: 'swap-horizontal' as const, isLocked: true },
   ];
 
   return (
@@ -206,16 +213,15 @@ export default function CategoriesIndex() {
         )}
       </View>
 
-          {/* Title */}
-          <Text style={styles.pageTitle}>Categories</Text>
-
-          {/* Animated Mascot */}
-          <View style={styles.mascotWrapper}>
-            <AnimatedMascot />
-          </View>
-
           {/* Content */}
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+            {/* Title */}
+            <Text style={styles.pageTitle}>Categories</Text>
+
+            {/* Animated Mascot */}
+            <View style={styles.mascotWrapper}>
+              <AnimatedMascot />
+            </View>
             {/* Create My Own Mix Button */}
             <TouchableOpacity
               style={styles.createMixButton}
@@ -267,11 +273,10 @@ export default function CategoriesIndex() {
               </Text>
             )}
 
-            {/* Most Popular Section */}
+            {/* Quick Access Categories */}
             <View style={[styles.section, selectedCategories.length === 1 && { marginTop: 16 }]}>
-              <Text style={styles.sectionTitle}>Most Popular</Text>
               <View style={styles.grid}>
-                {mostPopular.map((category, index) => (
+                {quickAccess.map((category, index) => (
                   <CategoryCard
                     key={index}
                     title={category.title}
@@ -345,6 +350,7 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.primary,
     textAlign: 'right',
+    fontWeight: "500"
   },
   mascotWrapper: {
     alignItems: 'center',
