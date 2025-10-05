@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
-import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import React, { useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
+  Linking,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -21,12 +24,18 @@ export default function ShareModal() {
   const router = useRouter();
   const params = useLocalSearchParams<{ text: string; category: string }>();
   const viewShotRef = useRef<ViewShot>(null);
-  const [isSharing, setIsSharing] = useState(false);
+  const [mascotReading, setMascotReading] = useState(false);
 
-  const handleShare = async () => {
+  const handleSaveImage = async () => {
     try {
-      setIsSharing(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Please grant photo library access to save the image.');
+        return;
+      }
 
       // Capture the view as an image
       const uri = await viewShotRef.current?.capture?.();
@@ -35,25 +44,91 @@ export default function ShareModal() {
         throw new Error('Failed to capture image');
       }
 
-      // Check if sharing is available
-      const isAvailable = await Sharing.isAvailableAsync();
+      // Save to media library
+      await MediaLibrary.saveToLibraryAsync(uri);
 
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Success', 'Image saved to your photo library!');
+
+    } catch (error) {
+      console.error('Error saving image:', error);
+      Alert.alert('Error', 'Failed to save the image. Please try again.');
+    }
+  };
+
+  const handleToggleMascot = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setMascotReading(!mascotReading);
+  };
+
+  const handleCopyText = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await Clipboard.setStringAsync(params.text);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Copied!', 'Quote text copied to clipboard.');
+    } catch (error) {
+      console.error('Error copying text:', error);
+      Alert.alert('Error', 'Failed to copy text. Please try again.');
+    }
+  };
+
+  const handleShareMessages = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const messageText = `${params.text}\n\nFrom "Glow - Your daily light" app`;
+      const smsUrl = `sms:&body=${encodeURIComponent(messageText)}`;
+      const canOpen = await Linking.canOpenURL(smsUrl);
+      if (canOpen) {
+        await Linking.openURL(smsUrl);
+      } else {
+        Alert.alert('Error', 'Failed to share via Messages.');
+      }
+    } catch (error) {
+      console.error('Error sharing via Messages:', error);
+      Alert.alert('Error', 'Failed to share via Messages.');
+    }
+  };
+
+  const handleShareWhatsApp = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const messageText = `${params.text}\n\nFrom "Glow - Your daily light" app`;
+      const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(messageText)}`;
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        Alert.alert('WhatsApp not installed', 'Please install WhatsApp to use this feature.');
+      }
+    } catch (error) {
+      console.error('Error sharing via WhatsApp:', error);
+      Alert.alert('Error', 'Failed to share via WhatsApp.');
+    }
+  };
+
+  const handleShareMore = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      const uri = await viewShotRef.current?.capture?.();
+      if (!uri) {
+        throw new Error('Failed to capture image');
+      }
+
+      const isAvailable = await Sharing.isAvailableAsync();
       if (!isAvailable) {
         Alert.alert('Sharing not available', 'Sharing is not available on this device');
         return;
       }
 
-      // Share the image
       await Sharing.shareAsync(uri, {
         mimeType: 'image/png',
         dialogTitle: 'Share your quote',
       });
-
     } catch (error) {
       console.error('Error sharing:', error);
-      Alert.alert('Error', 'Failed to share the image. Please try again.');
-    } finally {
-      setIsSharing(false);
+      Alert.alert('Error', 'Failed to share the image.');
     }
   };
 
@@ -69,59 +144,115 @@ export default function ShareModal() {
           style={styles.headerButton}
         >
           <Ionicons name="close" size={28} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={styles.modalTitle}>Share Quote</Text>
+        </TouchableOpacity>        
         <View style={styles.headerButton} />
       </View>
 
       {/* Quote Display - Shareable Image */}
       <View style={styles.content}>
-        <ViewShot
-          ref={viewShotRef}
-          options={{
-            format: 'png',
-            quality: 1.0,
-          }}
-          style={styles.viewShotContainer}
-        >
-          <View style={styles.shareableCard}>
-            {/* Quote Text */}
-            <View style={styles.quoteSection}>
+        <View style={styles.viewShotWrapper}>
+          <ViewShot
+            ref={viewShotRef}
+            options={{
+              format: 'png',
+              quality: 1.0,
+            }}
+            style={styles.viewShotContainer}
+          >
+            <View style={styles.shareableCard}>
+              {/* Quote Text */}
               <Text style={styles.quoteText}>{params.text}</Text>
-            </View>
 
-            {/* Bottom Section with Mascot */}
-            <View style={styles.bottomSection}>
+              {/* Mascot peeking from bottom-left (cropped by card border) */}
               <Image
-                source={require('../assets/images/mascot-alone.png')}
+                source={
+                  mascotReading
+                    ? require('../assets/images/mascot-alone-reading.png')
+                    : require('../assets/images/mascot-alone.png')
+                }
                 style={styles.mascotImage}
                 resizeMode="contain"
               />
-              <View style={styles.brandingSection}>
-                <Text style={styles.appName}>Glow</Text>
-                {params.category && (
-                  <Text style={styles.categoryText}>{params.category}</Text>
-                )}
-              </View>
             </View>
-          </View>
-        </ViewShot>
+          </ViewShot>
+        </View>
 
-        {/* Share Button */}
-        <TouchableOpacity
-          style={styles.shareButton}
-          onPress={handleShare}
-          disabled={isSharing}
+        {/* Badge Action Buttons - Horizontal Scroll */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.badgeScrollContent}
+          style={styles.badgeScroll}
         >
-          {isSharing ? (
-            <ActivityIndicator color={Colors.text.white} />
-          ) : (
-            <>
-              <Ionicons name="share-outline" size={24} color={Colors.text.white} />
-              <Text style={styles.shareButtonText}>Share Image</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionBadge}
+            onPress={handleSaveImage}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="download-outline" size={18} color={Colors.text.primary} />
+            <Text style={styles.badgeLabel}>Save Image</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionBadge, mascotReading && styles.actionBadgeSelected]}
+            onPress={handleToggleMascot}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="shirt-outline"
+              size={18}
+              color={mascotReading ? Colors.secondary : Colors.text.primary}
+            />
+            <Text style={[styles.badgeLabel, mascotReading && styles.badgeLabelSelected]}>
+              Change Glow outfit
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionBadge}
+            onPress={handleCopyText}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="copy-outline" size={18} color={Colors.text.primary} />
+            <Text style={styles.badgeLabel}>Copy text</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Native Sharing Buttons - Right Aligned */}
+        <View style={styles.sharingRow}>
+          <TouchableOpacity
+            style={styles.shareIconButton}
+            onPress={handleShareMessages}
+            activeOpacity={0.7}
+          >
+            <View style={styles.shareIconCircle}>
+              <Ionicons name="chatbubble" size={22} color={Colors.text.primary} />
+            </View>
+            <Text style={styles.shareIconLabel}>Messages</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.shareIconButton}
+            onPress={handleShareWhatsApp}
+            activeOpacity={0.7}
+          >
+            <View style={styles.shareIconCircle}>
+              <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
+            </View>
+            <Text style={styles.shareIconLabel}>WhatsApp</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.shareIconButton}
+            onPress={handleShareMore}
+            activeOpacity={0.7}
+          >
+            <View style={styles.shareIconCircle}>
+              <Ionicons name="share-outline" size={22} color={Colors.text.primary} />
+            </View>
+            <Text style={styles.shareIconLabel}>Share more</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -156,88 +287,117 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 24,
   },
+  viewShotWrapper: {
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 20,
+    },
+    shadowOpacity: 0.45,
+    shadowRadius: 40,
+    elevation: 24,
+  },
   viewShotContainer: {
     backgroundColor: 'transparent',
   },
   shareableCard: {
-    backgroundColor: Colors.background.primary,
+    backgroundColor: Colors.background.default,
     borderRadius: 30,
-    padding: 40,
-    width: 350,
-    minHeight: 500,
-    shadowColor: Colors.shadow.dark,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  quoteSection: {
-    flex: 1,
+    padding: 48,
+    width: 340,
+    height: 500,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 20,
+    overflow: 'hidden',
   },
   quoteText: {
     ...Typography.h2,
-    fontSize: 26,
-    lineHeight: 36,
+    fontSize: 30,
+    lineHeight: 42,
     textAlign: 'center',
     color: Colors.text.primary,
   },
-  bottomSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
   mascotImage: {
-    width: 80,
-    height: 80,
+    width: 200,
+    height: 200,
+    position: 'absolute',
+    left: -40,
+    bottom: -60,
+    transform: [{rotate: "10deg"}]
   },
-  brandingSection: {
-    flex: 1,
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-    paddingBottom: 8,
+  badgeScroll: {
+    maxHeight: 50,
+    paddingHorizontal: 28,    
+    marginHorizontal: -20,
   },
-  appName: {
-    ...Typography.h3,
-    fontSize: 24,
-    color: Colors.primary,
-    fontWeight: '600',
+  badgeScrollContent: {
+    gap: 8,
+    paddingRight: 28,
   },
-  categoryText: {
-    ...Typography.body,
-    fontSize: 14,
-    color: Colors.text.secondary,
-    textTransform: 'capitalize',
-    marginTop: 4,
-  },
-  shareButton: {
+  actionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
+    backgroundColor: Colors.background.primary,
     borderRadius: 30,
-    gap: 12,
-    minWidth: 200,
-    shadowColor: Colors.shadow.dark,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    gap: 8,
+    shadowColor: Colors.shadow.light,
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 1,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  shareButtonText: {
-    ...Typography.h3,
-    fontSize: 18,
-    color: Colors.text.white,
+  actionBadgeSelected: {
+    backgroundColor: Colors.background.primary,
+    borderColor: Colors.secondary,
+  },
+  badgeLabel: {
+    ...Typography.body,
+    fontSize: 15,
+    color: Colors.text.primary,
+  },
+  badgeLabelSelected: {
+    color: Colors.secondary,
+  },
+  sharingRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    marginTop: 12,
+  },
+  shareIconButton: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  shareIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.background.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shareIconLabel: {
+    ...Typography.body,
+    fontSize: 11,
+    color: Colors.text.primary,
+    textAlign: 'center',
   },
 });

@@ -380,6 +380,7 @@ const styles = StyleSheet.create({
     color: Colors.text.white,
     marginLeft: 8,
     fontSize: 16,
+    fontWeight: 600
   },
   section: {
     marginBottom: 32,
@@ -435,6 +436,7 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     marginBottom: 4,
     flexWrap: 'wrap',
+    fontWeight: "500"
   },
   categorySubtitle: {
     fontSize: 12,
