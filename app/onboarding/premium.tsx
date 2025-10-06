@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useLayoutEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Purchases from 'react-native-purchases';
 import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
@@ -46,7 +47,6 @@ export default function PremiumScreen() {
 
       if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
         // User purchased or restored premium - check subscription type
-        const Purchases = (await import('react-native-purchases')).default;
         const customerInfo = await Purchases.getCustomerInfo();
 
         // Check if user subscribed to yearly plan
