@@ -386,59 +386,6 @@ export default function Index() {
     }
   };
 
-  const resetFirstSwipeState = async () => {
-    setHasCompletedFirstSwipe(false);
-    uiOpacity.setValue(0);
-    try {
-      await AsyncStorage.removeItem('firstSwipeCompleted');
-    } catch (error) {
-      console.error('Error resetting first swipe state:', error);
-    }
-
-    // Stop any existing animation
-    if (bounceAnimationRef.current) {
-      bounceAnimationRef.current.stop();
-      bounceAnimationRef.current = null;
-    }
-
-    // Reset animation values
-    hintTranslateY.setValue(0);
-    hintOpacity.setValue(0);
-
-    // Show swipe hint immediately
-    setShowSwipeHint(true);
-
-    // Start bounce animation for tutorial
-    const bounceLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(hintTranslateY, {
-          toValue: -20,
-          duration: 1000,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(hintTranslateY, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.in(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    bounceAnimationRef.current = bounceLoop;
-
-    // Fade in hint and start bounce
-    Animated.parallel([
-      Animated.timing(hintOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      bounceLoop,
-    ]).start();
-  };
-
   const handleResetOnboarding = async () => {
     Alert.alert(
       'Reset Onboarding',
@@ -996,20 +943,6 @@ export default function Index() {
           visible={showStreakPopup}
           onComplete={() => setShowStreakPopup(false)}
         />
-
-        {/* Debug Button - Only in development */}
-        {__DEV__ && (
-          <TouchableOpacity
-            style={styles.debugButton}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              resetFirstSwipeState();
-            }}
-          >
-            <Ionicons name="bug-outline" size={24} color={Colors.text.white} />
-            <Text style={styles.debugButtonText}>Reset Tutorial</Text>
-          </TouchableOpacity>
-        )}
       </View>
     );
   }
@@ -1183,24 +1116,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
-  },
-  debugButton: {
-    position: 'absolute',
-    left: 20,
-    top: '50%',
-    marginTop: -40,
-    backgroundColor: 'rgba(128, 128, 128, 0.8)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    zIndex: 1000,
-  },
-  debugButtonText: {
-    color: Colors.text.white,
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
