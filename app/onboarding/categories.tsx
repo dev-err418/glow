@@ -10,15 +10,15 @@ import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
 const CATEGORY_OPTIONS = [
-  { label: 'Self-care', value: 'self-care' },
-  { label: 'Mindfulness', value: 'mindfulness' },
-  { label: 'Motivation', value: 'motivation' },
-  { label: 'Gratitude', value: 'gratitude' },
-  { label: 'Confidence', value: 'confidence' },
-  { label: 'Peace', value: 'peace' },
-  { label: 'Growth', value: 'growth' },
-  { label: 'Energy', value: 'energy' },
-  { label: 'Stress relief', value: 'stress-relief' },
+  { label: '🧘 Self-care', value: 'self-care' },
+  { label: '🧠 Mindfulness', value: 'mindfulness' },
+  { label: '💪 Motivation', value: 'motivation' },
+  { label: '🙏 Gratitude', value: 'gratitude' },
+  { label: '✨ Confidence', value: 'confidence' },
+  { label: '☮️ Peace', value: 'peace' },
+  { label: '🌱 Growth', value: 'growth' },
+  { label: '⚡ Energy', value: 'energy' },
+  { label: '😌 Stress relief', value: 'stress-relief' },
 ];
 
 export default function CategoriesScreen() {
