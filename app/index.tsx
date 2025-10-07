@@ -139,6 +139,7 @@ export default function Index() {
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
   const [likeHeartRotationDeg, setLikeHeartRotationDeg] = useState(0);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [hasCompletedFirstSwipe, setHasCompletedFirstSwipe] = useState(false);
 
   // Idle timer and animation values
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -165,6 +166,25 @@ export default function Index() {
   // Animated values for mascot position (left and bottom)
   const mascotLeft = useRef(new Animated.Value(MASCOT_HIDDEN.left)).current;
   const mascotBottom = useRef(new Animated.Value(MASCOT_HIDDEN.bottom)).current;
+
+  // Animated values for UI element fade-ins after first swipe
+  const uiOpacity = useRef(new Animated.Value(0)).current;
+
+  // Load first swipe state on mount
+  useEffect(() => {
+    const loadFirstSwipeState = async () => {
+      try {
+        const value = await AsyncStorage.getItem('firstSwipeCompleted');
+        if (value === 'true') {
+          setHasCompletedFirstSwipe(true);
+          uiOpacity.setValue(1); // Set UI to visible if already completed
+        }
+      } catch (error) {
+        console.error('Error loading first swipe state:', error);
+      }
+    };
+    loadFirstSwipeState();
+  }, []);
 
   useEffect(() => {
     // Wait for data to load before making navigation decisions
@@ -316,6 +336,109 @@ export default function Index() {
     setQuotes((prev) => [...prev, ...shuffled]);
   };
 
+  const completeFirstSwipe = async () => {
+    if (!hasCompletedFirstSwipe) {
+      // First, hide the swipe hint with its tutorial appearance
+      if (showSwipeHint) {
+        // Stop bounce animation
+        if (bounceAnimationRef.current) {
+          bounceAnimationRef.current.stop();
+          bounceAnimationRef.current = null;
+        }
+
+        setShowSwipeHint(false);
+        Animated.timing(hintOpacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          // After hint is hidden, update state and show UI
+          setHasCompletedFirstSwipe(true);
+
+          // Save to storage
+          AsyncStorage.setItem('firstSwipeCompleted', 'true').catch((error) => {
+            console.error('Error saving first swipe state:', error);
+          });
+
+          // Animate UI elements appearing with longer duration
+          Animated.timing(uiOpacity, {
+            toValue: 1,
+            duration: 1200, // Increased from 500ms
+            useNativeDriver: true,
+          }).start();
+        });
+      } else {
+        // If hint not showing, proceed immediately
+        setHasCompletedFirstSwipe(true);
+
+        try {
+          await AsyncStorage.setItem('firstSwipeCompleted', 'true');
+        } catch (error) {
+          console.error('Error saving first swipe state:', error);
+        }
+
+        Animated.timing(uiOpacity, {
+          toValue: 1,
+          duration: 1200, // Increased from 500ms
+          useNativeDriver: true,
+        }).start();
+      }
+    }
+  };
+
+  const resetFirstSwipeState = async () => {
+    setHasCompletedFirstSwipe(false);
+    uiOpacity.setValue(0);
+    try {
+      await AsyncStorage.removeItem('firstSwipeCompleted');
+    } catch (error) {
+      console.error('Error resetting first swipe state:', error);
+    }
+
+    // Stop any existing animation
+    if (bounceAnimationRef.current) {
+      bounceAnimationRef.current.stop();
+      bounceAnimationRef.current = null;
+    }
+
+    // Reset animation values
+    hintTranslateY.setValue(0);
+    hintOpacity.setValue(0);
+
+    // Show swipe hint immediately
+    setShowSwipeHint(true);
+
+    // Start bounce animation for tutorial
+    const bounceLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(hintTranslateY, {
+          toValue: -20,
+          duration: 1000,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(hintTranslateY, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    bounceAnimationRef.current = bounceLoop;
+
+    // Fade in hint and start bounce
+    Animated.parallel([
+      Animated.timing(hintOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      bounceLoop,
+    ]).start();
+  };
+
   const handleResetOnboarding = async () => {
     Alert.alert(
       'Reset Onboarding',
@@ -330,6 +453,7 @@ export default function Index() {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.removeItem('onboardingData');
+            await AsyncStorage.removeItem('firstSwipeCompleted'); // Reset first swipe state too
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             router.replace('/onboarding/welcome');
           },
@@ -521,6 +645,11 @@ export default function Index() {
   }, [selectedCategories]);
 
   const resetIdleTimer = () => {
+    // If first swipe not completed, don't use timer - keep hint visible
+    if (!hasCompletedFirstSwipe) {
+      return;
+    }
+
     // Clear existing timer
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
@@ -549,18 +678,21 @@ export default function Index() {
     idleTimerRef.current = setTimeout(() => {
       setShowSwipeHint(true);
 
+      // Reset animation value to ensure clean start
+      hintTranslateY.setValue(0);
+
       // Create and store bounce animation with easing
       const bounceLoop = Animated.loop(
         Animated.sequence([
           Animated.timing(hintTranslateY, {
-            toValue: -10,
-            duration: 600,
+            toValue: -15,
+            duration: 800,
             easing: Easing.out(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(hintTranslateY, {
             toValue: 0,
-            duration: 600,
+            duration: 800,
             easing: Easing.in(Easing.ease),
             useNativeDriver: true,
           }),
@@ -584,7 +716,47 @@ export default function Index() {
 
   // Start idle timer on mount and clean up on unmount
   useEffect(() => {
-    resetIdleTimer();
+    // If first swipe not completed, show hint immediately
+    if (!hasCompletedFirstSwipe && onboardingData.completed) {
+      setShowSwipeHint(true);
+
+      // Reset animation values
+      hintTranslateY.setValue(0);
+      hintOpacity.setValue(0);
+
+      // Start bounce animation immediately for first-time users
+      const bounceLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(hintTranslateY, {
+            toValue: -20, // Increased movement for better visibility
+            duration: 1000,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(hintTranslateY, {
+            toValue: 0,
+            duration: 1000,
+            easing: Easing.in(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+
+      bounceAnimationRef.current = bounceLoop;
+
+      // Fade in hint
+      Animated.parallel([
+        Animated.timing(hintOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        bounceLoop,
+      ]).start();
+    } else {
+      resetIdleTimer();
+    }
+
     return () => {
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
@@ -593,7 +765,7 @@ export default function Index() {
         bounceAnimationRef.current.stop();
       }
     };
-  }, []);
+  }, [hasCompletedFirstSwipe, onboardingData.completed]);
 
   // Handle deep link via URL params
   useEffect(() => {
@@ -660,27 +832,28 @@ export default function Index() {
     return (
       <View style={styles.container}>
         {/* Quote Feed */}
-        <Animated.View
-          style={{
-            flex: 1,
-            transform: [{ translateY: hintTranslateY }],
-          }}
-        >
+        <View style={{ flex: 1 }}>
           <FlatList
             ref={flatListRef}
             data={quotes}
             renderItem={renderQuote}
             keyExtractor={(item, index) => `${item.text}-${index}`}
             pagingEnabled
-            snapToInterval={screenHeight}
-            snapToAlignment="start"
-            decelerationRate="fast"
+            // snapToInterval={screenHeight}
+            // snapToAlignment="start"
+            decelerationRate={0}
             showsVerticalScrollIndicator={false}
             bounces={true}
             onEndReached={loadMoreQuotes}
             onEndReachedThreshold={0.5}
             onScroll={resetIdleTimer}
             scrollEventThrottle={400}
+            onMomentumScrollEnd={() => {
+              // Complete first swipe tutorial when user scrolls
+              if (!hasCompletedFirstSwipe) {
+                completeFirstSwipe();
+              }
+            }}
             onViewableItemsChanged={({ viewableItems }) => {
               if (viewableItems.length > 0 && viewableItems[0].index !== null) {
                 setCurrentViewIndex(viewableItems[0].index);
@@ -700,43 +873,49 @@ export default function Index() {
               }, 100);
             }}
           />
-        </Animated.View>
+        </View>
 
         {/* Fixed Category Badge */}
         {currentCategory && (
+          <Animated.View style={[styles.categoryBadgeWrapper, { opacity: uiOpacity }]} pointerEvents="box-none">
+            <TouchableOpacity
+              style={styles.categoryBadge}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push('/categories');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.categoryBadgeText}>{currentCategory}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* Floating Categories Button */}
+        <Animated.View style={[styles.categoriesButtonWrapper, { opacity: uiOpacity }]} pointerEvents="box-none">
           <TouchableOpacity
-            style={styles.categoryBadge}
+            style={styles.categoriesButton}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               router.push('/categories');
             }}
-            activeOpacity={0.7}
           >
-            <Text style={styles.categoryBadgeText}>{currentCategory}</Text>
+            <Ionicons name="grid-outline" size={18} color={Colors.text.white} />
           </TouchableOpacity>
-        )}
-
-        {/* Floating Categories Button */}
-        <TouchableOpacity
-          style={styles.categoriesButton}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/categories');
-          }}
-        >
-          <Ionicons name="grid-outline" size={18} color={Colors.text.white} />
-        </TouchableOpacity>
+        </Animated.View>
 
         {/* Floating Settings Button */}
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/settings');
-          }}
-        >
-          <Ionicons name="person-outline" size={18} color={Colors.text.white} />
-        </TouchableOpacity>
+        <Animated.View style={[styles.settingsButtonWrapper, { opacity: uiOpacity }]} pointerEvents="box-none">
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push('/settings');
+            }}
+          >
+            <Ionicons name="person-outline" size={18} color={Colors.text.white} />
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Particle Trail */}
         {particles.length > 0 && (
@@ -747,22 +926,24 @@ export default function Index() {
         )}
 
         {/* Interactive Mascot */}
-        <Animated.View
-          style={[
-            styles.mascotContainer,
-            {
-              left: mascotLeft,
-              bottom: mascotBottom,
-            },
-          ]}
-          pointerEvents="box-none"
-        >
-          <InteractiveMascot
-            size={MASCOT_SIZE}
-            onPress={handleMascotPress}
-            baseRotation={isMascotVisible ? ROTATION_VISIBLE : ROTATION_HIDDEN}
-            isReading={isMascotVisible}
-          />
+        <Animated.View style={{ opacity: uiOpacity }} pointerEvents="box-none">
+          <Animated.View
+            style={[
+              styles.mascotContainer,
+              {
+                left: mascotLeft,
+                bottom: mascotBottom,
+              },
+            ]}
+            pointerEvents="box-none"
+          >
+            <InteractiveMascot
+              size={MASCOT_SIZE}
+              onPress={handleMascotPress}
+              baseRotation={isMascotVisible ? ROTATION_VISIBLE : ROTATION_HIDDEN}
+              isReading={isMascotVisible}
+            />
+          </Animated.View>
         </Animated.View>
 
         {/* Swipe Hint */}
@@ -777,10 +958,17 @@ export default function Index() {
             ]}
             pointerEvents="none"
           >
-            <Ionicons name="chevron-up" size={40} color={Colors.text.secondary} />
-            <Animated.Text style={[styles.swipeHintText, { opacity: hintOpacity }]}>
+            <Ionicons
+              name="chevron-up"
+              size={40}
+              color={!hasCompletedFirstSwipe ? Colors.primary : Colors.text.secondary}
+            />
+            <Text style={[styles.swipeHintText, {
+              color: !hasCompletedFirstSwipe ? Colors.primary : Colors.text.secondary,
+              fontWeight: !hasCompletedFirstSwipe ? 'bold' : '400'
+            }]}>
               Swipe up for next quote
-            </Animated.Text>
+            </Text>
           </Animated.View>
         )}
 
@@ -808,6 +996,20 @@ export default function Index() {
           visible={showStreakPopup}
           onComplete={() => setShowStreakPopup(false)}
         />
+
+        {/* Debug Button - Only in development */}
+        {__DEV__ && (
+          <TouchableOpacity
+            style={styles.debugButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              resetFirstSwipeState();
+            }}
+          >
+            <Ionicons name="bug-outline" size={24} color={Colors.text.white} />
+            <Text style={styles.debugButtonText}>Reset Tutorial</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -837,13 +1039,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 40,
   },
-  categoryBadge: {
+  categoryBadgeWrapper: {
     position: 'absolute',
     top: 80,
     alignSelf: 'center',
+    zIndex: 10,
+  },
+  categoryBadge: {
     backgroundColor: Colors.primary,
     paddingHorizontal: 20,
-    justifyContent: "center"    ,
+    justifyContent: "center",
     height: 50,
     borderRadius: 20,
     shadowColor: Colors.shadow.medium,
@@ -854,7 +1059,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
-    zIndex: 10,
   },
   categoryBadgeText: {
     color: Colors.text.white,
@@ -887,10 +1091,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  categoriesButton: {
+  categoriesButtonWrapper: {
     position: 'absolute',
     right: 25,
     bottom: 25,
+    zIndex: 10,
+  },
+  categoriesButton: {
     width: 55,
     height: 55,
     borderRadius: 30,
@@ -905,12 +1112,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    zIndex: 10,
   },
-  settingsButton: {
+  settingsButtonWrapper: {
     position: 'absolute',
     right: 25,
     top: 80,
+    zIndex: 10,
+  },
+  settingsButton: {
     width: 55,
     height: 55,
     borderRadius: 30,
@@ -925,7 +1134,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    zIndex: 10,
   },
   menuButton: {
     position: 'absolute',
@@ -975,5 +1183,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
+  },
+  debugButton: {
+    position: 'absolute',
+    left: 20,
+    top: '50%',
+    marginTop: -40,
+    backgroundColor: 'rgba(128, 128, 128, 0.8)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 1000,
+  },
+  debugButtonText: {
+    color: Colors.text.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
