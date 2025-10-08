@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as StoreReview from 'expo-store-review';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -80,6 +81,12 @@ export default function CustomQuotesScreen() {
               }
               addCustomQuote(text);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+              // Check if we hit a milestone and request review
+              const newQuotesCount = customQuotes.length + 1;
+              if (newQuotesCount === 2 || newQuotesCount === 5 || newQuotesCount === 10) {
+                StoreReview.requestReview();
+              }
             }
           },
         },

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
+import * as StoreReview from 'expo-store-review';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -389,6 +390,13 @@ export default function Index() {
     } else {
       // Liking - add to favorites
       addFavorite(quote);
+
+      // Check if we hit a milestone and request review
+      const newFavoritesCount = favorites.length + 1;
+      if (newFavoritesCount >= 15 && newFavoritesCount % 15 === 0) {
+        // Request review at milestones: 15, 30, 45, etc.
+        StoreReview.requestReview();
+      }
 
       // Show large heart animation
       setShowLikeHeart(true);
