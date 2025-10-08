@@ -6,7 +6,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   AppState,
   Dimensions,
@@ -15,14 +14,17 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
-  View
+  View,
+  ViewToken
 } from 'react-native';
-import { InteractiveMascot } from '../components/InteractiveMascot';
-import { ParticleTrail } from '../components/ParticleTrail';
 import { StreakAnimationPopup } from '../components/StreakAnimationPopup';
+import { LikeHeartAnimation } from '../components/home/LikeHeartAnimation';
+import { MascotSection, Particle } from '../components/home/MascotSection';
+import { Quote } from '../components/home/QuoteCard';
+import { QuoteFeed } from '../components/home/QuoteFeed';
+import { SwipeHint } from '../components/home/SwipeHint';
+import { UIControls } from '../components/home/UIControls';
 import { Colors } from '../constants/Colors';
-import { Typography } from '../constants/Typography';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -30,23 +32,10 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
 
 // Import quotes
 const quotesData = require('../assets/data/quotes.json');
-
-interface Quote {
-  id: string;
-  text: string;
-  category: string;
-}
-
-interface Particle {
-  id: string;
-  x: number;
-  y: number;
-  delay: number;
-}
 
 // Mascot positions for toggle show/hide
 const MASCOT_SIZE = 180;
@@ -54,72 +43,6 @@ const MASCOT_HIDDEN = { left: -50, bottom: -50 };      // Bottom-left corner, pe
 const MASCOT_VISIBLE = { left: -30, bottom: 250 };   // Upper-right, reading position
 const ROTATION_HIDDEN = '15deg';   // Tilted right when hidden
 const ROTATION_VISIBLE = '-30deg'; // Tilted left when visible
-
-interface QuoteItemProps {
-  item: Quote;
-  onLike: (quote: Quote, scaleAnim: Animated.Value) => void;
-  onShare: (quote: Quote) => void;
-  isFavorite: boolean;
-  onTap: () => void;
-}
-
-function QuoteItem({ item, onLike, onShare, isFavorite, onTap }: QuoteItemProps) {
-  const likeScaleAnim = useRef(new Animated.Value(1)).current;
-  const lastTap = useRef<number>(0);
-
-  const handleDoubleTap = () => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-
-    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
-      // Double tap detected - like the quote
-      onLike(item, likeScaleAnim);
-    }
-    lastTap.current = now;
-  };
-
-  return (
-    <TouchableWithoutFeedback onPress={handleDoubleTap}>
-      <View style={styles.quoteContainer}>
-        {/* Quote Text */}
-        <TouchableOpacity
-          style={styles.quoteTextContainer}
-          onPress={onTap}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.quoteText}>{item.text}</Text>
-        </TouchableOpacity>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtonsContainer}>
-        {/* Share Button (left) */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onShare(item)}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="share-outline" size={36} color={Colors.text.primary} />
-        </TouchableOpacity>
-
-        {/* Like Button (right) */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onLike(item, likeScaleAnim)}
-          activeOpacity={0.7}
-        >
-          <Animated.View style={{ transform: [{ scale: likeScaleAnim }] }}>
-            <Ionicons
-              name={isFavorite ? 'heart' : 'heart-outline'}
-              size={36}
-              color={isFavorite ? Colors.primary : Colors.text.primary}
-            />
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
-      </View>
-    </TouchableWithoutFeedback>
-  );
-}
 
 export default function Index() {
   const router = useRouter();
@@ -155,7 +78,7 @@ export default function Index() {
   const quotePoolRef = useRef<Quote[]>([]);
 
   // FlatList ref for scrolling to specific quote
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<Quote>>(null);
 
   // Track if we've handled the initial deep link URL
   const hasHandledInitialUrl = useRef(false);
@@ -386,27 +309,57 @@ export default function Index() {
     }
   };
 
-  const handleResetOnboarding = async () => {
-    Alert.alert(
-      'Reset Onboarding',
-      'Are you sure you want to reset the onboarding process? This will clear all your saved data.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.removeItem('onboardingData');
-            await AsyncStorage.removeItem('firstSwipeCompleted'); // Reset first swipe state too
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            router.replace('/onboarding/welcome');
-          },
-        },
-      ]
+  const resetFirstSwipeState = async () => {
+    setHasCompletedFirstSwipe(false);
+    uiOpacity.setValue(0);
+    try {
+      await AsyncStorage.removeItem('firstSwipeCompleted');
+    } catch (error) {
+      console.error('Error resetting first swipe state:', error);
+    }
+
+    // Stop any existing animation
+    if (bounceAnimationRef.current) {
+      bounceAnimationRef.current.stop();
+      bounceAnimationRef.current = null;
+    }
+
+    // Reset animation values
+    hintTranslateY.setValue(0);
+    hintOpacity.setValue(0);
+
+    // Show swipe hint immediately
+    setShowSwipeHint(true);
+
+    // Start bounce animation for tutorial
+    const bounceLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(hintTranslateY, {
+          toValue: -20,
+          duration: 1000,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(hintTranslateY, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
     );
+
+    bounceAnimationRef.current = bounceLoop;
+
+    // Fade in hint and start bounce
+    Animated.parallel([
+      Animated.timing(hintOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      bounceLoop,
+    ]).start();
   };
 
   const handleLike = (quote: Quote, scaleAnim: Animated.Value) => {
@@ -565,15 +518,6 @@ export default function Index() {
     router.push('/categories');
   };
 
-  const renderQuote = ({ item }: { item: Quote; index: number }) => (
-    <QuoteItem
-      item={item}
-      onLike={handleLike}
-      onShare={handleShare}
-      isFavorite={isFavorite(item)}
-      onTap={handleQuoteTap}
-    />
-  );
 
   // Update category badge when selected category changes
   useEffect(() => {
@@ -779,170 +723,81 @@ export default function Index() {
     return (
       <View style={styles.container}>
         {/* Quote Feed */}
-        <View style={{ flex: 1 }}>
-          <FlatList
-            ref={flatListRef}
-            data={quotes}
-            renderItem={renderQuote}
-            keyExtractor={(item, index) => `${item.text}-${index}`}
-            pagingEnabled
-            // snapToInterval={screenHeight}
-            // snapToAlignment="start"
-            decelerationRate={0}
-            showsVerticalScrollIndicator={false}
-            bounces={true}
-            onEndReached={loadMoreQuotes}
-            onEndReachedThreshold={0.5}
-            onScroll={resetIdleTimer}
-            scrollEventThrottle={400}
-            onMomentumScrollEnd={() => {
-              // Complete first swipe tutorial when user scrolls
-              if (!hasCompletedFirstSwipe) {
-                completeFirstSwipe();
-              }
-            }}
-            onViewableItemsChanged={({ viewableItems }) => {
-              if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-                setCurrentViewIndex(viewableItems[0].index);
-              }
-            }}
-            viewabilityConfig={{
-              itemVisiblePercentThreshold: 50,
-            }}
-            onScrollToIndexFailed={(info) => {
-              console.log('⚠️ Scroll to index failed:', info);
-              // Retry after a delay
-              setTimeout(() => {
-                flatListRef.current?.scrollToIndex({
-                  index: info.index,
-                  animated: true,
-                });
-              }, 100);
-            }}
-          />
-        </View>
+        <QuoteFeed
+          quotes={quotes}
+          hasCompletedFirstSwipe={hasCompletedFirstSwipe}
+          onLike={handleLike}
+          onShare={handleShare}
+          onQuoteTap={handleQuoteTap}
+          onScroll={resetIdleTimer}
+          onMomentumScrollEnd={completeFirstSwipe}
+          onViewableItemsChanged={({ viewableItems }: { viewableItems: ViewToken[] }) => {
+            if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+              setCurrentViewIndex(viewableItems[0].index);
+            }
+          }}
+          onEndReached={loadMoreQuotes}
+          isFavorite={isFavorite}
+          flatListRef={flatListRef}
+        />
 
-        {/* Fixed Category Badge */}
-        {currentCategory && (
-          <Animated.View style={[styles.categoryBadgeWrapper, { opacity: uiOpacity }]} pointerEvents="box-none">
-            <TouchableOpacity
-              style={styles.categoryBadge}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push('/categories');
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.categoryBadgeText}>{currentCategory}</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+        {/* UI Controls */}
+        <UIControls
+          uiOpacity={uiOpacity}
+          currentCategory={currentCategory}
+          onCategoriesPress={() => router.push('/categories')}
+          onSettingsPress={() => router.push('/settings')}
+        />
 
-        {/* Floating Categories Button */}
-        <Animated.View style={[styles.categoriesButtonWrapper, { opacity: uiOpacity }]} pointerEvents="box-none">
-          <TouchableOpacity
-            style={styles.categoriesButton}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push('/categories');
-            }}
-          >
-            <Ionicons name="grid-outline" size={18} color={Colors.text.white} />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Floating Settings Button */}
-        <Animated.View style={[styles.settingsButtonWrapper, { opacity: uiOpacity }]} pointerEvents="box-none">
-          <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push('/settings');
-            }}
-          >
-            <Ionicons name="person-outline" size={18} color={Colors.text.white} />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Particle Trail */}
-        {particles.length > 0 && (
-          <ParticleTrail
-            particles={particles}
-            onComplete={() => setParticles([])}
-          />
-        )}
-
-        {/* Interactive Mascot */}
-        <Animated.View style={{ opacity: uiOpacity }} pointerEvents="box-none">
-          <Animated.View
-            style={[
-              styles.mascotContainer,
-              {
-                left: mascotLeft,
-                bottom: mascotBottom,
-              },
-            ]}
-            pointerEvents="box-none"
-          >
-            <InteractiveMascot
-              size={MASCOT_SIZE}
-              onPress={handleMascotPress}
-              baseRotation={isMascotVisible ? ROTATION_VISIBLE : ROTATION_HIDDEN}
-              isReading={isMascotVisible}
-            />
-          </Animated.View>
-        </Animated.View>
+        {/* Mascot Section */}
+        <MascotSection
+          uiOpacity={uiOpacity}
+          mascotLeft={mascotLeft}
+          mascotBottom={mascotBottom}
+          mascotSize={MASCOT_SIZE}
+          isMascotVisible={isMascotVisible}
+          rotationVisible={ROTATION_VISIBLE}
+          rotationHidden={ROTATION_HIDDEN}
+          particles={particles}
+          onMascotPress={handleMascotPress}
+          onParticlesComplete={() => setParticles([])}
+        />
 
         {/* Swipe Hint */}
-        {showSwipeHint && (
-          <Animated.View
-            style={[
-              styles.swipeHintContainer,
-              {
-                opacity: hintOpacity,
-                transform: [{ translateY: hintTranslateY }],
-              },
-            ]}
-            pointerEvents="none"
-          >
-            <Ionicons
-              name="chevron-up"
-              size={40}
-              color={!hasCompletedFirstSwipe ? Colors.primary : Colors.text.secondary}
-            />
-            <Text style={[styles.swipeHintText, {
-              color: !hasCompletedFirstSwipe ? Colors.primary : Colors.text.secondary,
-              fontWeight: !hasCompletedFirstSwipe ? 'bold' : '400'
-            }]}>
-              Swipe up for next quote
-            </Text>
-          </Animated.View>
-        )}
+        <SwipeHint
+          showSwipeHint={showSwipeHint}
+          hintOpacity={hintOpacity}
+          hintTranslateY={hintTranslateY}
+          hasCompletedFirstSwipe={hasCompletedFirstSwipe}
+        />
 
-        {/* Large Like Heart Animation */}
-        {showLikeHeart && (
-          <Animated.View
-            style={[
-              styles.likeHeartContainer,
-              {
-                opacity: likeHeartOpacity,
-                transform: [
-                  { scale: likeHeartScale },
-                  { rotate: `${likeHeartRotationDeg}deg` },
-                ],
-              },
-            ]}
-            pointerEvents="none"
-          >
-            <Ionicons name="heart" size={140} color={Colors.primary} />
-          </Animated.View>
-        )}
+        {/* Like Heart Animation */}
+        <LikeHeartAnimation
+          showLikeHeart={showLikeHeart}
+          likeHeartOpacity={likeHeartOpacity}
+          likeHeartScale={likeHeartScale}
+          likeHeartRotationDeg={likeHeartRotationDeg}
+        />
 
         {/* Streak Animation Popup */}
         <StreakAnimationPopup
           visible={showStreakPopup}
           onComplete={() => setShowStreakPopup(false)}
         />
+
+        {/* Debug Button - Only in development */}
+        {__DEV__ && (
+          <TouchableOpacity
+            style={styles.debugButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              resetFirstSwipeState();
+            }}
+          >
+            <Ionicons name="bug-outline" size={24} color={Colors.text.white} />
+            <Text style={styles.debugButtonText}>Reset Tutorial</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -966,155 +821,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  quoteContainer: {
-    height: screenHeight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  categoryBadgeWrapper: {
+  debugButton: {
     position: 'absolute',
-    top: 80,
-    alignSelf: 'center',
-    zIndex: 10,
-  },
-  categoryBadge: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 20,
-    justifyContent: "center",
-    height: 50,
-    borderRadius: 20,
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  categoryBadgeText: {
-    color: Colors.text.white,
-    fontSize: 18,
-    textTransform: 'capitalize',
-    fontWeight: "500"
-  },
-  quoteTextContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quoteText: {
-    ...Typography.h2,
-    textAlign: 'center',
-    fontSize: 32,
-    lineHeight: 44,
-    color: Colors.text.primary,
-  },
-  actionButtonsContainer: {
-    position: 'absolute',
-    bottom: 180,
-    flexDirection: 'row',    
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  categoriesButtonWrapper: {
-    position: 'absolute',
-    right: 25,
-    bottom: 25,
-    zIndex: 10,
-  },
-  categoriesButton: {
-    width: 55,
-    height: 55,
-    borderRadius: 30,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.shadow.dark,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  settingsButtonWrapper: {
-    position: 'absolute',
-    right: 25,
-    top: 80,
-    zIndex: 10,
-  },
-  settingsButton: {
-    width: 55,
-    height: 55,
-    borderRadius: 30,
-    backgroundColor: Colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.shadow.dark,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  menuButton: {
-    position: 'absolute',
-    right: 20,
-    top: 60,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.background.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 10,
-  },
-  mascotContainer: {
-    position: 'absolute',
-    zIndex: 10,
-  },
-  swipeHintContainer: {
-    position: 'absolute',
-    bottom: 60,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 5,
-  },
-  swipeHintText: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    fontSize: 16,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  likeHeartContainer: {
-    position: 'absolute',
+    left: 20,
     top: '50%',
-    left: '50%',
-    marginTop: -70,
-    marginLeft: -70,
-    justifyContent: 'center',
+    marginTop: -40,
+    backgroundColor: 'rgba(128, 128, 128, 0.8)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 100,
+    gap: 8,
+    zIndex: 1000,
+  },
+  debugButtonText: {
+    color: Colors.text.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

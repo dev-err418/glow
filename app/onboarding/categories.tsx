@@ -70,7 +70,7 @@ export default function CategoriesScreen() {
         <View style={styles.content}>
           <Text style={styles.title}>What brings you joy?</Text>
           <Text style={styles.subtitle}>
-            We'll personalize your affirmations based on your interests
+            {"We'll personalize your affirmations based on your interests"}
           </Text>
 
           <BadgeGroup

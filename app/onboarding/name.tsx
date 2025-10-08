@@ -41,9 +41,9 @@ export default function NameScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>What's your name?</Text>
+          <Text style={styles.title}>{"What's your name?"}</Text>
           <Text style={styles.subtitle}>
-            I'd love to get to know you better!
+            {"I'd love to get to know you better!"}
           </Text>
 
           <Input
