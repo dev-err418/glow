@@ -3,11 +3,14 @@ import { Stack, useRouter } from "expo-router";
 import { PostHogProvider } from 'posthog-react-native';
 import { useEffect } from "react";
 import { AppState, Linking, StatusBar } from "react-native";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { UpdateBottomSheet } from "../components/UpdateBottomSheet";
 import { Colors } from "../constants/Colors";
 import { CategoriesProvider } from "../contexts/CategoriesContext";
 import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
+import { InAppUpdatesProvider, useInAppUpdates } from "../contexts/InAppUpdatesContext";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
@@ -30,6 +33,7 @@ Sentry.init({
 
 function RootLayoutContent() {
   const router = useRouter();
+  const { isUpdateSheetVisible, updateInfo, handleUpdate, handleLater } = useInAppUpdates();
 
   // Handle deep links from widget (glow://?id=xyz)
   useEffect(() => {
@@ -77,90 +81,104 @@ function RootLayoutContent() {
   }, [router]);
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: Colors.secondary,
-        },
-        headerTintColor: Colors.text.white,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: 'Glow App',
-          headerShown: false
+    <>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: Colors.secondary,
+          },
+          headerTintColor: Colors.text.white,
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            title: 'Glow App',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="categories"
+          options={{
+            presentation: 'modal',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="mix-modal"
+          options={{
+            presentation: 'modal',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="share-modal"
+          options={{
+            presentation: 'modal',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="settings"
+          options={{
+            presentation: 'modal',
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="onboarding"
+          options={{
+            headerShown: false
+          }}
+        />
+      </Stack>
+
+      {/* Update Bottom Sheet */}
+      <UpdateBottomSheet
+        isVisible={isUpdateSheetVisible}
+        onUpdate={handleUpdate}
+        onLater={handleLater}
+        storeVersion={updateInfo.storeVersion}
       />
-      <Stack.Screen
-        name="categories"
-        options={{
-          presentation: 'modal',
-          headerShown: false
-        }}
-      />
-      <Stack.Screen
-        name="mix-modal"
-        options={{
-          presentation: 'modal',
-          headerShown: false
-        }}
-      />
-      <Stack.Screen
-        name="share-modal"
-        options={{
-          presentation: 'modal',
-          headerShown: false
-        }}
-      />
-      <Stack.Screen
-        name="settings"
-        options={{
-          presentation: 'modal',
-          headerShown: false
-        }}
-      />
-      <Stack.Screen
-        name="onboarding"
-        options={{
-          headerShown: false
-        }}
-      />
-    </Stack>
+    </>
   );
 }
 
 export default Sentry.wrap(function RootLayout() {
   return (
-    <PostHogProvider
-      apiKey="phc_4NPUazdcWH8ap7z40KAGmADw5yBlZZVtLng0i3e6a5u"
-      options={{
-        host: 'https://eu.i.posthog.com',
-        enableSessionReplay: true,
-      }}
-      autocapture
-    >
-      <KeyboardProvider>
-        <PremiumProvider>
-          <StreakProvider>
-            <CategoriesProvider>
-              <NotificationProvider>
-                <OnboardingProvider>
-                  <FavoritesProvider>
-                    <CustomQuotesProvider>
-                      <StatusBar barStyle={"dark-content"} />
-                      <RootLayoutContent />
-                    </CustomQuotesProvider>
-                  </FavoritesProvider>
-                </OnboardingProvider>
-              </NotificationProvider>
-            </CategoriesProvider>
-          </StreakProvider>
-        </PremiumProvider>
-      </KeyboardProvider>
-    </PostHogProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PostHogProvider
+        apiKey="phc_4NPUazdcWH8ap7z40KAGmADw5yBlZZVtLng0i3e6a5u"
+        options={{
+          host: 'https://eu.i.posthog.com',
+          enableSessionReplay: true,
+        }}
+        autocapture
+      >
+        <KeyboardProvider>
+          <PremiumProvider>
+            <StreakProvider>
+              <CategoriesProvider>
+                <NotificationProvider>
+                  <OnboardingProvider>
+                    <FavoritesProvider>
+                      <CustomQuotesProvider>
+                        <InAppUpdatesProvider>
+                          <StatusBar barStyle={"dark-content"} />
+                          <RootLayoutContent />
+                        </InAppUpdatesProvider>
+                      </CustomQuotesProvider>
+                    </FavoritesProvider>
+                  </OnboardingProvider>
+                </NotificationProvider>
+              </CategoriesProvider>
+            </StreakProvider>
+          </PremiumProvider>
+        </KeyboardProvider>
+      </PostHogProvider>
+    </GestureHandlerRootView>
   );
 });

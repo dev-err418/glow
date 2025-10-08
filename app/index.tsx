@@ -32,6 +32,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
+import { useInAppUpdates } from '../contexts/InAppUpdatesContext';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -54,6 +55,7 @@ export default function Index() {
   const { customQuotes } = useCustomQuotes();
   const { recordActivity } = useStreak();
   const { scheduleNotifications } = useNotifications();
+  const { showUpdateSheet } = useInAppUpdates();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -793,18 +795,31 @@ export default function Index() {
           onComplete={() => setShowStreakPopup(false)}
         />
 
-        {/* Debug Button - Only in development */}
+        {/* Debug Buttons - Only in development */}
         {__DEV__ && (
-          <TouchableOpacity
-            style={styles.debugButton}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              resetFirstSwipeState();
-            }}
-          >
-            <Ionicons name="bug-outline" size={24} color={Colors.text.white} />
-            <Text style={styles.debugButtonText}>Reset Tutorial</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.debugButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                resetFirstSwipeState();
+              }}
+            >
+              <Ionicons name="bug-outline" size={24} color={Colors.text.white} />
+              <Text style={styles.debugButtonText}>Reset Tutorial</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.debugButton, { marginTop: 8 }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                showUpdateSheet();
+              }}
+            >
+              <Ionicons name="download-outline" size={24} color={Colors.text.white} />
+              <Text style={styles.debugButtonText}>Show Update</Text>
+            </TouchableOpacity>
+          </>
         )}
       </View>
     );

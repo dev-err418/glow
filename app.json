@@ -18,7 +18,8 @@
       },
       "bundleIdentifier": "com.arthurbuildsstuff.glow",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "AppStoreID": "6753347459"
       }
     },
     "android": {
