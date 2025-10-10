@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePostHog } from 'posthog-react-native';
 
 interface StreakContextType {
   streakDays: string[];
@@ -17,6 +18,8 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
   const [streakDays, setStreakDays] = useState<string[]>([]);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const posthog = usePostHog();
+  const previousStreakRef = useRef(0);
 
   // Load saved streak data on app start
   useEffect(() => {
@@ -27,6 +30,27 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     calculateCurrentStreak();
   }, [streakDays]);
+
+  // Track streak milestones in PostHog
+  useEffect(() => {
+    const STREAK_MILESTONES = [1, 3, 7, 14, 30, 50, 100];
+    const previousStreak = previousStreakRef.current;
+
+    // Check if we hit a new milestone
+    if (currentStreak > previousStreak) {
+      for (const milestone of STREAK_MILESTONES) {
+        if (currentStreak >= milestone && previousStreak < milestone) {
+          posthog.capture('Streak Milestone Reached', {
+            streakDays: milestone,
+            currentStreak: currentStreak,
+          });
+        }
+      }
+    }
+
+    // Update the previous streak reference
+    previousStreakRef.current = currentStreak;
+  }, [currentStreak, posthog]);
 
   const loadStreakData = async () => {
     try {

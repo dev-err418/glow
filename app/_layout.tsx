@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/react-native';
-import { Stack, useRouter } from "expo-router";
-import { PostHogProvider } from 'posthog-react-native';
+import { Stack, useRouter, usePathname, useGlobalSearchParams } from "expo-router";
+import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { useEffect } from "react";
 import { AppState, Linking, StatusBar } from "react-native";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -16,6 +16,7 @@ import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
 import { StreakProvider } from "../contexts/StreakContext";
 import "../services/notificationService";
+import { normalizeScreenName } from "../utils/analytics";
 
 Sentry.init({
   dsn: 'https://13a334d3dd9bd7fab7d14c26c2214c2b@o4510128131145728.ingest.de.sentry.io/4510128132522064',
@@ -34,6 +35,15 @@ Sentry.init({
 function RootLayoutContent() {
   const router = useRouter();
   const { isUpdateSheetVisible, updateInfo, handleUpdate, handleLater } = useInAppUpdates();
+  const posthog = usePostHog();
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+
+  // Track screen views in PostHog
+  useEffect(() => {
+    const screenName = normalizeScreenName(pathname);
+    posthog.screen(screenName, params);
+  }, [pathname, params, posthog]);
 
   // Handle deep links from widget (glow://?id=xyz)
   useEffect(() => {

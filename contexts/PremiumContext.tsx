@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesOffering } from 'react-native-purchases';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
+import { usePostHog } from 'posthog-react-native';
 
 interface PremiumContextType {
   isPremium: boolean;
@@ -17,6 +18,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+  const posthog = usePostHog();
 
   useEffect(() => {
     initializePurchases();
@@ -37,6 +39,20 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
       // Get initial customer info
       const info = await Purchases.getCustomerInfo();
       updateCustomerInfo(info);
+
+      // Identify user in PostHog with RevenueCat user ID
+      const userId = info.originalAppUserId;
+      const hasPremium = info.entitlements.active['Premium'] !== undefined;
+      posthog.identify(userId, {
+        platform: Platform.OS,
+        isPremium: hasPremium,
+      });
+
+      // Set super properties that apply to all events
+      posthog.register({
+        platform: Platform.OS,
+        isPremium: hasPremium,
+      });
     } catch (error) {
       console.error('Error initializing purchases:', error);
     } finally {
@@ -49,6 +65,11 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     // Check if user has premium entitlement
     const hasPremium = info.entitlements.active['Premium'] !== undefined;
     setIsPremium(hasPremium);
+
+    // Update PostHog super properties when premium status changes
+    posthog.register({
+      isPremium: hasPremium,
+    });
   };
 
   const showPaywall = async (): Promise<PAYWALL_RESULT> => {
@@ -65,6 +86,15 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
       if (paywallResult === PAYWALL_RESULT.PURCHASED || paywallResult === PAYWALL_RESULT.RESTORED) {
         const info = await Purchases.getCustomerInfo();
         updateCustomerInfo(info);
+
+        // Track premium purchase or restore event
+        if (paywallResult === PAYWALL_RESULT.PURCHASED) {
+          posthog.capture('Premium Purchased');
+        } else if (paywallResult === PAYWALL_RESULT.RESTORED) {
+          posthog.capture('Premium Restored');
+        }
+      } else if (paywallResult === PAYWALL_RESULT.CANCELLED) {
+        posthog.capture('Paywall Cancelled');
       }
 
       return paywallResult;

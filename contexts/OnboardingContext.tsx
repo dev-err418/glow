@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Purchases from 'react-native-purchases';
+import { usePostHog } from 'posthog-react-native';
 import { submitOnboardingData } from '../services/supabaseService';
 
 interface OnboardingData {
@@ -44,6 +45,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [onboardingData, setOnboardingData] = useState<OnboardingData>(defaultOnboardingData);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const posthog = usePostHog();
 
   // Load saved onboarding data on app start
   useEffect(() => {
@@ -83,6 +85,20 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const completeOnboarding = async () => {
     setOnboardingData((prev) => ({ ...prev, completed: true }));
+
+    // Track onboarding completion in PostHog
+    posthog.capture('Onboarding Completed', {
+      age: onboardingData.age,
+      sex: onboardingData.sex,
+      mentalHealthMethods: onboardingData.mentalHealthMethods,
+      streakGoal: onboardingData.streakGoal,
+      categoriesCount: onboardingData.categories?.length,
+      notificationsEnabled: onboardingData.notificationsEnabled,
+      notificationsPerDay: onboardingData.notificationsPerDay,
+      widgetInstalled: onboardingData.widgetInstalled,
+      premiumPaywallAction: onboardingData.premiumPaywallAction,
+      subscriptionType: onboardingData.subscriptionType,
+    });
 
     // Submit onboarding data to Supabase (non-blocking)
     try {
