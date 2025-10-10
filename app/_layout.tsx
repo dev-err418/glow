@@ -12,7 +12,7 @@ import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { InAppUpdatesProvider, useInAppUpdates } from "../contexts/InAppUpdatesContext";
 import { NotificationProvider } from "../contexts/NotificationContext";
-import { OnboardingProvider } from "../contexts/OnboardingContext";
+import { OnboardingProvider, useOnboarding } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
 import { StreakProvider } from "../contexts/StreakContext";
 import "../services/notificationService";
@@ -38,6 +38,7 @@ function RootLayoutContent() {
   const posthog = usePostHog();
   const pathname = usePathname();
   const params = useGlobalSearchParams();
+  const { isOnboardingComplete, isLoading: isOnboardingLoading } = useOnboarding();
 
   // Track screen views in PostHog
   useEffect(() => {
@@ -47,6 +48,12 @@ function RootLayoutContent() {
 
   // Handle deep links from widget (glow://?id=xyz)
   useEffect(() => {
+    // Only process deep links if onboarding is complete
+    if (isOnboardingLoading || !isOnboardingComplete) {
+      console.log('🔗 Ignoring deep link - onboarding not complete');
+      return;
+    }
+
     // Check if app was opened from a deep link (cold start)
     const handleInitialURL = async () => {
       const initialUrl = await Linking.getInitialURL();
@@ -55,7 +62,7 @@ function RootLayoutContent() {
         const quoteId = url.searchParams.get('id');
         if (quoteId) {
           console.log('🔗 App opened from widget deep link with quote ID:', quoteId);
-          router.setParams({ id: quoteId });
+          router.replace(`/?id=${quoteId}`);
         }
       }
     };
@@ -68,14 +75,14 @@ function RootLayoutContent() {
       const quoteId = url.searchParams.get('id');
       if (quoteId) {
         console.log('🔗 Widget deep link received with quote ID:', quoteId);
-        router.setParams({ id: quoteId });
+        router.replace(`/?id=${quoteId}`);
       }
     });
 
     return () => {
       subscription.remove();
     };
-  }, [router]);
+  }, [router, isOnboardingLoading, isOnboardingComplete]);
 
   // Dismiss modals when app goes to background
   useEffect(() => {

@@ -63,7 +63,7 @@ struct CustomQuote: Codable {
 // MARK: - Provider
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> QuoteEntry {
-        QuoteEntry(date: Date(), quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "general")
+        QuoteEntry(date: Date(), quoteId: "general-1", quoteText: "Today's a reset button", category: "general")
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QuoteEntry) -> ()) {
@@ -99,7 +99,7 @@ struct Provider: TimelineProvider {
               let data = try? Data(contentsOf: url),
               let quotesData = try? JSONDecoder().decode(QuotesData.self, from: data) else {
             print("❌ Widget: Failed to load quotes.json")
-            return ("motivation-1", "You are amazing", "general")
+            return ("general-1", "Today's a reset button", "general")
         }
 
         // Read selected categories from shared storage
@@ -134,7 +134,7 @@ struct Provider: TimelineProvider {
         }
 
         guard !quotesToUse.isEmpty else {
-            return ("motivation-1", "You are amazing", "general")
+            return ("general-1", "Today's a reset button", "general")
         }
 
         // Use hour + displaySize hash for deterministic but unique selection per widget instance
@@ -176,13 +176,16 @@ struct SmallQuoteWidgetView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
-            Image("MascotImage")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 55, height: 55)
-                .rotationEffect(.degrees(-15))
-                .padding(.leading, -20)
-                .padding(.bottom, -25)
+            // Only show image if it exists
+            if let _ = UIImage(named: "MascotImage") {
+                Image("MascotImage")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 55, height: 55)
+                    .rotationEffect(.degrees(-15))
+                    .padding(.leading, -20)
+                    .padding(.bottom, -25)
+            }
         }
         .widgetURL(createDeepLink(id: entry.quoteId))
     }
@@ -209,13 +212,16 @@ struct MediumQuoteWidgetView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
-            Image("MascotImage")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 80, height: 80)
-                .rotationEffect(.degrees(-15))
-                .padding(.leading, -40)
-                .padding(.bottom, -35)
+            // Only show image if it exists
+            if let _ = UIImage(named: "MascotImage") {
+                Image("MascotImage")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 80)
+                    .rotationEffect(.degrees(-15))
+                    .padding(.leading, -40)
+                    .padding(.bottom, -35)
+            }
         }
         .widgetURL(createDeepLink(id: entry.quoteId))
     }
@@ -320,20 +326,20 @@ extension Color {
 #Preview(as: .systemSmall) {
     SmallQuoteWidget()
 } timeline: {
-    QuoteEntry(date: .now, quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "motivation")
-    QuoteEntry(date: .now, quoteId: "growth-2", quoteText: "Every step forward is progress", category: "growth")
+    QuoteEntry(date: .now, quoteId: "general-1", quoteText: "Today's a reset button", category: "general")
+    QuoteEntry(date: .now, quoteId: "general-2", quoteText: "You're in the right spot", category: "general")
 }
 
 #Preview(as: .systemMedium) {
     MediumQuoteWidget()
 } timeline: {
-    QuoteEntry(date: .now, quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "motivation")
-    QuoteEntry(date: .now, quoteId: "growth-2", quoteText: "Every step forward is progress", category: "growth")
+    QuoteEntry(date: .now, quoteId: "general-1", quoteText: "Today's a reset button", category: "general")
+    QuoteEntry(date: .now, quoteId: "general-2", quoteText: "You're in the right spot", category: "general")
 }
 
 #Preview(as: .accessoryRectangular) {
     LockScreenQuoteWidget()
 } timeline: {
-    QuoteEntry(date: .now, quoteId: "motivation-1", quoteText: "You are capable of amazing things", category: "motivation")
-    QuoteEntry(date: .now, quoteId: "growth-2", quoteText: "Every step forward is progress", category: "growth")
+    QuoteEntry(date: .now, quoteId: "general-1", quoteText: "Today's a reset button", category: "general")
+    QuoteEntry(date: .now, quoteId: "general-2", quoteText: "You're in the right spot", category: "general")
 }
