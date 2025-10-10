@@ -15,7 +15,7 @@ interface UpdateBottomSheetProps {
 
 export function UpdateBottomSheet({ isVisible, onUpdate, onLater, storeVersion }: UpdateBottomSheetProps) {
   const bottomSheetRef = React.useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['60%'], []);
+  const snapPoints = useMemo(() => [550], []);
 
   // Show/hide bottom sheet based on isVisible prop
   React.useEffect(() => {
@@ -116,9 +116,8 @@ const styles = StyleSheet.create({
     height: 4,
   },
   contentContainer: {
-    flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingBottom: 40,
     paddingTop: 16,
     alignItems: 'center',
   },

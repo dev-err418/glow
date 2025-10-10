@@ -64,6 +64,7 @@ The app uses multiple context providers that wrap the entire application in a sp
 7. **OnboardingProvider** - Onboarding flow state
 8. **FavoritesProvider** - Favorited quotes management
 9. **CustomQuotesProvider** - User-created custom quotes
+10. **InAppUpdatesProvider** - In-app update prompts
 
 **PremiumContext** (`contexts/PremiumContext.tsx`):
 - Manages RevenueCat integration for premium subscriptions
