@@ -1,9 +1,9 @@
 import * as Sentry from '@sentry/react-native';
+import { Stack, useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
-import { Stack, useRouter, usePathname, useGlobalSearchParams } from "expo-router";
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { useEffect } from "react";
-import { AppState, Linking, StatusBar } from "react-native";
+import { Linking, StatusBar } from "react-native";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { UpdateBottomSheet } from "../components/UpdateBottomSheet";
@@ -45,13 +45,6 @@ function RootLayoutContent() {
   const { isOnboardingComplete, isLoading: isOnboardingLoading } = useOnboarding();
   const { isLoading: isCategoriesLoading } = useCategories();
 
-  // Hide splash screen when all contexts are loaded
-  useEffect(() => {
-    if (!isOnboardingLoading && !isCategoriesLoading) {
-      SplashScreen.hideAsync().catch(console.warn);
-    }
-  }, [isOnboardingLoading, isCategoriesLoading]);
-
   // Track screen views in PostHog
   useEffect(() => {
     const screenName = normalizeScreenName(pathname);
@@ -74,9 +67,15 @@ function RootLayoutContent() {
         const quoteId = url.searchParams.get('id');
         if (quoteId) {
           console.log('🔗 App opened from widget deep link with quote ID:', quoteId);
-          // Dismiss any modals back to index, then set the quote ID param
-          router.dismissTo('/');
-          router.setParams({ id: quoteId });
+          // Check if modals are open before dismissing
+          if (router.canDismiss()) {
+            // Modals are open - dismiss them first, then replace
+            router.dismissAll();
+            router.replace(`/?id=${quoteId}`);
+          } else {
+            // No modals - just update params on current screen
+            router.setParams({ id: quoteId });
+          }
         }
       }
     };
@@ -89,9 +88,17 @@ function RootLayoutContent() {
       const quoteId = url.searchParams.get('id');
       if (quoteId) {
         console.log('🔗 Widget deep link received with quote ID:', quoteId);
-        // Dismiss any modals back to index, then set the quote ID param
-        router.dismissTo('/');
-        router.setParams({ id: quoteId });
+        // Check if modals are open before dismissing
+        router.dismissAll()
+        router.replace(`/?id=${quoteId}`, { withAnchor: true })
+        // if (router.canDismiss()) {
+        //   // Modals are open - dismiss them first, then replace
+        //   router.dismissAll();
+        //   router.replace(`/?id=${quoteId}`);
+        // } else {
+        //   // No modals - just update params on current screen
+        //   router.setParams({ id: quoteId });
+        // }
       }
     });
 

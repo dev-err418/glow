@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
-import * as StoreReview from 'expo-store-review';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import * as StoreReview from 'expo-store-review';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -28,10 +29,10 @@ import { Colors } from '../constants/Colors';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useInAppUpdates } from '../contexts/InAppUpdatesContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
-import { useInAppUpdates } from '../contexts/InAppUpdatesContext';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -117,6 +118,8 @@ export default function Index() {
       // Delay navigation to ensure Stack is mounted
       const timer = setTimeout(() => {
         router.replace('/onboarding/welcome');
+        // Hide splash after navigating to onboarding
+        SplashScreen.hideAsync().catch(console.warn);
       }, 100);
 
       return () => clearTimeout(timer);
@@ -130,8 +133,8 @@ export default function Index() {
 
       if (quoteId) {
         console.log('📬 Notification tapped with quote ID:', quoteId);
-        // Replace entire navigation stack with index route including quote ID
-        router.replace(`/?id=${quoteId}`);
+        
+        router.dismissTo(`/?id=${quoteId}`)        
       }
     });
 
@@ -187,6 +190,13 @@ export default function Index() {
       scheduleNotifications();
     }
   }, [selectedCategories, isCategoriesLoading]);
+
+  // Hide splash screen when quotes are ready to display
+  useEffect(() => {
+    if (quotes.length > 0 && onboardingData.completed) {
+      SplashScreen.hideAsync().catch(console.warn);
+    }
+  }, [quotes.length, onboardingData.completed]);
 
   // Separate effect to handle favorites changes when viewing favorites category
   useEffect(() => {
@@ -527,6 +537,42 @@ export default function Index() {
     router.push('/categories');
   };
 
+  const sendTestNotification = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      // Get a random quote from general category
+      const generalQuotes = quotesData['general'];
+      if (!generalQuotes || !Array.isArray(generalQuotes) || generalQuotes.length === 0) {
+        console.error('No general quotes found');
+        return;
+      }
+
+      const randomQuote = generalQuotes[Math.floor(Math.random() * generalQuotes.length)];
+
+      // Schedule immediate notification (1 second delay)
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "⤵",
+          body: randomQuote.text,
+          sound: true,
+          data: {
+            quoteId: randomQuote.id,
+            categories: ['general'],
+            isTest: true,
+          },
+        },
+        trigger: {
+          seconds: 1,
+        },
+      });
+
+      console.log('✅ Test notification scheduled:', randomQuote.text);
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+    }
+  };
+
 
   // Update category badge when selected category changes
   useEffect(() => {
@@ -800,7 +846,7 @@ export default function Index() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.debugButton, { marginTop: 8 }]}
+              style={[styles.debugButton, { marginTop: 16 }]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 showUpdateSheet();
@@ -808,6 +854,14 @@ export default function Index() {
             >
               <Ionicons name="download-outline" size={24} color={Colors.text.white} />
               <Text style={styles.debugButtonText}>Show Update</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.debugButton, { marginTop: 72 }]}
+              onPress={sendTestNotification}
+            >
+              <Ionicons name="notifications-outline" size={24} color={Colors.text.white} />
+              <Text style={styles.debugButtonText}>Test Notification</Text>
             </TouchableOpacity>
           </>
         )}
