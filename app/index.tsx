@@ -12,6 +12,7 @@ import {
   Dimensions,
   Easing,
   FlatList,
+  Linking,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -89,12 +90,20 @@ export default function Index() {
   // Store pending deep link quote to show as first card
   const pendingDeepLinkQuote = useRef<Quote | null>(null);
 
+  // Store the true current view index that persists across navigation/re-renders
+  const currentViewIndexRef = useRef(0);
+
   // Animated values for mascot position (left and bottom)
   const mascotLeft = useRef(new Animated.Value(MASCOT_HIDDEN.left)).current;
   const mascotBottom = useRef(new Animated.Value(MASCOT_HIDDEN.bottom)).current;
 
   // Animated values for UI element fade-ins after first swipe
   const uiOpacity = useRef(new Animated.Value(0)).current;
+
+  // Keep the ref in sync with the state
+  useEffect(() => {
+    currentViewIndexRef.current = currentViewIndex;
+  }, [currentViewIndex]);
 
   // Load first swipe state on mount
   useEffect(() => {
@@ -133,8 +142,40 @@ export default function Index() {
 
       if (quoteId) {
         console.log('📬 Notification tapped with quote ID:', quoteId);
-        
-        router.dismissTo(`/?id=${quoteId}`)        
+
+        router.dismissTo(`/?id=${quoteId}`)
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
+
+  // Handle widget deep links (glow://?id=xyz)
+  useEffect(() => {
+    // Check if app was opened from a deep link (cold start)
+    const handleInitialURL = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        const url = new URL(initialUrl);
+        const quoteId = url.searchParams.get('id');
+        if (quoteId) {
+          console.log('🔗 App opened from widget deep link with quote ID:', quoteId);
+          router.dismissTo(`/?id=${quoteId}`);
+        }
+      }
+    };
+
+    handleInitialURL();
+
+    // Listen for deep links while app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      const url = new URL(event.url);
+      const quoteId = url.searchParams.get('id');
+      if (quoteId) {
+        console.log('🔗 Widget deep link received with quote ID:', quoteId);
+        router.dismissTo(`/?id=${quoteId}`);
       }
     });
 
@@ -718,6 +759,14 @@ export default function Index() {
     if (quoteId && quotes.length > 0) {
       console.log('📱 Deep link to quote ID:', quoteId);
 
+      // Use the ref value which persists across navigation
+      const trueViewIndex = currentViewIndexRef.current;
+      console.log('📊 Current state:', {
+        currentViewIndex,
+        trueViewIndex,
+        totalQuotes: quotes.length
+      });
+
       let targetQuote: Quote | null = null;
 
       // Check if quote already exists in feed
@@ -741,19 +790,43 @@ export default function Index() {
       }
 
       if (targetQuote) {
-        // Remove the quote from its current position if it exists
+        // Remove the quote from its current position if it exists to prevent duplicates
+        const existingIndex = quotes.findIndex(q => q.id === quoteId);
+        let adjustedViewIndex = trueViewIndex;
+
+        console.log('🔧 Before adjustment:', { existingIndex, trueViewIndex, adjustedViewIndex });
+
+        // If the quote exists before the current view index, account for the shift after removal
+        if (existingIndex !== -1 && existingIndex < trueViewIndex) {
+          adjustedViewIndex = trueViewIndex - 1;
+          console.log('📐 Adjusted index down by 1:', adjustedViewIndex);
+        }
+
         const filteredQuotes = quotes.filter(q => q.id !== quoteId);
 
-        // Insert it at the current viewing position (replace what's there)
+        // Insert it at the adjusted current viewing position
         const newQuotes = [
-          ...filteredQuotes.slice(0, currentViewIndex),
+          ...filteredQuotes.slice(0, adjustedViewIndex),
           targetQuote,
-          ...filteredQuotes.slice(currentViewIndex)
+          ...filteredQuotes.slice(adjustedViewIndex)
         ];
 
         setQuotes(newQuotes);
 
-        console.log('✅ Inserted quote at current position:', currentViewIndex);
+        console.log('✅ Inserted quote at adjusted position:', adjustedViewIndex);
+
+        // Log top 5 quotes for verification
+        const top5 = newQuotes.slice(0, 5).map((q, i) => ({
+          index: i,
+          id: q.id,
+          isTarget: q.id === quoteId
+        }));
+        console.log('📋 Top 5 quotes after insertion:', top5);
+
+        // Verify the target quote is at the correct position
+        const targetIndex = newQuotes.findIndex(q => q.id === quoteId);
+        console.log('🎯 Target quote final index:', targetIndex, '(should be', adjustedViewIndex, ')');
+
         // No scrolling needed - quote is already at the visible position
       } else {
         console.log('⚠️ Quote ID not found');
@@ -762,7 +835,7 @@ export default function Index() {
       // Clear the param without navigating
       router.setParams({ id: undefined });
     }
-  }, [quoteId, quotes.length, router]);
+  }, [quoteId, quotes.length, router, currentViewIndex]);
 
   // If onboarding is completed, show the TikTok-style quote feed
   if (onboardingData.completed) {
