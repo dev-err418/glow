@@ -6,7 +6,6 @@ import * as StoreReview from 'expo-store-review';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   AppState,
   Dimensions,
@@ -719,15 +718,6 @@ export default function Index() {
     }
   }, [quoteId, quotes.length, router]);
 
-  // Show loading spinner while data is loading
-  if (isOnboardingLoading || isCategoriesLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator color={Colors.primary} />
-      </View>
-    );
-  }
-
   // If onboarding is completed, show the TikTok-style quote feed
   if (onboardingData.completed) {
     return (
@@ -825,24 +815,14 @@ export default function Index() {
     );
   }
 
-  // Show loading while checking/redirecting
-  return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator color={Colors.primary} />
-    </View>
-  );
+  // Return null while loading - splash screen will be visible
+  return null;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background.default,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   debugButton: {
     position: 'absolute',

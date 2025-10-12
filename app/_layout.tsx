@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import { Stack, useRouter, usePathname, useGlobalSearchParams } from "expo-router";
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { useEffect } from "react";
@@ -7,7 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { UpdateBottomSheet } from "../components/UpdateBottomSheet";
 import { Colors } from "../constants/Colors";
-import { CategoriesProvider } from "../contexts/CategoriesContext";
+import { CategoriesProvider, useCategories } from "../contexts/CategoriesContext";
 import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { InAppUpdatesProvider, useInAppUpdates } from "../contexts/InAppUpdatesContext";
@@ -17,6 +18,9 @@ import { PremiumProvider } from "../contexts/PremiumContext";
 import { StreakProvider } from "../contexts/StreakContext";
 import "../services/notificationService";
 import { normalizeScreenName } from "../utils/analytics";
+
+// Prevent splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync().catch(console.warn);
 
 Sentry.init({
   dsn: 'https://13a334d3dd9bd7fab7d14c26c2214c2b@o4510128131145728.ingest.de.sentry.io/4510128132522064',
@@ -39,6 +43,14 @@ function RootLayoutContent() {
   const pathname = usePathname();
   const params = useGlobalSearchParams();
   const { isOnboardingComplete, isLoading: isOnboardingLoading } = useOnboarding();
+  const { isLoading: isCategoriesLoading } = useCategories();
+
+  // Hide splash screen when all contexts are loaded
+  useEffect(() => {
+    if (!isOnboardingLoading && !isCategoriesLoading) {
+      SplashScreen.hideAsync().catch(console.warn);
+    }
+  }, [isOnboardingLoading, isCategoriesLoading]);
 
   // Track screen views in PostHog
   useEffect(() => {
