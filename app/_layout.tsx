@@ -74,7 +74,9 @@ function RootLayoutContent() {
         const quoteId = url.searchParams.get('id');
         if (quoteId) {
           console.log('🔗 App opened from widget deep link with quote ID:', quoteId);
-          router.replace(`/?id=${quoteId}`);
+          // Dismiss any modals back to index, then set the quote ID param
+          router.dismissTo('/');
+          router.setParams({ id: quoteId });
         }
       }
     };
@@ -87,7 +89,9 @@ function RootLayoutContent() {
       const quoteId = url.searchParams.get('id');
       if (quoteId) {
         console.log('🔗 Widget deep link received with quote ID:', quoteId);
-        router.replace(`/?id=${quoteId}`);
+        // Dismiss any modals back to index, then set the quote ID param
+        router.dismissTo('/');
+        router.setParams({ id: quoteId });
       }
     });
 
@@ -96,18 +100,6 @@ function RootLayoutContent() {
     };
   }, [router, isOnboardingLoading, isOnboardingComplete]);
 
-  // Dismiss modals when app goes to background
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'background') {
-        router.dismissAll();
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [router]);
 
   return (
     <>
@@ -124,6 +116,7 @@ function RootLayoutContent() {
       >
         <Stack.Screen
           name="index"
+          getId={() => 'index'}
           options={{
             title: 'Glow App',
             headerShown: false
