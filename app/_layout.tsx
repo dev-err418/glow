@@ -3,17 +3,17 @@ import { Stack, useGlobalSearchParams, usePathname, useRouter } from "expo-route
 import * as SplashScreen from 'expo-splash-screen';
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { useEffect } from "react";
-import { StatusBar } from "react-native";
+import { AppState, StatusBar } from "react-native";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { UpdateBottomSheet } from "../components/UpdateBottomSheet";
 import { Colors } from "../constants/Colors";
-import { CategoriesProvider, useCategories } from "../contexts/CategoriesContext";
+import { CategoriesProvider } from "../contexts/CategoriesContext";
 import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { InAppUpdatesProvider, useInAppUpdates } from "../contexts/InAppUpdatesContext";
 import { NotificationProvider } from "../contexts/NotificationContext";
-import { OnboardingProvider, useOnboarding } from "../contexts/OnboardingContext";
+import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
 import { StreakProvider } from "../contexts/StreakContext";
 import "../services/notificationService";
@@ -41,9 +41,7 @@ function RootLayoutContent() {
   const { isUpdateSheetVisible, updateInfo, handleUpdate, handleLater } = useInAppUpdates();
   const posthog = usePostHog();
   const pathname = usePathname();
-  const params = useGlobalSearchParams();
-  const { isOnboardingComplete, isLoading: isOnboardingLoading } = useOnboarding();
-  const { isLoading: isCategoriesLoading } = useCategories();
+  const params = useGlobalSearchParams();  
 
   // Track screen views in PostHog
   useEffect(() => {
@@ -51,6 +49,18 @@ function RootLayoutContent() {
     posthog.screen(screenName, params);
   }, [pathname, params, posthog]);
 
+  // Dismiss modals when app goes to background
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'background') {
+        router.dismissAll();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
 
 
   return (

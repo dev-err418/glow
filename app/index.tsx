@@ -84,26 +84,12 @@ export default function Index() {
   // FlatList ref for scrolling to specific quote
   const flatListRef = useRef<FlatList<Quote>>(null);
 
-  // Track if we've handled the initial deep link URL
-  const hasHandledInitialUrl = useRef(false);
-
-  // Store pending deep link quote to show as first card
-  const pendingDeepLinkQuote = useRef<Quote | null>(null);
-
-  // Store the true current view index that persists across navigation/re-renders
-  const currentViewIndexRef = useRef(0);
-
   // Animated values for mascot position (left and bottom)
   const mascotLeft = useRef(new Animated.Value(MASCOT_HIDDEN.left)).current;
   const mascotBottom = useRef(new Animated.Value(MASCOT_HIDDEN.bottom)).current;
 
   // Animated values for UI element fade-ins after first swipe
   const uiOpacity = useRef(new Animated.Value(0)).current;
-
-  // Keep the ref in sync with the state
-  useEffect(() => {
-    currentViewIndexRef.current = currentViewIndex;
-  }, [currentViewIndex]);
 
   // Load first swipe state on mount
   useEffect(() => {
@@ -225,8 +211,7 @@ export default function Index() {
   // Load and shuffle quotes based on selected categories
   useEffect(() => {
     if (!isCategoriesLoading && selectedCategories.length > 0) {
-      // Use pending deep link quote if available, otherwise initialize normally
-      initializeQuotePool(pendingDeepLinkQuote.current);
+      initializeQuotePool();
       // Update notifications with new categories
       scheduleNotifications();
     }
@@ -257,7 +242,7 @@ export default function Index() {
     }
   }, [customQuotes]);
 
-  const initializeQuotePool = (priorityQuote?: Quote | null) => {
+  const initializeQuotePool = () => {
     const allQuotes: Quote[] = [];
 
     // Gather quotes from selected categories
@@ -288,22 +273,11 @@ export default function Index() {
     // Initialize with 3-4 cycles of shuffled quotes for infinite scroll
     const initialQuotes: Quote[] = [];
 
-    // If we have a priority quote (from deep link), add it first
-    if (priorityQuote) {
-      initialQuotes.push(priorityQuote);
-      console.log('🎯 Added priority quote from deep link as first card:', priorityQuote.text);
-    }
-
     for (let i = 0; i < 4; i++) {
       const shuffled = [...allQuotes].sort(() => Math.random() - 0.5);
       initialQuotes.push(...shuffled);
     }
     setQuotes(initialQuotes);
-
-    // Clear the pending deep link quote after using it
-    if (priorityQuote) {
-      pendingDeepLinkQuote.current = null;
-    }
   };
 
   const loadMoreQuotes = () => {
@@ -604,8 +578,10 @@ export default function Index() {
           },
         },
         trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
           seconds: 1,
-        },
+          repeats: false,
+        } as any,
       });
 
       console.log('✅ Test notification scheduled:', randomQuote.text);
@@ -754,88 +730,77 @@ export default function Index() {
     };
   }, [hasCompletedFirstSwipe, onboardingData.completed]);
 
-  // Handle deep link via URL params
+  // Handle deep link via URL params - simplified approach
   useEffect(() => {
     if (quoteId && quotes.length > 0) {
       console.log('📱 Deep link to quote ID:', quoteId);
 
-      // Use the ref value which persists across navigation
-      const trueViewIndex = currentViewIndexRef.current;
-      console.log('📊 Current state:', {
-        currentViewIndex,
-        trueViewIndex,
-        totalQuotes: quotes.length
-      });
-
       let targetQuote: Quote | null = null;
 
-      // Check if quote already exists in feed
-      const existingIndex = quotes.findIndex(q => q.id === quoteId);
-      if (existingIndex !== -1) {
-        console.log('✅ Quote already in feed at index:', existingIndex);
-        targetQuote = quotes[existingIndex];
-      } else {
-        // Find the quote in quotesData by ID
-        for (const category in quotesData) {
-          const categoryQuotes = quotesData[category];
-          if (Array.isArray(categoryQuotes)) {
-            const quoteObj = categoryQuotes.find((q: any) => q.id === quoteId);
-            if (quoteObj) {
-              targetQuote = { id: quoteObj.id, text: quoteObj.text, category };
-              console.log('✅ Found quote in quotesData:', targetQuote.text);
-              break;
-            }
+      // Find the quote in quotesData by ID
+      for (const category in quotesData) {
+        const categoryQuotes = quotesData[category];
+        if (Array.isArray(categoryQuotes)) {
+          const quoteObj = categoryQuotes.find((q: any) => q.id === quoteId);
+          if (quoteObj) {
+            targetQuote = { id: quoteObj.id, text: quoteObj.text, category };
+            console.log('✅ Found quote in quotesData:', targetQuote.text);
+            break;
           }
         }
       }
 
       if (targetQuote) {
-        // Remove the quote from its current position if it exists to prevent duplicates
-        const existingIndex = quotes.findIndex(q => q.id === quoteId);
-        let adjustedViewIndex = trueViewIndex;
+        // Simple approach: Rebuild entire quotes array with target quote first
+        const allQuotes: Quote[] = [];
 
-        console.log('🔧 Before adjustment:', { existingIndex, trueViewIndex, adjustedViewIndex });
+        // Gather all quotes from current categories (same as initializeQuotePool)
+        selectedCategories.forEach((category) => {
+          if (category === 'favorites') {
+            favorites.forEach((favorite) => {
+              allQuotes.push({ id: favorite.text, text: favorite.text, category: favorite.category });
+            });
+          } else if (category === 'custom') {
+            customQuotes.forEach((custom) => {
+              allQuotes.push({ id: custom.id, text: custom.text, category: 'custom' });
+            });
+          } else {
+            const categoryQuotes = quotesData[category];
+            if (categoryQuotes && Array.isArray(categoryQuotes)) {
+              categoryQuotes.forEach((quoteObj: { id: string; text: string }) => {
+                allQuotes.push({ id: quoteObj.id, text: quoteObj.text, category });
+              });
+            }
+          }
+        });
 
-        // If the quote exists before the current view index, account for the shift after removal
-        if (existingIndex !== -1 && existingIndex < trueViewIndex) {
-          adjustedViewIndex = trueViewIndex - 1;
-          console.log('📐 Adjusted index down by 1:', adjustedViewIndex);
+        // Build new quotes array: target quote first, then shuffled others
+        const newQuotes: Quote[] = [targetQuote];
+
+        // Remove target quote from pool to avoid duplicates
+        const filteredQuotes = allQuotes.filter(q => q.id !== quoteId);
+
+        // Add 3-4 cycles of shuffled quotes after the target
+        for (let i = 0; i < 4; i++) {
+          const shuffled = [...filteredQuotes].sort(() => Math.random() - 0.5);
+          newQuotes.push(...shuffled);
         }
 
-        const filteredQuotes = quotes.filter(q => q.id !== quoteId);
-
-        // Insert it at the adjusted current viewing position
-        const newQuotes = [
-          ...filteredQuotes.slice(0, adjustedViewIndex),
-          targetQuote,
-          ...filteredQuotes.slice(adjustedViewIndex)
-        ];
-
         setQuotes(newQuotes);
+        console.log('✅ Reset quotes array with target quote at index 0');
 
-        console.log('✅ Inserted quote at adjusted position:', adjustedViewIndex);
-
-        // Log top 5 quotes for verification
-        const top5 = newQuotes.slice(0, 5).map((q, i) => ({
-          index: i,
-          id: q.id,
-          isTarget: q.id === quoteId
-        }));
-        console.log('📋 Top 5 quotes after insertion:', top5);
-
-        // Verify the target quote is at the correct position
-        const targetIndex = newQuotes.findIndex(q => q.id === quoteId);
-        console.log('🎯 Target quote final index:', targetIndex, '(should be', adjustedViewIndex, ')');
-
-        // No scrolling needed - quote is already at the visible position
+        // Scroll to the beginning to ensure target quote is visible
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({ index: 0, animated: false });
+        }, 100);
       } else {
-        console.log('⚠️ Quote ID not found');
+        console.log('⚠️ Quote ID not found in quotesData');
       }
 
       // Clear the param without navigating
       router.setParams({ id: undefined });
     }
-  }, [quoteId, quotes.length, router, currentViewIndex]);
+  }, [quoteId, quotes.length, router, selectedCategories, favorites, customQuotes]);
 
   // If onboarding is completed, show the TikTok-style quote feed
   if (onboardingData.completed) {
