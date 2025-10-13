@@ -870,7 +870,7 @@ export default function Index() {
         />
 
         {/* Debug Buttons - Only in development */}
-        {__DEV__ && (
+        {__DEV__ && process.env.EXPO_PUBLIC_SHOW_DEBUG_BUTTONS === 'true' && (
           <>
             <TouchableOpacity
               style={styles.debugButton}
