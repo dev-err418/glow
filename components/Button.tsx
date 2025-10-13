@@ -1,7 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native';
 import { Colors } from '../constants/Colors';
-import { Typography } from '../constants/Typography';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline';
 export type ButtonSize = 'small' | 'medium' | 'large';
@@ -27,18 +26,18 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
-  const buttonStyles = [
+  const buttonStyles: (ViewStyle | false | undefined)[] = [
     styles.button,
-    styles[`button${variant.charAt(0).toUpperCase() + variant.slice(1)}` as keyof typeof styles],
-    styles[`button${size.charAt(0).toUpperCase() + size.slice(1)}` as keyof typeof styles],
+    styles[`button${variant.charAt(0).toUpperCase() + variant.slice(1)}` as keyof typeof styles] as ViewStyle,
+    styles[`button${size.charAt(0).toUpperCase() + size.slice(1)}` as keyof typeof styles] as ViewStyle,
     disabled && styles.buttonDisabled,
     style,
   ];
 
-  const textStyles = [
+  const textStyles: (TextStyle | false | undefined)[] = [
     styles.text,
-    styles[`text${variant.charAt(0).toUpperCase() + variant.slice(1)}` as keyof typeof styles],
-    styles[`text${size.charAt(0).toUpperCase() + size.slice(1)}` as keyof typeof styles],
+    styles[`text${variant.charAt(0).toUpperCase() + variant.slice(1)}` as keyof typeof styles] as TextStyle,
+    styles[`text${size.charAt(0).toUpperCase() + size.slice(1)}` as keyof typeof styles] as TextStyle,
     disabled && styles.textDisabled,
     textStyle,
   ];
@@ -102,7 +101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   buttonLarge: {
-    paddingVertical: 18,
+    paddingVertical: 20,
     paddingHorizontal: 40,
   },
 
@@ -132,6 +131,7 @@ const styles = StyleSheet.create({
   },
   textLarge: {
     fontSize: 18,
+    fontWeight: '600',
   },
   textDisabled: {
     opacity: 1,

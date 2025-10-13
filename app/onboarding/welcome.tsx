@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Dimensions, Image, StyleSheet, View } from 'react-native';
+import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
-import { Button } from '../../components/Button';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 12,
-    color: Colors.text.primary,
+    color: Colors.text.primary,    
   },
   subtitle: {
     marginBottom: 20,
@@ -324,7 +324,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   buttonContainer: {
-    paddingBottom: 16,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
     backgroundColor: 'transparent',
   },
 });
