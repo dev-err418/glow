@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import * as StoreReview from 'expo-store-review';
 import { useRouter } from 'expo-router';
+import * as StoreReview from 'expo-store-review';
 import React, { useState } from 'react';
 import {
   ActionSheetIOS,
@@ -339,6 +339,7 @@ const styles = StyleSheet.create({
     color: Colors.text.white,
     marginLeft: 8,
     fontSize: 16,
+    fontWeight: 600
   },
   listContent: {
     paddingHorizontal: 20,

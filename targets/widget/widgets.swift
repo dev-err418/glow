@@ -240,8 +240,8 @@ struct SmallQuoteWidget: Widget {
             SmallQuoteWidgetView(entry: entry)
                 .containerBackground(Color(hex: "FFF8F3"), for: .widget)
         }
-        .configurationDisplayName("Glow Quote - Small")
-        .description("Daily motivation in a small widget")
+        .configurationDisplayName("Glow affirmation - Small")
+        .description("Daily affirmations in a small widget")
         .supportedFamilies([.systemSmall])
     }
 }
@@ -254,8 +254,8 @@ struct MediumQuoteWidget: Widget {
             MediumQuoteWidgetView(entry: entry)
                 .containerBackground(Color(hex: "FFF8F3"), for: .widget)
         }
-        .configurationDisplayName("Glow Quote - Medium")
-        .description("Daily motivation in a medium widget")
+        .configurationDisplayName("Glow affirmation - Medium")
+        .description("Daily affirmations in a medium widget")
         .supportedFamilies([.systemMedium])
     }
 }
@@ -290,8 +290,8 @@ struct LockScreenQuoteWidget: Widget {
                     Color.clear
                 }
         }
-        .configurationDisplayName("Glow Quote - Lock Screen")
-        .description("Daily motivation on your lock screen")
+        .configurationDisplayName("Glow affirmation - Lock screen")
+        .description("Daily affirmations on your lock screen")
         .supportedFamilies([.accessoryRectangular])
     }
 }
