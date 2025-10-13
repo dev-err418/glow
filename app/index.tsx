@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
-import * as StoreReview from 'expo-store-review';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import * as StoreReview from 'expo-store-review';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -11,6 +12,7 @@ import {
   Dimensions,
   Easing,
   FlatList,
+  Linking,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -28,10 +30,10 @@ import { Colors } from '../constants/Colors';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useInAppUpdates } from '../contexts/InAppUpdatesContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
-import { useInAppUpdates } from '../contexts/InAppUpdatesContext';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -82,12 +84,6 @@ export default function Index() {
   // FlatList ref for scrolling to specific quote
   const flatListRef = useRef<FlatList<Quote>>(null);
 
-  // Track if we've handled the initial deep link URL
-  const hasHandledInitialUrl = useRef(false);
-
-  // Store pending deep link quote to show as first card
-  const pendingDeepLinkQuote = useRef<Quote | null>(null);
-
   // Animated values for mascot position (left and bottom)
   const mascotLeft = useRef(new Animated.Value(MASCOT_HIDDEN.left)).current;
   const mascotBottom = useRef(new Animated.Value(MASCOT_HIDDEN.bottom)).current;
@@ -117,6 +113,8 @@ export default function Index() {
       // Delay navigation to ensure Stack is mounted
       const timer = setTimeout(() => {
         router.replace('/onboarding/welcome');
+        // Hide splash after navigating to onboarding
+        SplashScreen.hideAsync().catch(console.warn);
       }, 100);
 
       return () => clearTimeout(timer);
@@ -130,8 +128,40 @@ export default function Index() {
 
       if (quoteId) {
         console.log('📬 Notification tapped with quote ID:', quoteId);
-        // Replace entire navigation stack with index route including quote ID
-        router.replace(`/?id=${quoteId}`);
+
+        router.dismissTo(`/?id=${quoteId}`)
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [router]);
+
+  // Handle widget deep links (glow://?id=xyz)
+  useEffect(() => {
+    // Check if app was opened from a deep link (cold start)
+    const handleInitialURL = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        const url = new URL(initialUrl);
+        const quoteId = url.searchParams.get('id');
+        if (quoteId) {
+          console.log('🔗 App opened from widget deep link with quote ID:', quoteId);
+          router.dismissTo(`/?id=${quoteId}`);
+        }
+      }
+    };
+
+    handleInitialURL();
+
+    // Listen for deep links while app is running
+    const subscription = Linking.addEventListener('url', (event) => {
+      const url = new URL(event.url);
+      const quoteId = url.searchParams.get('id');
+      if (quoteId) {
+        console.log('🔗 Widget deep link received with quote ID:', quoteId);
+        router.dismissTo(`/?id=${quoteId}`);
       }
     });
 
@@ -181,12 +211,18 @@ export default function Index() {
   // Load and shuffle quotes based on selected categories
   useEffect(() => {
     if (!isCategoriesLoading && selectedCategories.length > 0) {
-      // Use pending deep link quote if available, otherwise initialize normally
-      initializeQuotePool(pendingDeepLinkQuote.current);
+      initializeQuotePool();
       // Update notifications with new categories
       scheduleNotifications();
     }
   }, [selectedCategories, isCategoriesLoading]);
+
+  // Hide splash screen when quotes are ready to display
+  useEffect(() => {
+    if (quotes.length > 0 && onboardingData.completed) {
+      SplashScreen.hideAsync().catch(console.warn);
+    }
+  }, [quotes.length, onboardingData.completed]);
 
   // Separate effect to handle favorites changes when viewing favorites category
   useEffect(() => {
@@ -206,7 +242,7 @@ export default function Index() {
     }
   }, [customQuotes]);
 
-  const initializeQuotePool = (priorityQuote?: Quote | null) => {
+  const initializeQuotePool = () => {
     const allQuotes: Quote[] = [];
 
     // Gather quotes from selected categories
@@ -237,22 +273,11 @@ export default function Index() {
     // Initialize with 3-4 cycles of shuffled quotes for infinite scroll
     const initialQuotes: Quote[] = [];
 
-    // If we have a priority quote (from deep link), add it first
-    if (priorityQuote) {
-      initialQuotes.push(priorityQuote);
-      console.log('🎯 Added priority quote from deep link as first card:', priorityQuote.text);
-    }
-
     for (let i = 0; i < 4; i++) {
       const shuffled = [...allQuotes].sort(() => Math.random() - 0.5);
       initialQuotes.push(...shuffled);
     }
     setQuotes(initialQuotes);
-
-    // Clear the pending deep link quote after using it
-    if (priorityQuote) {
-      pendingDeepLinkQuote.current = null;
-    }
   };
 
   const loadMoreQuotes = () => {
@@ -527,6 +552,44 @@ export default function Index() {
     router.push('/categories');
   };
 
+  const sendTestNotification = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      // Get a random quote from general category
+      const generalQuotes = quotesData['general'];
+      if (!generalQuotes || !Array.isArray(generalQuotes) || generalQuotes.length === 0) {
+        console.error('No general quotes found');
+        return;
+      }
+
+      const randomQuote = generalQuotes[Math.floor(Math.random() * generalQuotes.length)];
+
+      // Schedule immediate notification (1 second delay)
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "⤵",
+          body: randomQuote.text,
+          sound: true,
+          data: {
+            quoteId: randomQuote.id,
+            categories: ['general'],
+            isTest: true,
+          },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 1,
+          repeats: false,
+        } as any,
+      });
+
+      console.log('✅ Test notification scheduled:', randomQuote.text);
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+    }
+  };
+
 
   // Update category badge when selected category changes
   useEffect(() => {
@@ -667,56 +730,77 @@ export default function Index() {
     };
   }, [hasCompletedFirstSwipe, onboardingData.completed]);
 
-  // Handle deep link via URL params
+  // Handle deep link via URL params - simplified approach
   useEffect(() => {
     if (quoteId && quotes.length > 0) {
       console.log('📱 Deep link to quote ID:', quoteId);
 
       let targetQuote: Quote | null = null;
 
-      // Check if quote already exists in feed
-      const existingIndex = quotes.findIndex(q => q.id === quoteId);
-      if (existingIndex !== -1) {
-        console.log('✅ Quote already in feed at index:', existingIndex);
-        targetQuote = quotes[existingIndex];
-      } else {
-        // Find the quote in quotesData by ID
-        for (const category in quotesData) {
-          const categoryQuotes = quotesData[category];
-          if (Array.isArray(categoryQuotes)) {
-            const quoteObj = categoryQuotes.find((q: any) => q.id === quoteId);
-            if (quoteObj) {
-              targetQuote = { id: quoteObj.id, text: quoteObj.text, category };
-              console.log('✅ Found quote in quotesData:', targetQuote.text);
-              break;
-            }
+      // Find the quote in quotesData by ID
+      for (const category in quotesData) {
+        const categoryQuotes = quotesData[category];
+        if (Array.isArray(categoryQuotes)) {
+          const quoteObj = categoryQuotes.find((q: any) => q.id === quoteId);
+          if (quoteObj) {
+            targetQuote = { id: quoteObj.id, text: quoteObj.text, category };
+            console.log('✅ Found quote in quotesData:', targetQuote.text);
+            break;
           }
         }
       }
 
       if (targetQuote) {
-        // Remove the quote from its current position if it exists
-        const filteredQuotes = quotes.filter(q => q.id !== quoteId);
+        // Simple approach: Rebuild entire quotes array with target quote first
+        const allQuotes: Quote[] = [];
 
-        // Insert it at the current viewing position (replace what's there)
-        const newQuotes = [
-          ...filteredQuotes.slice(0, currentViewIndex),
-          targetQuote,
-          ...filteredQuotes.slice(currentViewIndex)
-        ];
+        // Gather all quotes from current categories (same as initializeQuotePool)
+        selectedCategories.forEach((category) => {
+          if (category === 'favorites') {
+            favorites.forEach((favorite) => {
+              allQuotes.push({ id: favorite.text, text: favorite.text, category: favorite.category });
+            });
+          } else if (category === 'custom') {
+            customQuotes.forEach((custom) => {
+              allQuotes.push({ id: custom.id, text: custom.text, category: 'custom' });
+            });
+          } else {
+            const categoryQuotes = quotesData[category];
+            if (categoryQuotes && Array.isArray(categoryQuotes)) {
+              categoryQuotes.forEach((quoteObj: { id: string; text: string }) => {
+                allQuotes.push({ id: quoteObj.id, text: quoteObj.text, category });
+              });
+            }
+          }
+        });
+
+        // Build new quotes array: target quote first, then shuffled others
+        const newQuotes: Quote[] = [targetQuote];
+
+        // Remove target quote from pool to avoid duplicates
+        const filteredQuotes = allQuotes.filter(q => q.id !== quoteId);
+
+        // Add 3-4 cycles of shuffled quotes after the target
+        for (let i = 0; i < 4; i++) {
+          const shuffled = [...filteredQuotes].sort(() => Math.random() - 0.5);
+          newQuotes.push(...shuffled);
+        }
 
         setQuotes(newQuotes);
+        console.log('✅ Reset quotes array with target quote at index 0');
 
-        console.log('✅ Inserted quote at current position:', currentViewIndex);
-        // No scrolling needed - quote is already at the visible position
+        // Scroll to the beginning to ensure target quote is visible
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({ index: 0, animated: false });
+        }, 100);
       } else {
-        console.log('⚠️ Quote ID not found');
+        console.log('⚠️ Quote ID not found in quotesData');
       }
 
       // Clear the param without navigating
       router.setParams({ id: undefined });
     }
-  }, [quoteId, quotes.length, router]);
+  }, [quoteId, quotes.length, router, selectedCategories, favorites, customQuotes]);
 
   // If onboarding is completed, show the TikTok-style quote feed
   if (onboardingData.completed) {
@@ -800,7 +884,7 @@ export default function Index() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.debugButton, { marginTop: 8 }]}
+              style={[styles.debugButton, { marginTop: 16 }]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 showUpdateSheet();
@@ -808,6 +892,14 @@ export default function Index() {
             >
               <Ionicons name="download-outline" size={24} color={Colors.text.white} />
               <Text style={styles.debugButtonText}>Show Update</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.debugButton, { marginTop: 72 }]}
+              onPress={sendTestNotification}
+            >
+              <Ionicons name="notifications-outline" size={24} color={Colors.text.white} />
+              <Text style={styles.debugButtonText}>Test Notification</Text>
             </TouchableOpacity>
           </>
         )}

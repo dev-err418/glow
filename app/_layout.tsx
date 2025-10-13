@@ -1,19 +1,19 @@
 import * as Sentry from '@sentry/react-native';
+import { Stack, useGlobalSearchParams, usePathname, useRouter } from "expo-router";
 import * as SplashScreen from 'expo-splash-screen';
-import { Stack, useRouter, usePathname, useGlobalSearchParams } from "expo-router";
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { useEffect } from "react";
-import { AppState, Linking, StatusBar } from "react-native";
+import { AppState, StatusBar } from "react-native";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { UpdateBottomSheet } from "../components/UpdateBottomSheet";
 import { Colors } from "../constants/Colors";
-import { CategoriesProvider, useCategories } from "../contexts/CategoriesContext";
+import { CategoriesProvider } from "../contexts/CategoriesContext";
 import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { InAppUpdatesProvider, useInAppUpdates } from "../contexts/InAppUpdatesContext";
 import { NotificationProvider } from "../contexts/NotificationContext";
-import { OnboardingProvider, useOnboarding } from "../contexts/OnboardingContext";
+import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
 import { StreakProvider } from "../contexts/StreakContext";
 import "../services/notificationService";
@@ -41,60 +41,13 @@ function RootLayoutContent() {
   const { isUpdateSheetVisible, updateInfo, handleUpdate, handleLater } = useInAppUpdates();
   const posthog = usePostHog();
   const pathname = usePathname();
-  const params = useGlobalSearchParams();
-  const { isOnboardingComplete, isLoading: isOnboardingLoading } = useOnboarding();
-  const { isLoading: isCategoriesLoading } = useCategories();
-
-  // Hide splash screen when all contexts are loaded
-  useEffect(() => {
-    if (!isOnboardingLoading && !isCategoriesLoading) {
-      SplashScreen.hideAsync().catch(console.warn);
-    }
-  }, [isOnboardingLoading, isCategoriesLoading]);
+  const params = useGlobalSearchParams();  
 
   // Track screen views in PostHog
   useEffect(() => {
     const screenName = normalizeScreenName(pathname);
     posthog.screen(screenName, params);
   }, [pathname, params, posthog]);
-
-  // Handle deep links from widget (glow://?id=xyz)
-  useEffect(() => {
-    // Only process deep links if onboarding is complete
-    if (isOnboardingLoading || !isOnboardingComplete) {
-      console.log('🔗 Ignoring deep link - onboarding not complete');
-      return;
-    }
-
-    // Check if app was opened from a deep link (cold start)
-    const handleInitialURL = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        const url = new URL(initialUrl);
-        const quoteId = url.searchParams.get('id');
-        if (quoteId) {
-          console.log('🔗 App opened from widget deep link with quote ID:', quoteId);
-          router.replace(`/?id=${quoteId}`);
-        }
-      }
-    };
-
-    handleInitialURL();
-
-    // Listen for deep links while app is running
-    const subscription = Linking.addEventListener('url', (event) => {
-      const url = new URL(event.url);
-      const quoteId = url.searchParams.get('id');
-      if (quoteId) {
-        console.log('🔗 Widget deep link received with quote ID:', quoteId);
-        router.replace(`/?id=${quoteId}`);
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [router, isOnboardingLoading, isOnboardingComplete]);
 
   // Dismiss modals when app goes to background
   useEffect(() => {
@@ -108,6 +61,7 @@ function RootLayoutContent() {
       subscription.remove();
     };
   }, [router]);
+
 
   return (
     <>
@@ -124,6 +78,7 @@ function RootLayoutContent() {
       >
         <Stack.Screen
           name="index"
+          getId={() => 'index'}
           options={{
             title: 'Glow App',
             headerShown: false
