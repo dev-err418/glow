@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
@@ -14,8 +13,6 @@ import {
   FlatList,
   Linking,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
   ViewToken
 } from 'react-native';
@@ -30,7 +27,6 @@ import { Colors } from '../constants/Colors';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { useInAppUpdates } from '../contexts/InAppUpdatesContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
@@ -56,7 +52,6 @@ export default function Index() {
   const { customQuotes } = useCustomQuotes();
   const { recordActivity } = useStreak();
   const { scheduleNotifications } = useNotifications();
-  const { showUpdateSheet } = useInAppUpdates();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -336,59 +331,6 @@ export default function Index() {
     }
   };
 
-  const resetFirstSwipeState = async () => {
-    setHasCompletedFirstSwipe(false);
-    uiOpacity.setValue(0);
-    try {
-      await AsyncStorage.removeItem('firstSwipeCompleted');
-    } catch (error) {
-      console.error('Error resetting first swipe state:', error);
-    }
-
-    // Stop any existing animation
-    if (bounceAnimationRef.current) {
-      bounceAnimationRef.current.stop();
-      bounceAnimationRef.current = null;
-    }
-
-    // Reset animation values
-    hintTranslateY.setValue(0);
-    hintOpacity.setValue(0);
-
-    // Show swipe hint immediately
-    setShowSwipeHint(true);
-
-    // Start bounce animation for tutorial
-    const bounceLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(hintTranslateY, {
-          toValue: -20,
-          duration: 1000,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(hintTranslateY, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.in(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    bounceAnimationRef.current = bounceLoop;
-
-    // Fade in hint and start bounce
-    Animated.parallel([
-      Animated.timing(hintOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      bounceLoop,
-    ]).start();
-  };
-
   const handleLike = (quote: Quote, scaleAnim: Animated.Value) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -551,45 +493,6 @@ export default function Index() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/categories');
   };
-
-  const sendTestNotification = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    try {
-      // Get a random quote from general category
-      const generalQuotes = quotesData['general'];
-      if (!generalQuotes || !Array.isArray(generalQuotes) || generalQuotes.length === 0) {
-        console.error('No general quotes found');
-        return;
-      }
-
-      const randomQuote = generalQuotes[Math.floor(Math.random() * generalQuotes.length)];
-
-      // Schedule immediate notification (1 second delay)
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "⤵",
-          body: randomQuote.text,
-          sound: true,
-          data: {
-            quoteId: randomQuote.id,
-            categories: ['general'],
-            isTest: true,
-          },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 1,
-          repeats: false,
-        } as any,
-      });
-
-      console.log('✅ Test notification scheduled:', randomQuote.text);
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-    }
-  };
-
 
   // Update category badge when selected category changes
   useEffect(() => {
@@ -868,41 +771,6 @@ export default function Index() {
           visible={showStreakPopup}
           onComplete={() => setShowStreakPopup(false)}
         />
-
-        {/* Debug Buttons - Only in development */}
-        {__DEV__ && process.env.EXPO_PUBLIC_SHOW_DEBUG_BUTTONS === 'true' && (
-          <>
-            <TouchableOpacity
-              style={styles.debugButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                resetFirstSwipeState();
-              }}
-            >
-              <Ionicons name="bug-outline" size={24} color={Colors.text.white} />
-              <Text style={styles.debugButtonText}>Reset Tutorial</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.debugButton, { marginTop: 16 }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                showUpdateSheet();
-              }}
-            >
-              <Ionicons name="download-outline" size={24} color={Colors.text.white} />
-              <Text style={styles.debugButtonText}>Show Update</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.debugButton, { marginTop: 72 }]}
-              onPress={sendTestNotification}
-            >
-              <Ionicons name="notifications-outline" size={24} color={Colors.text.white} />
-              <Text style={styles.debugButtonText}>Test Notification</Text>
-            </TouchableOpacity>
-          </>
-        )}
       </View>
     );
   }
@@ -915,24 +783,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background.default,
-  },
-  debugButton: {
-    position: 'absolute',
-    left: 20,
-    top: '50%',
-    marginTop: -40,
-    backgroundColor: 'rgba(128, 128, 128, 0.8)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    zIndex: 1000,
-  },
-  debugButtonText: {
-    color: Colors.text.white,
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
