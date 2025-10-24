@@ -1,14 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedMascot } from '../../components/AnimatedMascot';
 import { StreakDisplay } from '../../components/StreakDisplay';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
+import { usePremium } from '../../contexts/PremiumContext';
 
 interface SettingsRowProps {
   label: string;
@@ -43,10 +45,26 @@ function SettingsRow({ label, value, icon, onPress, showDivider = true }: Settin
 export default function SettingsIndex() {
   const router = useRouter();
   const { onboardingData } = useOnboarding();
+  const { customerInfo } = usePremium();
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.back();
+  };
+
+  const handleCopyUserId = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const userId = getCleanUserId();
+      if (userId) {
+        await Clipboard.setStringAsync(userId);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert('Copied!', 'User ID copied to clipboard.');
+      }
+    } catch (error) {
+      console.error('Error copying user ID:', error);
+      Alert.alert('Error', 'Failed to copy user ID. Please try again.');
+    }
   };
 
   const handleNavigate = (path: string) => {
@@ -82,6 +100,12 @@ export default function SettingsIndex() {
       default:
         return 'Not set';
     }
+  };
+
+  const getCleanUserId = () => {
+    const userId = customerInfo?.originalAppUserId;
+    if (!userId) return null;
+    return userId.replace('$RCAnonymousID:', '');
   };
 
   return (
@@ -168,6 +192,17 @@ export default function SettingsIndex() {
               showDivider={false}
             />
           </View>
+
+          {/* User ID */}
+          {getCleanUserId() && (
+            <TouchableOpacity
+              onPress={handleCopyUserId}
+              activeOpacity={0.7}
+              style={styles.userIdContainer}
+            >
+              <Text style={styles.userIdText}>{getCleanUserId()}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -250,5 +285,17 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border.light,
     marginLeft: 16,
+  },
+  userIdContainer: {
+    marginTop: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  userIdText: {
+    ...Typography.body,
+    fontSize: 11,
+    color: Colors.text.light,
+    fontFamily: 'monospace',
+    letterSpacing: 0.5,
   },
 });
