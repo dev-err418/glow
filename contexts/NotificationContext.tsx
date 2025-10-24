@@ -185,9 +185,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   };
 
   const requestPermissions = async (): Promise<boolean> => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    setPermissionStatus(status);
-    return status === 'granted';
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      setPermissionStatus(status);
+      return status === 'granted';
+    } catch (error) {
+      // Mac Catalyst and some platforms throw errors instead of returning denied status
+      // This prevents crashes on iPad Pro running Mac Catalyst apps
+      console.error('Error requesting notification permissions:', error);
+      setPermissionStatus('denied');
+      return false;
+    }
   };
 
   /**

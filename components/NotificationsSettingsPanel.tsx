@@ -43,7 +43,7 @@ export function NotificationsSettingsPanel() {
       } else {
         Alert.alert(
           'Notifications Disabled',
-          'Please enable notifications in your device settings to use this feature.',
+          'Please enable notifications in your device settings to use this feature.\n\nNote: If you\'re running this app on macOS (Mac Catalyst), notifications may not be supported. Please use the native iOS app on your iPhone or iPad for full notification support.',
           [
             { text: 'Cancel', style: 'cancel' },
             {
@@ -69,7 +69,7 @@ export function NotificationsSettingsPanel() {
       } else {
         Alert.alert(
           'Notifications Disabled',
-          'Please enable notifications in your device settings to use this feature.',
+          'Please enable notifications in your device settings to use this feature.\n\nNote: If you\'re running this app on macOS (Mac Catalyst), notifications may not be supported. Please use the native iOS app on your iPhone or iPad for full notification support.',
           [
             { text: 'Cancel', style: 'cancel' },
             {
