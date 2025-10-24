@@ -49,9 +49,21 @@ export default function PremiumScreen() {
         // User purchased or restored premium - check subscription type
         const customerInfo = await Purchases.getCustomerInfo();
 
-        // Check if user subscribed to yearly plan
-        const isYearlyPlan = customerInfo.entitlements.active['Premium']?.productIdentifier === '$rc_annual';
-        const subscriptionType = isYearlyPlan ? 'yearly' : 'monthly';
+        // Get subscription details
+        const entitlement = customerInfo.entitlements.active['Premium'];
+        const productId = entitlement?.productIdentifier;
+
+        // Determine subscription type based on product identifier
+        let subscriptionType: 'weekly' | 'monthly' | 'yearly' | 'lifetime' = 'monthly';
+        if (productId === '$rc_weekly') {
+          subscriptionType = 'weekly';
+        } else if (productId === '$rc_monthly') {
+          subscriptionType = 'monthly';
+        } else if (productId === '$rc_annual') {
+          subscriptionType = 'yearly';
+        } else if (productId === '$rc_lifetime') {
+          subscriptionType = 'lifetime';
+        }
 
         const trialStartDate = new Date().toISOString();
         updateOnboardingData({
@@ -60,12 +72,14 @@ export default function PremiumScreen() {
           subscriptionType: subscriptionType
         });
 
-        // Only schedule trial reminder for yearly subscribers
-        if (isYearlyPlan) {
+        // Schedule trial reminder for any subscription with an introductory offer
+        const hasTrialOrIntro = entitlement?.periodType === 'TRIAL' || entitlement?.periodType === 'INTRO';
+
+        if (hasTrialOrIntro) {
           await schedulePremiumReminder();
-          console.log('📅 Trial reminder scheduled for yearly subscriber');
+          console.log(`📅 Trial reminder scheduled for ${subscriptionType} subscriber with introductory offer`);
         } else {
-          console.log('📅 Skipping trial reminder - monthly subscriber');
+          console.log(`📅 Skipping trial reminder - ${subscriptionType} subscriber without trial`);
         }
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

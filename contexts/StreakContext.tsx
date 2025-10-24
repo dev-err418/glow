@@ -21,10 +21,6 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
   const posthog = usePostHog();
   const previousStreakRef = useRef(0);
 
-  // Demo mode: Generate 17-day streak for store screenshots
-  const isDemoMode = process.env.EXPO_PUBLIC_DEMO_STREAK === 'true';
-  const DEMO_STREAK_DAYS = 17;
-
   // Load saved streak data on app start
   useEffect(() => {
     loadStreakData();
@@ -194,23 +190,9 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Generate demo streak data: 17 consecutive days ending today
-  const generateDemoStreakDays = (): string[] => {
-    const today = new Date();
-    const demoDays: string[] = [];
-
-    for (let i = DEMO_STREAK_DAYS - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      demoDays.push(formatDateToLocal(date));
-    }
-
-    return demoDays;
-  };
-
   const value = {
-    streakDays: isDemoMode ? generateDemoStreakDays() : streakDays,
-    currentStreak: isDemoMode ? DEMO_STREAK_DAYS : currentStreak,
+    streakDays,
+    currentStreak,
     recordActivity,
     migrateAndFixDates,
     isLoading,

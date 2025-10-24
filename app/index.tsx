@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
@@ -30,7 +29,6 @@ import { Colors } from '../constants/Colors';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { useInAppUpdates } from '../contexts/InAppUpdatesContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useStreak } from '../contexts/StreakContext';
@@ -55,8 +53,7 @@ export default function Index() {
   const { addFavorite, removeFavorite, isFavorite, favorites } = useFavorites();
   const { customQuotes } = useCustomQuotes();
   const { recordActivity } = useStreak();
-  const { scheduleNotifications } = useNotifications();
-  const { showUpdateSheet } = useInAppUpdates();
+  const { scheduleNotifications, permissionStatus } = useNotifications();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -83,6 +80,9 @@ export default function Index() {
 
   // FlatList ref for scrolling to specific quote
   const flatListRef = useRef<FlatList<Quote>>(null);
+
+  // Ref to store pending quoteId from notification (for handling race conditions)
+  const pendingQuoteIdRef = useRef<string | null>(null);
 
   // Animated values for mascot position (left and bottom)
   const mascotLeft = useRef(new Animated.Value(MASCOT_HIDDEN.left)).current;
@@ -136,6 +136,34 @@ export default function Index() {
     return () => {
       subscription.remove();
     };
+  }, [router]);
+
+  // Handle notification taps when app is launched from closed state
+  useEffect(() => {
+    const checkLastNotificationResponse = async () => {
+      const response = await Notifications.getLastNotificationResponseAsync();
+
+      if (response) {
+        const quoteId = response.notification.request.content.data?.quoteId as string | undefined;
+
+        if (quoteId) {
+          console.log('📬 App launched from notification with quote ID:', quoteId);
+          console.log('📬 Notification data:', JSON.stringify(response.notification.request.content.data));
+
+          // Store the quoteId in ref so it persists until quotes are loaded
+          pendingQuoteIdRef.current = quoteId;
+
+          // Also set URL param (this might work if quotes are already loaded)
+          router.dismissTo(`/?id=${quoteId}`);
+        } else {
+          console.log('⚠️ Notification response received but no quoteId in data');
+        }
+      } else {
+        console.log('ℹ️ No notification response found (app not launched from notification)');
+      }
+    };
+
+    checkLastNotificationResponse();
   }, [router]);
 
   // Handle widget deep links (glow://?id=xyz)
@@ -336,59 +364,6 @@ export default function Index() {
     }
   };
 
-  const resetFirstSwipeState = async () => {
-    setHasCompletedFirstSwipe(false);
-    uiOpacity.setValue(0);
-    try {
-      await AsyncStorage.removeItem('firstSwipeCompleted');
-    } catch (error) {
-      console.error('Error resetting first swipe state:', error);
-    }
-
-    // Stop any existing animation
-    if (bounceAnimationRef.current) {
-      bounceAnimationRef.current.stop();
-      bounceAnimationRef.current = null;
-    }
-
-    // Reset animation values
-    hintTranslateY.setValue(0);
-    hintOpacity.setValue(0);
-
-    // Show swipe hint immediately
-    setShowSwipeHint(true);
-
-    // Start bounce animation for tutorial
-    const bounceLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(hintTranslateY, {
-          toValue: -20,
-          duration: 1000,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(hintTranslateY, {
-          toValue: 0,
-          duration: 1000,
-          easing: Easing.in(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    bounceAnimationRef.current = bounceLoop;
-
-    // Fade in hint and start bounce
-    Animated.parallel([
-      Animated.timing(hintOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      bounceLoop,
-    ]).start();
-  };
-
   const handleLike = (quote: Quote, scaleAnim: Animated.Value) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -552,44 +527,44 @@ export default function Index() {
     router.push('/categories');
   };
 
+  /* DEBUG: Test notification function (commented out for production)
   const sendTestNotification = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    try {
-      // Get a random quote from general category
-      const generalQuotes = quotesData['general'];
-      if (!generalQuotes || !Array.isArray(generalQuotes) || generalQuotes.length === 0) {
-        console.error('No general quotes found');
-        return;
-      }
-
-      const randomQuote = generalQuotes[Math.floor(Math.random() * generalQuotes.length)];
-
-      // Schedule immediate notification (1 second delay)
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "⤵",
-          body: randomQuote.text,
-          sound: true,
-          data: {
-            quoteId: randomQuote.id,
-            categories: ['general'],
-            isTest: true,
-          },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 1,
-          repeats: false,
-        } as any,
-      });
-
-      console.log('✅ Test notification scheduled:', randomQuote.text);
-    } catch (error) {
-      console.error('Error sending test notification:', error);
+    // Check permissions first
+    if (permissionStatus !== 'granted') {
+      console.log('🔕 Notifications permission not granted, cannot send test notification');
+      return;
     }
-  };
 
+    // Get a random quote from the current quote pool
+    const randomQuote = quotePoolRef.current.length > 0
+      ? quotePoolRef.current[Math.floor(Math.random() * quotePoolRef.current.length)]
+      : { id: 'general-1', text: "Take a moment to appreciate yourself 🌸", category: 'general' };
+
+    console.log('🧪 Sending test notification with quote ID:', randomQuote.id);
+
+    // Schedule a notification 5 seconds from now
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Test Notification 🧪",
+        body: randomQuote.text,
+        sound: true,
+        data: {
+          quoteId: randomQuote.id,
+          isTest: true,
+        },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+        repeats: false,
+      } as any,
+    });
+
+    console.log('✅ Test notification scheduled! It will appear in 5 seconds.');
+  };
+  */
 
   // Update category badge when selected category changes
   useEffect(() => {
@@ -732,8 +707,13 @@ export default function Index() {
 
   // Handle deep link via URL params - simplified approach
   useEffect(() => {
-    if (quoteId && quotes.length > 0) {
-      console.log('📱 Deep link to quote ID:', quoteId);
+    // Check for quoteId from either URL param or pending notification ref
+    const targetQuoteId = quoteId || pendingQuoteIdRef.current;
+
+    if (targetQuoteId && quotes.length > 0) {
+      console.log('📱 Processing deep link to quote ID:', targetQuoteId);
+      console.log('📱 Source:', quoteId ? 'URL param' : 'pending notification');
+      console.log('📱 Quotes loaded:', quotes.length);
 
       let targetQuote: Quote | null = null;
 
@@ -741,7 +721,7 @@ export default function Index() {
       for (const category in quotesData) {
         const categoryQuotes = quotesData[category];
         if (Array.isArray(categoryQuotes)) {
-          const quoteObj = categoryQuotes.find((q: any) => q.id === quoteId);
+          const quoteObj = categoryQuotes.find((q: any) => q.id === targetQuoteId);
           if (quoteObj) {
             targetQuote = { id: quoteObj.id, text: quoteObj.text, category };
             console.log('✅ Found quote in quotesData:', targetQuote.text);
@@ -793,12 +773,22 @@ export default function Index() {
         setTimeout(() => {
           flatListRef.current?.scrollToIndex({ index: 0, animated: false });
         }, 100);
-      } else {
-        console.log('⚠️ Quote ID not found in quotesData');
-      }
 
-      // Clear the param without navigating
-      router.setParams({ id: undefined });
+        // Clear both the pending ref and URL param after successful navigation
+        pendingQuoteIdRef.current = null;
+        if (quoteId) {
+          router.setParams({ id: undefined });
+        }
+      } else {
+        console.log('⚠️ Quote ID not found in quotesData:', targetQuoteId);
+        // Still clear the pending values even if quote not found
+        pendingQuoteIdRef.current = null;
+        if (quoteId) {
+          router.setParams({ id: undefined });
+        }
+      }
+    } else if (targetQuoteId && quotes.length === 0) {
+      console.log('⏳ Deep link pending: quote ID ready but quotes not loaded yet');
     }
   }, [quoteId, quotes.length, router, selectedCategories, favorites, customQuotes]);
 
@@ -847,6 +837,25 @@ export default function Index() {
           onParticlesComplete={() => setParticles([])}
         />
 
+        {/* DEBUG: Test Notification Button (commented out for production)
+        <Animated.View
+          style={[
+            styles.debugButton,
+            {
+              opacity: uiOpacity,
+            },
+          ]}
+          pointerEvents={hasCompletedFirstSwipe ? 'auto' : 'none'}
+        >
+          <TouchableOpacity
+            onPress={sendTestNotification}
+            style={styles.debugButtonTouchable}
+          >
+            <Text style={styles.debugButtonText}>🧪 Test Notification</Text>
+          </TouchableOpacity>
+        </Animated.View>
+        */}
+
         {/* Swipe Hint */}
         <SwipeHint
           showSwipeHint={showSwipeHint}
@@ -868,41 +877,6 @@ export default function Index() {
           visible={showStreakPopup}
           onComplete={() => setShowStreakPopup(false)}
         />
-
-        {/* Debug Buttons - Only in development */}
-        {__DEV__ && process.env.EXPO_PUBLIC_SHOW_DEBUG_BUTTONS === 'true' && (
-          <>
-            <TouchableOpacity
-              style={styles.debugButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                resetFirstSwipeState();
-              }}
-            >
-              <Ionicons name="bug-outline" size={24} color={Colors.text.white} />
-              <Text style={styles.debugButtonText}>Reset Tutorial</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.debugButton, { marginTop: 16 }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                showUpdateSheet();
-              }}
-            >
-              <Ionicons name="download-outline" size={24} color={Colors.text.white} />
-              <Text style={styles.debugButtonText}>Show Update</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.debugButton, { marginTop: 72 }]}
-              onPress={sendTestNotification}
-            >
-              <Ionicons name="notifications-outline" size={24} color={Colors.text.white} />
-              <Text style={styles.debugButtonText}>Test Notification</Text>
-            </TouchableOpacity>
-          </>
-        )}
       </View>
     );
   }
@@ -916,23 +890,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background.default,
   },
+  /* DEBUG: Test notification button styles (commented out for production)
   debugButton: {
     position: 'absolute',
-    left: 20,
     top: '50%',
-    marginTop: -40,
-    backgroundColor: 'rgba(128, 128, 128, 0.8)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    left: '50%',
+    transform: [{ translateX: -100 }, { translateY: -25 }],
     zIndex: 1000,
   },
-  debugButtonText: {
-    color: Colors.text.white,
-    fontSize: 14,
-    fontWeight: '600',
+  debugButtonTouchable: {
+    backgroundColor: 'rgba(255, 123, 84, 0.9)',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  */
 });
