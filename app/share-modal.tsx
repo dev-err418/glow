@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React, { useRef, useState } from 'react';
+import * as StoreReview from 'expo-store-review';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Image,
@@ -25,6 +27,24 @@ export default function ShareModal() {
   const params = useLocalSearchParams<{ text: string; category: string }>();
   const viewShotRef = useRef<ViewShot>(null);
   const [mascotReading, setMascotReading] = useState(false);
+
+  // Request review on first share modal open
+  useEffect(() => {
+    const checkAndRequestReview = async () => {
+      try {
+        const hasRequestedReview = await AsyncStorage.getItem('hasRequestedReviewForShare');
+        if (!hasRequestedReview) {
+          // First time opening share modal - request review
+          await AsyncStorage.setItem('hasRequestedReviewForShare', 'true');
+          StoreReview.requestReview();
+        }
+      } catch (error) {
+        console.error('Error checking/requesting review for share:', error);
+      }
+    };
+
+    checkAndRequestReview();
+  }, []);
 
   const handleSaveImage = async () => {
     try {

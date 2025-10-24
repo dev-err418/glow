@@ -394,8 +394,8 @@ export default function Index() {
 
       // Check if we hit a milestone and request review
       const newFavoritesCount = favorites.length + 1;
-      if (newFavoritesCount >= 15 && newFavoritesCount % 15 === 0) {
-        // Request review at milestones: 15, 30, 45, etc.
+      if ([5, 15, 30, 45].includes(newFavoritesCount)) {
+        // Request review at milestones: 5, 15, 30, 45
         StoreReview.requestReview();
       }
 
