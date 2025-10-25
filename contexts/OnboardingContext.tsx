@@ -26,6 +26,7 @@ interface OnboardingContextType {
   onboardingData: OnboardingData;
   updateOnboardingData: (data: Partial<OnboardingData>) => void;
   completeOnboarding: () => void;
+  resetOnboarding: () => Promise<void>;
   isOnboardingComplete: boolean;
   isLoading: boolean;
 }
@@ -128,10 +129,24 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const resetOnboarding = async () => {
+    try {
+      // Clear onboarding data from AsyncStorage
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      // Reset state to default
+      setOnboardingData(defaultOnboardingData);
+      setIsOnboardingComplete(false);
+      console.log('🔄 Onboarding data reset (dev mode)');
+    } catch (error) {
+      console.error('Error resetting onboarding data:', error);
+    }
+  };
+
   const value = {
     onboardingData,
     updateOnboardingData,
     completeOnboarding,
+    resetOnboarding,
     isOnboardingComplete,
     isLoading,
   };

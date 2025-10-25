@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
@@ -9,10 +9,48 @@ import { Typography } from '../../constants/Typography';
 
 export default function BenefitsScreen() {
   const router = useRouter();
+  const [visibleBenefits, setVisibleBenefits] = useState(1);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Animated values for benefits 2 and 3
+  const benefit2Opacity = useRef(new Animated.Value(0)).current;
+  const benefit2TranslateY = useRef(new Animated.Value(20)).current;
+  const benefit3Opacity = useRef(new Animated.Value(0)).current;
+  const benefit3TranslateY = useRef(new Animated.Value(20)).current;
 
   const handleContinue = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/onboarding/notifications');
+
+    if (isAnimating) return; // Prevent rapid tapping
+
+    if (visibleBenefits < 3) {
+      // Show next benefit
+      setIsAnimating(true);
+      const nextBenefit = visibleBenefits + 1;
+
+      // Select which benefit to animate
+      const opacity = nextBenefit === 2 ? benefit2Opacity : benefit3Opacity;
+      const translateY = nextBenefit === 2 ? benefit2TranslateY : benefit3TranslateY;
+
+      Animated.parallel([
+        Animated.spring(opacity, {
+          toValue: 1,
+          useNativeDriver: true,
+          bounciness: 8,
+        }),
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          bounciness: 8,
+        }),
+      ]).start(() => {
+        setVisibleBenefits(nextBenefit);
+        setIsAnimating(false);
+      });
+    } else {
+      // All benefits shown, navigate to next screen
+      router.push('/onboarding/notifications');
+    }
   };
 
   return (
@@ -31,22 +69,41 @@ export default function BenefitsScreen() {
         <View style={styles.content}>
           <Text style={styles.title}>The benefits of daily affirmations</Text>
 
-          <View style={styles.benefitsContainer}>            
+          <View style={styles.benefitsContainer}>
+            {/* Benefit 1 - Always visible */}
             <BenefitItem
               emoji="🧘"
               title="Reduce stress"
               description="Mindful moments throughout the day help you stay grounded and manage anxiety"
             />
-            <BenefitItem
-              emoji="✨"
-              title="Increase positivity"
-              description="Daily reminders shift your mindset toward gratitude and optimism"
-            />
-            <BenefitItem
-              emoji="🎯"
-              title="Achieve your goals"
-              description="Positive self-talk reinforces your capabilities and motivates action"
-            />
+
+            {/* Benefit 2 - Animated reveal (winter/SAD focused) */}
+            <Animated.View
+              style={{
+                opacity: benefit2Opacity,
+                transform: [{ translateY: benefit2TranslateY }],
+              }}
+            >
+              <BenefitItem
+                emoji="☀️"
+                title="Fight seasonal blues"
+                description="Gentle support designed for those dark days when getting out of bed feels impossible"
+              />
+            </Animated.View>
+
+            {/* Benefit 3 - Animated reveal */}
+            <Animated.View
+              style={{
+                opacity: benefit3Opacity,
+                transform: [{ translateY: benefit3TranslateY }],
+              }}
+            >
+              <BenefitItem
+                emoji="🎯"
+                title="Achieve your goals"
+                description="Positive self-talk reinforces your capabilities and motivates action"
+              />
+            </Animated.View>
           </View>
         </View>
       </KeyboardAwareScrollView>

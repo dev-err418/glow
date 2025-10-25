@@ -48,7 +48,7 @@ const ROTATION_VISIBLE = '-30deg'; // Tilted left when visible
 export default function Index() {
   const router = useRouter();
   const { id: quoteId } = useLocalSearchParams<{ id?: string }>();
-  const { onboardingData, isLoading: isOnboardingLoading } = useOnboarding();
+  const { onboardingData, isLoading: isOnboardingLoading, resetOnboarding } = useOnboarding();
   const { selectedCategories, isLoading: isCategoriesLoading } = useCategories();
   const { addFavorite, removeFavorite, isFavorite, favorites } = useFavorites();
   const { customQuotes } = useCustomQuotes();
@@ -527,6 +527,13 @@ export default function Index() {
     router.push('/categories');
   };
 
+  /* DEBUG: Reset onboarding function (dev mode only) */
+  const handleResetOnboarding = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await resetOnboarding();
+    router.replace('/onboarding/welcome');
+  };
+
   /* DEBUG: Test notification function (commented out for production)
   const sendTestNotification = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -856,6 +863,26 @@ export default function Index() {
         </Animated.View>
         */}
 
+        {/* DEBUG: Reset Onboarding Button (dev mode only) */}
+        {__DEV__ && (
+          <Animated.View
+            style={[
+              styles.debugResetButton,
+              {
+                opacity: uiOpacity,
+              },
+            ]}
+            pointerEvents={hasCompletedFirstSwipe ? 'auto' : 'none'}
+          >
+            <TouchableOpacity
+              onPress={handleResetOnboarding}
+              style={styles.debugButtonTouchable}
+            >
+              <Text style={styles.debugButtonText}>🔄 Reset Onboarding</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
         {/* Swipe Hint */}
         <SwipeHint
           showSwipeHint={showSwipeHint}
@@ -898,6 +925,14 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -100 }, { translateY: -25 }],
     zIndex: 1000,
   },
+  */
+  // DEBUG: Reset onboarding button styles (dev mode only)
+  debugResetButton: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    zIndex: 1000,
+  },
   debugButtonTouchable: {
     backgroundColor: 'rgba(255, 123, 84, 0.9)',
     paddingHorizontal: 20,
@@ -915,5 +950,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  */
 });
