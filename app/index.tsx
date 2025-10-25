@@ -401,6 +401,7 @@ export default function Index() {
 
       // Track like event in PostHog
       posthog.capture('Quote Liked', {
+        quoteId: quote.id,
         category: quote.category,
         favoritesCount: favorites.length + 1,
       });
@@ -482,6 +483,7 @@ export default function Index() {
 
     // Track share event in PostHog
     posthog.capture('Quote Shared', {
+      quoteId: quote.id,
       category: quote.category,
       source: 'quote_feed',
     });
