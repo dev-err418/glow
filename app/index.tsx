@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as StoreReview from 'expo-store-review';
+import { usePostHog } from 'posthog-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -54,6 +55,7 @@ export default function Index() {
   const { customQuotes } = useCustomQuotes();
   const { recordActivity } = useStreak();
   const { scheduleNotifications, permissionStatus } = useNotifications();
+  const posthog = usePostHog();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isMascotVisible, setIsMascotVisible] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -397,6 +399,12 @@ export default function Index() {
       // Liking - add to favorites
       addFavorite(quote);
 
+      // Track like event in PostHog
+      posthog.capture('Quote Liked', {
+        category: quote.category,
+        favoritesCount: favorites.length + 1,
+      });
+
       // Check if we hit a milestone and request review
       const newFavoritesCount = favorites.length + 1;
       if ([5, 15, 30, 45].includes(newFavoritesCount)) {
@@ -471,6 +479,13 @@ export default function Index() {
   const handleShare = (quote: Quote) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     console.log('Navigating to share modal with quote:', quote.text);
+
+    // Track share event in PostHog
+    posthog.capture('Quote Shared', {
+      category: quote.category,
+      source: 'quote_feed',
+    });
+
     try {
       router.push({
         pathname: 'share-modal' as any,
