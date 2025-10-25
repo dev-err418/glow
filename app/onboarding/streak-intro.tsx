@@ -24,11 +24,19 @@ export default function StreakIntroScreen() {
   const floatingY = useRef(new Animated.Value(0)).current;
   const swayX = useRef(new Animated.Value(0)).current;
 
+  // Checkmark smash animation
+  const checkmarkScale = useRef(new Animated.Value(0)).current;
+  const dayBoxScale = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     const timer = setTimeout(() => {
       playMascotAnimation();
+      playCheckmarkSmashAnimation();
     }, 500);
-    return () => clearTimeout(timer);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, []);
 
   const resetMascotPosition = () => {
@@ -112,6 +120,36 @@ export default function StreakIntroScreen() {
     });
   };
 
+  const playCheckmarkSmashAnimation = () => {
+    // Reset scales
+    checkmarkScale.setValue(0);
+    dayBoxScale.setValue(0);
+
+    // Delay slightly to let mascot settle, then smash in
+    setTimeout(() => {
+      // Trigger haptic feedback
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+      // Animate both together with high tension for smash effect
+      Animated.parallel([
+        Animated.spring(checkmarkScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 5,
+          overshootClamping: false,
+        }),
+        Animated.spring(dayBoxScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 5,
+          overshootClamping: false,
+        }),
+      ]).start();
+    }, 300);
+  };
+
   const handleContinue = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/onboarding/streak-goal');
@@ -185,7 +223,7 @@ export default function StreakIntroScreen() {
           Build your daily habit
         </Text>
         <Text style={styles.subtitle}>
-          Consistency is key to lasting change
+          Every streak starts with day 1, today is yours.
         </Text>
 
         {/* Weekly Calendar with Checkmarks */}
@@ -194,15 +232,25 @@ export default function StreakIntroScreen() {
             {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day, index) => (
               <View key={index} style={styles.dayColumn}>
                 <Text style={[styles.dayLabel, index === todayIndex && styles.dayLabelActive]}>{day}</Text>
-                <View style={[styles.dayBox, index === todayIndex && styles.dayBoxActive]}>
-                  {index === todayIndex && (
-                    <Ionicons
-                      name="checkmark"
-                      size={24}
-                      color={Colors.background.primary}
-                    />
-                  )}
-                </View>
+                {index === todayIndex ? (
+                  <Animated.View
+                    style={[
+                      styles.dayBox,
+                      styles.dayBoxActive,
+                      { transform: [{ scale: dayBoxScale }] }
+                    ]}
+                  >
+                    <Animated.View style={{ transform: [{ scale: checkmarkScale }] }}>
+                      <Ionicons
+                        name="checkmark"
+                        size={24}
+                        color={Colors.background.primary}
+                      />
+                    </Animated.View>
+                  </Animated.View>
+                ) : (
+                  <View style={styles.dayBox} />
+                )}
               </View>
             ))}
           </View>
@@ -215,7 +263,7 @@ export default function StreakIntroScreen() {
         <View style={styles.statContainer}>
           <Text style={styles.statEmoji}>🔥</Text>
           <Text style={styles.statText}>
-            People with 7-day streaks are 3x more likely to form lasting habits
+            87% of users reach their 7-day goal
           </Text>
         </View>
       </View>

@@ -27,24 +27,24 @@ export default function BenefitsScreen() {
       // Show next benefit
       setIsAnimating(true);
       const nextBenefit = visibleBenefits + 1;
+      setVisibleBenefits(nextBenefit);
 
       // Select which benefit to animate
       const opacity = nextBenefit === 2 ? benefit2Opacity : benefit3Opacity;
       const translateY = nextBenefit === 2 ? benefit2TranslateY : benefit3TranslateY;
 
       Animated.parallel([
-        Animated.spring(opacity, {
+        Animated.timing(opacity, {
           toValue: 1,
+          duration: 300,
           useNativeDriver: true,
-          bounciness: 8,
         }),
-        Animated.spring(translateY, {
+        Animated.timing(translateY, {
           toValue: 0,
+          duration: 300,
           useNativeDriver: true,
-          bounciness: 8,
         }),
       ]).start(() => {
-        setVisibleBenefits(nextBenefit);
         setIsAnimating(false);
       });
     } else {
@@ -113,6 +113,7 @@ export default function BenefitsScreen() {
           variant="primary"
           size="large"
           onPress={handleContinue}
+          disabled={isAnimating}
           style={styles.button}
         >
           Next

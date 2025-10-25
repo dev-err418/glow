@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useEffect, useLayoutEffect } from 'react';
+import { AppState, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
@@ -9,28 +10,51 @@ import { Typography } from '../../constants/Typography';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
-export default function NotificationPermissionScreen() {
+export default function NotificationDeniedScreen() {
   const router = useRouter();
-  const { requestPermissions, setNotificationsEnabled } = useNotifications();
+  const navigation = useNavigation();
+  const { setNotificationsEnabled } = useNotifications();
   const { updateOnboardingData } = useOnboarding();
 
-  const handleEnableNotifications = async () => {
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (nextAppState === 'active') {
+        // Check if permissions were granted while in settings
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status === 'granted') {
+          setNotificationsEnabled(true);
+          updateOnboardingData({ notificationsEnabled: true });
+          router.push('/onboarding/streak-intro');
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const handleGoToSettings = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    // Request notification permission
-    const granted = await requestPermissions();
-
-    if (granted) {
-      // Permission granted
-      setNotificationsEnabled(true);
-      updateOnboardingData({ notificationsEnabled: true });
-      router.push('/onboarding/widget');
-    } else {
-      // Permission denied, go to encouragement screen
-      updateOnboardingData({ notificationsEnabled: false });
-      router.push('/onboarding/notification-denied');
-    }
+    Linking.openSettings();
   };
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/onboarding/streak-intro');
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={handleSkip} style={{ marginHorizontal: 4 }}>
+          <Text style={{ color: Colors.text.secondary, fontSize: 16 }}>
+            Skip
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
@@ -45,24 +69,24 @@ export default function NotificationPermissionScreen() {
 
         <View style={styles.content}>
           <Text style={styles.title}>
-            Glow works best with notifications
+            Here's what you'll miss
           </Text>
           <Text style={styles.subtitle}>
-            Daily affirmations are most effective when they reach you throughout the day. Enable notifications to get the full Glow experience.
+            Without notifications, you'll miss out on key features that make Glow truly powerful.
           </Text>
 
           <View style={styles.benefitsContainer}>
             <BenefitItem
-              emoji="🔔"
-              text="Gentle reminders to practice self-care"
+              emoji="📱"
+              text="Personalized timing - Affirmations delivered at YOUR perfect moments, not random times"
             />
             <BenefitItem
-              emoji="💫"
-              text="Stay consistent with your daily streak"
+              emoji="🔥"
+              text="Streak protection - Gentle nudges to keep your momentum going when life gets busy"
             />
             <BenefitItem
-              emoji="✨"
-              text="Receive affirmations when you need them most"
+              emoji="💝"
+              text="Surprise moments - Unexpected positivity throughout your day when you need it most"
             />
           </View>
         </View>
@@ -72,10 +96,10 @@ export default function NotificationPermissionScreen() {
         <Button
           variant="primary"
           size="large"
-          onPress={handleEnableNotifications}
+          onPress={handleGoToSettings}
           style={styles.button}
         >
-          Enable notifications
+          Go to settings
         </Button>
       </View>
     </View>

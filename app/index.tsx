@@ -78,6 +78,9 @@ export default function Index() {
   // Store base pool of all available quotes
   const quotePoolRef = useRef<Quote[]>([]);
 
+  // Track if we've already checked onboarding on initial load
+  const hasCheckedOnboarding = useRef(false);
+
   // FlatList ref for scrolling to specific quote
   const flatListRef = useRef<FlatList<Quote>>(null);
 
@@ -109,7 +112,9 @@ export default function Index() {
 
   useEffect(() => {
     // Wait for data to load before making navigation decisions
-    if (!isOnboardingLoading && !onboardingData.completed) {
+    // Only redirect once on initial load, not when resuming from background
+    if (!isOnboardingLoading && !onboardingData.completed && !hasCheckedOnboarding.current) {
+      hasCheckedOnboarding.current = true;
       // Delay navigation to ensure Stack is mounted
       const timer = setTimeout(() => {
         router.replace('/onboarding/welcome');

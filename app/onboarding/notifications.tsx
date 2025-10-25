@@ -17,8 +17,6 @@ export default function NotificationsScreen() {
     setNotificationsPerDay,
     setStartHour,
     setEndHour,
-    requestPermissions,
-    setNotificationsEnabled,
   } = useNotifications();
 
   const [localCount, setLocalCount] = useState(3);
@@ -55,33 +53,20 @@ export default function NotificationsScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Update notification settings
+    // Update notification settings (but don't enable yet)
     setNotificationsPerDay(localCount);
     setStartHour(startHours);
     setEndHour(endHours);
 
-    // Request permissions and enable notifications
-    const granted = await requestPermissions();
-    if (granted) {
-      setNotificationsEnabled(true);
-      // Save notification settings to onboarding data
-      updateOnboardingData({
-        notificationsEnabled: true,
-        notificationsPerDay: localCount,
-        notificationStartTime: localStartTime.toISOString(),
-        notificationEndTime: localEndTime.toISOString(),
-      });
-      router.push('/onboarding/streak-intro');
-    } else {
-      // User denied permissions, show encouragement screen
-      updateOnboardingData({
-        notificationsEnabled: false,
-        notificationsPerDay: localCount,
-        notificationStartTime: localStartTime.toISOString(),
-        notificationEndTime: localEndTime.toISOString(),
-      });
-      router.push('/onboarding/notification-permission');
-    }
+    // Save notification settings to onboarding data (permission request happens later)
+    updateOnboardingData({
+      notificationsPerDay: localCount,
+      notificationStartTime: localStartTime.toISOString(),
+      notificationEndTime: localEndTime.toISOString(),
+    });
+
+    // Navigate to glow notifications screen (permission will be requested there)
+    router.push('/onboarding/glow-notifications');
   };
 
   return (

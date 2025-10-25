@@ -53,14 +53,17 @@ function RootLayoutContent() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'background') {
-        router.dismissAll();
+        // Don't dismiss if user is on notification-denied screen (they may be going to settings)
+        if (pathname !== '/onboarding/notification-denied') {
+          router.dismissAll();
+        }
       }
     });
 
     return () => {
       subscription.remove();
     };
-  }, [router]);
+  }, [router, pathname]);
 
 
   return (

@@ -72,6 +72,18 @@ export default function OnboardingLayout() {
         }}
       />
       <Stack.Screen
+        name="glow-notifications"
+        options={{
+          title: 'Build your habit',
+        }}
+      />
+      <Stack.Screen
+        name="notification-denied"
+        options={{
+          title: 'One more thing',
+        }}
+      />
+      <Stack.Screen
         name="notification-permission"
         options={{
           title: 'Enable notifications',

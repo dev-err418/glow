@@ -9,7 +9,7 @@ import { Typography } from '../../constants/Typography';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
-export default function NotificationPermissionScreen() {
+export default function GlowNotificationsScreen() {
   const router = useRouter();
   const { requestPermissions, setNotificationsEnabled } = useNotifications();
   const { updateOnboardingData } = useOnboarding();
@@ -24,7 +24,7 @@ export default function NotificationPermissionScreen() {
       // Permission granted
       setNotificationsEnabled(true);
       updateOnboardingData({ notificationsEnabled: true });
-      router.push('/onboarding/widget');
+      router.push('/onboarding/streak-intro');
     } else {
       // Permission denied, go to encouragement screen
       updateOnboardingData({ notificationsEnabled: false });
@@ -54,7 +54,7 @@ export default function NotificationPermissionScreen() {
           <View style={styles.benefitsContainer}>
             <BenefitItem
               emoji="🔔"
-              text="Gentle reminders to practice self-care"
+              text="Get gentle reminders throughout the day"
             />
             <BenefitItem
               emoji="💫"
