@@ -81,10 +81,14 @@ const getStreakReminderContent = (currentStreak: number): { title: string; body:
   };
 };
 
-// Helper function to get a random quote from selected categories
-const getRandomQuote = (categories: string[]): { id: string; text: string } => {
+// Creates a quote selector that ensures unique quotes across a scheduling session
+const createUniqueQuoteSelector = (categories: string[]) => {
+  let availableQuotes: { id: string; text: string }[] = [];
+  const usedQuoteIds = new Set<string>();
+  
+  // Build the full quote pool based on selected categories
   const allQuotes: { id: string; text: string }[] = [];
-
+  
   categories.forEach((category) => {
     const categoryQuotes = quotesData[category];
     if (categoryQuotes && Array.isArray(categoryQuotes)) {
@@ -100,9 +104,40 @@ const getRandomQuote = (categories: string[]): { id: string; text: string } => {
     }
   }
 
-  return allQuotes.length > 0
-    ? allQuotes[Math.floor(Math.random() * allQuotes.length)]
-    : { id: 'general-1', text: "Take a moment to appreciate yourself 🌸" };
+  const resetQuotePool = () => {
+    // Filter out already used quotes and shuffle
+    availableQuotes = allQuotes
+      .filter(quote => !usedQuoteIds.has(quote.id))
+      .sort(() => Math.random() - 0.5); // Shuffle for randomness
+  };
+
+  // Initialize available quotes
+  resetQuotePool();
+
+  return {
+    getNextUniqueQuote: (): { id: string; text: string } => {
+      // If we've used all quotes, reset and start over
+      if (availableQuotes.length === 0) {
+        console.log('📚 All quotes used, resetting pool');
+        usedQuoteIds.clear();
+        resetQuotePool();
+      }
+
+      // If still no quotes available (shouldn't happen), return fallback
+      if (availableQuotes.length === 0) {
+        return { id: 'general-1', text: "Take a moment to appreciate yourself 🌸" };
+      }
+
+      // Get the next quote
+      const quote = availableQuotes.pop()!;
+      usedQuoteIds.add(quote.id);
+      
+      return quote;
+    },
+    
+    getQuotesRemaining: () => availableQuotes.length,
+    getTotalQuotes: () => allQuotes.length,
+  };
 };
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
@@ -240,130 +275,191 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       console.log('🔕 Notifications permission not granted, skipping scheduling');
       return;
     }
-
+  
     if (schedulingInProgress.current) {
       console.log('⏳ Scheduling already in progress, skipping');
       return;
     }
-
+  
     try {
       schedulingInProgress.current = true;
-
+  
       // Step 1: Cancel all existing notifications
       await Notifications.cancelAllScheduledNotificationsAsync();
       console.log('🗑️ Cancelled all scheduled notifications');
-
+  
       // Step 2: If notifications are disabled, we're done
       if (!notificationsEnabled) {
         console.log('🔕 Notifications disabled, not scheduling new ones');
         return;
       }
+  
+      // Step 3: Calculate how many days we can schedule ahead
+      const quoteSelector = createUniqueQuoteSelector(selectedCategories);
+      console.log(`📚 Quote pool: ${quoteSelector.getTotalQuotes()} unique quotes available`);
 
-      // Step 3: Generate random times for notifications
-      const times = generateRandomTimes(notificationsPerDay, startHour, endHour);
-      console.log(`🔔 Scheduling ${times.length} notifications between ${startHour}:00 and ${endHour}:00`);
-
-      // Step 4: Schedule each notification with daily repeat
-      for (let i = 0; i < times.length; i++) {
-        const { hour, minute } = times[i];
-
-        // Get a random quote for this notification
-        const quote = getRandomQuote(selectedCategories);
-
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "⤵",
-            body: quote.text,
-            sound: true,
-            data: {
-              quoteId: quote.id,
-              categories: selectedCategories,
-              index: i,
-            },
-          },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-            hour,
-            minute,
-            repeats: true,
-          } as any,
-        });
-
-        console.log(`  ✅ Scheduled notification ${i + 1} at ${hour}:${minute.toString().padStart(2, '0')}`);
-      }
-
-      // Step 5: Schedule streak reminders if enabled (2 reminders)
-      if (streakReminderEnabled) {
-        // Check if today's streak is already completed (using local timezone)
-        const today = formatDateToLocal(new Date());
-        const hasCompletedToday = streakDays.includes(today);
-
-        // Only schedule if streak NOT completed today
-        if (!hasCompletedToday) {
+      const MAX_TOTAL_NOTIFICATIONS = 62;
+      const notificationsPerDayTotal = notificationsPerDay + (streakReminderEnabled ? 2 : 0);
+      
+      // Calculate days to schedule (max 14 days to keep content fresh)
+      const daysToSchedule = Math.min(
+        Math.floor(MAX_TOTAL_NOTIFICATIONS / notificationsPerDayTotal),
+        14
+      );
+      
+      console.log(`📅 Scheduling ${daysToSchedule} days of notifications`);
+      console.log(`   - ${notificationsPerDay} quotes per day`);
+      console.log(`   - ${streakReminderEnabled ? '2 streak reminders per day' : 'No streak reminders'}`);
+      console.log(`   - Total: ${notificationsPerDayTotal * daysToSchedule} notifications`);
+  
+      let totalScheduled = 0;
+      const now = new Date();
+  
+      // Step 4: Schedule notifications for each day
+      for (let dayOffset = 0; dayOffset < daysToSchedule; dayOffset++) {
+        const targetDate = new Date(now);
+        targetDate.setDate(targetDate.getDate() + dayOffset);
+        targetDate.setHours(0, 0, 0, 0); // Reset to start of day
+        
+        // Generate random times for this specific day
+        const times = generateRandomTimes(notificationsPerDay, startHour, endHour);
+        
+        console.log(`\n📆 Day ${dayOffset + 1} (${targetDate.toLocaleDateString()}):`);
+  
+        // Schedule quote notifications for this day
+        for (let i = 0; i < times.length; i++) {
+          const { hour, minute } = times[i];
+          
+          // Get a UNIQUE random quote for each notification
+          const quote = quoteSelector.getNextUniqueQuote();
+          
+          const notificationDate = new Date(targetDate);
+          notificationDate.setHours(hour, minute, 0, 0);
+          
+          // Only schedule if it's in the future
+          if (notificationDate > now) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "⤵",
+                body: quote.text,
+                sound: true,
+                data: {
+                  quoteId: quote.id,
+                  categories: selectedCategories,
+                  dayOffset,
+                  notificationIndex: i,
+                },
+              },
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+                year: notificationDate.getFullYear(),
+                month: notificationDate.getMonth() + 1, // JavaScript months are 0-indexed
+                day: notificationDate.getDate(),
+                hour,
+                minute,
+                repeats: false, // NO REPEAT - each is unique
+              } as any,
+            });
+            
+            totalScheduled++;
+            console.log(`  ✅ Quote ${i + 1} at ${hour}:${minute.toString().padStart(2, '0')} - "${quote.text.substring(0, 30)}..."`);
+          }
+        }
+  
+        // Schedule streak reminders for this day if enabled
+        if (streakReminderEnabled) {
           const totalHours = endHour - startHour;
           const lastQuarterStart = endHour - (totalHours * 0.25);
-
+  
           // First reminder: Random time within the last quarter of time window
           const firstReminderHour = Math.floor(lastQuarterStart + Math.random() * (endHour - lastQuarterStart - 0.5));
           const firstReminderMinute = Math.floor(Math.random() * 60);
-
+  
           // Second reminder: Random time in the last 30 minutes before end time
           const secondReminderHour = endHour - 1;
-          const secondReminderMinute = 30 + Math.floor(Math.random() * 30); // Between :30 and :59 of the hour before end
-
-          // Get streak-aware content (same for both reminders for consistency)
-          const reminderContent = getStreakReminderContent(currentStreak);
-
-          // Schedule first reminder
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: reminderContent.title,
-              body: reminderContent.body,
-              sound: true,
-              data: {
-                type: 'streak_reminder',
-                reminderNumber: 1,
+          const secondReminderMinute = 30 + Math.floor(Math.random() * 30);
+  
+          // Get streak-aware content (can vary by day for variety)
+          const reminderContent = getStreakReminderContent(currentStreak + dayOffset);
+  
+          // Schedule first streak reminder
+          const firstReminderDate = new Date(targetDate);
+          firstReminderDate.setHours(firstReminderHour, firstReminderMinute, 0, 0);
+          
+          if (firstReminderDate > now) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: reminderContent.title,
+                body: reminderContent.body,
+                sound: true,
+                data: {
+                  type: 'streak_reminder',
+                  reminderNumber: 1,
+                  dayOffset,
+                },
               },
-            },
-            trigger: {
-              type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-              hour: firstReminderHour,
-              minute: firstReminderMinute,
-              repeats: true,
-            } as any,
-          });
-
-          console.log(`🔥 Scheduled first streak reminder at ${firstReminderHour}:${firstReminderMinute.toString().padStart(2, '0')}`);
-
-          // Schedule second reminder (backup)
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: reminderContent.title,
-              body: reminderContent.body,
-              sound: true,
-              data: {
-                type: 'streak_reminder',
-                reminderNumber: 2,
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+                year: firstReminderDate.getFullYear(),
+                month: firstReminderDate.getMonth() + 1,
+                day: firstReminderDate.getDate(),
+                hour: firstReminderHour,
+                minute: firstReminderMinute,
+                repeats: false, // NO REPEAT
+              } as any,
+            });
+            
+            totalScheduled++;
+            console.log(`  🔥 Streak reminder 1 at ${firstReminderHour}:${firstReminderMinute.toString().padStart(2, '0')}`);
+          }
+  
+          // Schedule second streak reminder
+          const secondReminderDate = new Date(targetDate);
+          secondReminderDate.setHours(secondReminderHour, secondReminderMinute, 0, 0);
+          
+          if (secondReminderDate > now) {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: reminderContent.title,
+                body: reminderContent.body,
+                sound: true,
+                data: {
+                  type: 'streak_reminder',
+                  reminderNumber: 2,
+                  dayOffset,
+                },
               },
-            },
-            trigger: {
-              type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-              hour: secondReminderHour,
-              minute: secondReminderMinute,
-              repeats: true,
-            } as any,
-          });
-
-          console.log(`🔥 Scheduled second streak reminder at ${secondReminderHour}:${secondReminderMinute.toString().padStart(2, '0')}`);
-        } else {
-          console.log('✅ Streak already completed today, streak reminders will show tomorrow');
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+                year: secondReminderDate.getFullYear(),
+                month: secondReminderDate.getMonth() + 1,
+                day: secondReminderDate.getDate(),
+                hour: secondReminderHour,
+                minute: secondReminderMinute,
+                repeats: false, // NO REPEAT
+              } as any,
+            });
+            
+            totalScheduled++;
+            console.log(`  🔥 Streak reminder 2 at ${secondReminderHour}:${secondReminderMinute.toString().padStart(2, '0')}`);
+          }
+        }
+  
+        // Safety check: ensure we don't exceed max notifications
+        if (totalScheduled >= MAX_TOTAL_NOTIFICATIONS) {
+          console.log(`⚠️ Reached maximum of ${MAX_TOTAL_NOTIFICATIONS} notifications, stopping`);
+          break;
         }
       }
-
-      // Step 6: Verify what was scheduled
+  
+      // Step 5: Verify what was scheduled
       const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-      console.log(`✅ Total scheduled notifications: ${scheduled.length}`);
-
+      console.log(`\n✅ Successfully scheduled ${scheduled.length} unique notifications`);
+      console.log(`📊 Covering ${daysToSchedule} days with fresh quotes each time`);
+      
+      // Store last schedule date for reference
+      await AsyncStorage.setItem('lastScheduledDate', new Date().toISOString());
+  
     } catch (error) {
       console.error('❌ Error scheduling notifications:', error);
     } finally {
