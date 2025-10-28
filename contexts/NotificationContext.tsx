@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { useCategories } from './CategoriesContext';
 import { useStreak } from './StreakContext';
 
@@ -503,10 +504,83 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     startHour,
     endHour,
     selectedCategories,
-    streakDays,
     permissionStatus,
     isInitialized,
   ]);
+
+  // Auto-rescheduling: Check every 24 hours and when running low on notifications
+  useEffect(() => {
+    const checkAndReschedule = async () => {
+      if (!isInitialized || permissionStatus !== 'granted' || !notificationsEnabled) {
+        return;
+      }
+
+      try {
+        // Check when we last scheduled
+        const lastScheduledDateStr = await AsyncStorage.getItem('lastScheduledDate');
+        const lastScheduledDate = lastScheduledDateStr ? new Date(lastScheduledDateStr) : null;
+
+        const now = new Date();
+        const hoursSinceLastSchedule = lastScheduledDate
+          ? (now.getTime() - lastScheduledDate.getTime()) / (1000 * 60 * 60)
+          : 24; // If no date stored, assume we need to reschedule
+
+        // Reschedule every 24 hours to ensure fresh content
+        if (hoursSinceLastSchedule >= 24) {
+          console.log('🔄 24+ hours since last schedule, refreshing notifications with new quotes');
+          await scheduleNotifications();
+          return;
+        }
+
+        // Also check if we're running low on scheduled notifications
+        const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+        const quotesRemaining = scheduled.filter(n => !n.content.data?.type ||
+                                                     n.content.data.type !== 'streak_reminder').length;
+
+        if (quotesRemaining < notificationsPerDay * 2) { // Less than 2 days worth
+          console.log(`⚠️ Only ${quotesRemaining} quote notifications left, rescheduling...`);
+          await scheduleNotifications();
+        }
+      } catch (error) {
+        console.error('❌ Error checking reschedule:', error);
+      }
+    };
+
+    // Check on mount
+    checkAndReschedule();
+
+    // Set up interval to check periodically (every hour while app is open)
+    const interval = setInterval(checkAndReschedule, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isInitialized, permissionStatus, notificationsEnabled, notificationsPerDay]);
+
+  // AppState listener: Check and reschedule when app comes to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (nextAppState === 'active' && isInitialized && permissionStatus === 'granted' && notificationsEnabled) {
+        console.log('📱 App came to foreground, checking notification schedule...');
+
+        try {
+          const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+          const quotesRemaining = scheduled.filter(n => !n.content.data?.type ||
+                                                       n.content.data.type !== 'streak_reminder').length;
+
+          // If running low, reschedule
+          if (quotesRemaining < notificationsPerDay * 2) {
+            console.log(`⚠️ Only ${quotesRemaining} quote notifications left, rescheduling on foreground...`);
+            await scheduleNotifications();
+          } else {
+            console.log(`✅ ${quotesRemaining} quote notifications still scheduled`);
+          }
+        } catch (error) {
+          console.error('❌ Error checking schedule on foreground:', error);
+        }
+      }
+    });
+
+    return () => subscription.remove();
+  }, [isInitialized, permissionStatus, notificationsEnabled, notificationsPerDay]);
 
   const value = {
     notificationsPerDay,
