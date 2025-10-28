@@ -546,10 +546,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       }
     };
 
-    // Check on mount
-    checkAndReschedule();
-
     // Set up interval to check periodically (every hour while app is open)
+    // Note: Don't check on mount - the "settings change" useEffect handles cold start
     const interval = setInterval(checkAndReschedule, 60 * 60 * 1000);
 
     return () => clearInterval(interval);
