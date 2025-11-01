@@ -116,12 +116,12 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
       ...Typography.h2,
       fontSize: 40,
       lineHeight: 45,
-      color: Colors.secondary
+      color: '#f54e08'
     },
     streakLabel: {
       ...Typography.bodySmall,
       fontSize: 14,
-      color: Colors.secondary,
+      color: '#f54e08',
       lineHeight: 14
     },
     calendarContainer: {
@@ -153,7 +153,7 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
       justifyContent: 'center',
     },
     dayBoxToday: {
-      backgroundColor: Colors.secondary,
+      backgroundColor: '#f54e08',
       shadowColor: Colors.shadow.light,
       shadowOffset: {
         width: 0,

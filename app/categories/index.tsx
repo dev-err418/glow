@@ -59,7 +59,7 @@ function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subti
     },
     categoryCardSelected: {
       borderWidth: 2,
-      borderColor: Colors.secondary,
+      borderColor: '#f54e08',
     },
     categoryContent: {
       flex: 1,
@@ -115,7 +115,7 @@ function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subti
       )}
       {isSelected && !shouldShowLock && (
         <View style={cardStyles.checkIconContainer}>
-          <Ionicons name="checkmark-circle" size={20} color={Colors.secondary} />
+          <Ionicons name="checkmark-circle" size={20} color={'#f54e08'} />
         </View>
       )}
       <View style={cardStyles.categoryContent}>
@@ -126,7 +126,7 @@ function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subti
           )}
         </View>
         <View style={cardStyles.iconContainer}>
-          <Ionicons name={icon} size={24} color={Colors.secondary} />
+          <Ionicons name={icon} size={24} color={'#f54e08'} />
         </View>
       </View>
     </TouchableOpacity>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   unlockText: {
     ...Typography.body,
-    color: Colors.secondary,
+    color: '#f54e08',
     textAlign: 'right',
     fontWeight: "500"
   },
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#f54e08',
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 24,

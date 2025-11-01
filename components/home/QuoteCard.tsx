@@ -111,7 +111,7 @@ export function QuoteCard({ item, onLike, onShare, isFavorite, onTap }: QuoteCar
               <Ionicons
                 name={isFavorite ? 'heart' : 'heart-outline'}
                 size={36}
-                color={isFavorite ? Colors.secondary : Colors.text.primary}
+                color={isFavorite ? '#f54e08' : Colors.text.primary}
               />
             </Animated.View>
           </TouchableOpacity>

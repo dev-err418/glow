@@ -47,7 +47,7 @@ export function LikeHeartAnimation({
       ]}
       pointerEvents="none"
     >
-      <Ionicons name="heart" size={140} color={Colors.secondary} />
+      <Ionicons name="heart" size={140} color={'#f54e08'} />
     </Animated.View>
   );
 }

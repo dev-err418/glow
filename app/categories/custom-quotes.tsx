@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#f54e08',
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 24,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.secondary,
+    backgroundColor: '#f54e08',
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 24,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
             <Ionicons
               name={item.isFavorited ? 'heart' : 'heart-outline'}
               size={22}
-              color={item.isFavorited ? Colors.secondary : Colors.text.secondary}
+              color={item.isFavorited ? '#f54e08' : Colors.text.secondary}
             />
           </TouchableOpacity>
           <TouchableOpacity

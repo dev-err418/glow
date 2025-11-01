@@ -50,7 +50,7 @@ function CategoryCheckbox({ category, isSelected, onToggle, Colors }: CategoryCh
     },
     categoryCardSelected: {
       borderWidth: 2,
-      borderColor: Colors.secondary,
+      borderColor: '#f54e08',
     },
     checkIconContainer: {
       position: 'absolute',
@@ -86,7 +86,7 @@ function CategoryCheckbox({ category, isSelected, onToggle, Colors }: CategoryCh
     >
       {isSelected && (
         <View style={styles.checkIconContainer}>
-          <Ionicons name="checkmark-circle" size={20} color={Colors.secondary} />
+          <Ionicons name="checkmark-circle" size={20} color={'#f54e08'} />
         </View>
       )}
       <View style={styles.categoryContent}>
@@ -97,7 +97,7 @@ function CategoryCheckbox({ category, isSelected, onToggle, Colors }: CategoryCh
           )}
         </View>
         <View style={styles.iconContainer}>
-          <Ionicons name={category.icon} size={24} color={Colors.secondary} />
+          <Ionicons name={category.icon} size={24} color={'#f54e08'} />
         </View>
       </View>
     </TouchableOpacity>
@@ -241,7 +241,7 @@ export default function CreateMixScreen() {
       alignItems: 'center',
       justifyContent: 'center',
       width: "100%",
-      backgroundColor: Colors.secondary,
+      backgroundColor: '#f54e08',
       borderRadius: 16,
       paddingVertical: 18,
       paddingHorizontal: 24,
