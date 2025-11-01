@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useCategories } from '../../contexts/CategoriesContext';
 import { useCustomQuotes } from '../../contexts/CustomQuotesContext';
@@ -25,6 +25,147 @@ import { usePremium } from '../../contexts/PremiumContext';
 const MAX_QUOTE_LENGTH = 200;
 
 export default function CustomQuotesScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  pageTitle: {
+    ...Typography.h1,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 20,
+  },
+  pageSubtitle: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 40,
+  },
+  showInFeedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.secondary,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    shadowColor: Colors.shadow.medium,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  showInFeedText: {
+    ...Typography.body,
+    color: Colors.text.white,
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: 600
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  listContentEmpty: {
+    flex: 1,
+  },
+  quoteCard: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quoteHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  quoteDate: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+  },
+  quoteActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quoteText: {
+    ...Typography.body,
+    color: Colors.text.primary,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    ...Typography.h2,
+    marginTop: 24,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.secondary,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    marginTop: 16,
+    shadowColor: Colors.shadow.medium,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addButtonText: {
+    ...Typography.body,
+    color: Colors.text.white,
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: 600
+  },
+});
+
   const router = useRouter();
   const { isPremium, showPaywall } = usePremium();
   const { customQuotes, addCustomQuote, removeCustomQuote, updateCustomQuote, toggleFavorite } = useCustomQuotes();
@@ -223,7 +364,7 @@ export default function CustomQuotesScreen() {
             <Ionicons
               name={item.isFavorited ? 'heart' : 'heart-outline'}
               size={22}
-              color={item.isFavorited ? Colors.primary : Colors.text.secondary}
+              color={item.isFavorited ? Colors.secondary : Colors.text.secondary}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -295,141 +436,3 @@ export default function CustomQuotesScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  pageTitle: {
-    ...Typography.h1,
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 8,
-    paddingHorizontal: 20,
-  },
-  pageSubtitle: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 40,
-  },
-  showInFeedButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.secondary,
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  showInFeedText: {
-    ...Typography.body,
-    color: Colors.text.white,
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: 600
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  listContentEmpty: {
-    flex: 1,
-  },
-  quoteCard: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  quoteHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  quoteDate: {
-    fontSize: 12,
-    color: Colors.text.secondary,
-  },
-  quoteActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quoteText: {
-    ...Typography.body,
-    color: Colors.text.primary,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    ...Typography.h2,
-    marginTop: 24,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    marginTop: 16,
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  addButtonText: {
-    ...Typography.body,
-    color: Colors.text.white,
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: 600
-  },
-});

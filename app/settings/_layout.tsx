@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 
 export default function SettingsLayout() {
+  const Colors = useColors();
+
   return (
     <Stack
       screenOptions={{
@@ -29,6 +31,13 @@ export default function SettingsLayout() {
       />
       <Stack.Screen
         name="widget"
+        options={{
+          title: '',
+          headerBackTitle: 'Back',
+        }}
+      />
+      <Stack.Screen
+        name="theme"
         options={{
           title: '',
           headerBackTitle: 'Back',

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
 interface SwipeHintProps {
@@ -17,7 +17,27 @@ export function SwipeHint({
   hintTranslateY,
   hasCompletedFirstSwipe,
 }: SwipeHintProps) {
+  const Colors = useColors();
+
   if (!showSwipeHint) return null;
+
+  const styles = StyleSheet.create({
+    swipeHintContainer: {
+      position: 'absolute',
+      bottom: 60,
+      alignSelf: 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 5,
+    },
+    swipeHintText: {
+      ...Typography.body,
+      color: Colors.text.secondary,
+      fontSize: 16,
+      marginTop: 8,
+      textAlign: 'center',
+    },
+  });
 
   return (
     <Animated.View
@@ -49,21 +69,3 @@ export function SwipeHint({
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  swipeHintContainer: {
-    position: 'absolute',
-    bottom: 60,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 5,
-  },
-  swipeHintText: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    fontSize: 16,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-});

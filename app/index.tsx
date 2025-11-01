@@ -26,7 +26,7 @@ import { Quote } from '../components/home/QuoteCard';
 import { QuoteFeed } from '../components/home/QuoteFeed';
 import { SwipeHint } from '../components/home/SwipeHint';
 import { UIControls } from '../components/home/UIControls';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { useCategories } from '../contexts/CategoriesContext';
 import { useCustomQuotes } from '../contexts/CustomQuotesContext';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -47,6 +47,7 @@ const ROTATION_HIDDEN = '15deg';   // Tilted right when hidden
 const ROTATION_VISIBLE = '-30deg'; // Tilted left when visible
 
 export default function Index() {
+  const Colors = useColors();
   const router = useRouter();
   const { id: quoteId } = useLocalSearchParams<{ id?: string }>();
   const { onboardingData, isLoading: isOnboardingLoading, resetOnboarding } = useOnboarding();
@@ -821,6 +822,36 @@ export default function Index() {
     }
   }, [quoteId, quotes.length, router, selectedCategories, favorites, customQuotes]);
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background.default,
+    },
+    debugResetButton: {
+      position: 'absolute',
+      bottom: 40,
+      right: 20,
+      zIndex: 1000,
+    },
+    debugButtonTouchable: {
+      backgroundColor: 'rgba(255, 123, 84, 0.9)',
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      borderRadius: 25,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    debugButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+  });
+
   // If onboarding is completed, show the TikTok-style quote feed
   if (onboardingData.completed) {
     return (
@@ -933,43 +964,3 @@ export default function Index() {
   // Return null while loading - splash screen will be visible
   return null;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  /* DEBUG: Test notification button styles (commented out for production)
-  debugButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -100 }, { translateY: -25 }],
-    zIndex: 1000,
-  },
-  */
-  // DEBUG: Reset onboarding button styles (dev mode only)
-  debugResetButton: {
-    position: 'absolute',
-    bottom: 40,
-    right: 20,
-    zIndex: 1000,
-  },
-  debugButtonTouchable: {
-    backgroundColor: 'rgba(255, 123, 84, 0.9)',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderRadius: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  debugButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-});

@@ -5,15 +5,63 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
 export default function NameScreen() {
+  const Colors = useColors();
   const router = useRouter();
   const { updateOnboardingData } = useOnboarding();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background.default,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+      paddingTop: 20,
+      paddingBottom: 40,
+    },
+    mascotContainer: {
+      alignItems: 'center',
+      marginTop: 10,
+      marginBottom: 30,
+    },
+    mascot: {
+      width: 120,
+      height: 120,
+    },
+    content: {
+      flex: 1,
+    },
+    title: {
+      ...Typography.h2,
+      color: Colors.text.primary,
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    subtitle: {
+      ...Typography.subtitle,
+      color: Colors.text.secondary,
+      textAlign: 'center',
+      marginBottom: 40,
+    },
+    inputContainer: {
+      marginBottom: 24,
+    },
+    buttonContainer: {
+      paddingHorizontal: 24,
+      paddingVertical: 24,
+    },
+    button: {
+      width: '100%',
+    },
+  });
 
   const handleNext = () => {
     if (name.trim().length < 2) {
@@ -80,48 +128,3 @@ export default function NameScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  mascotContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  mascot: {
-    width: 120,
-    height: 120,
-  },
-  content: {
-    flex: 1,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    ...Typography.subtitle,
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-  button: {
-    width: '100%',
-  },
-});

@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native";
-import { Colors } from "../../constants/Colors";
+import { useColors } from "../../constants/Colors";
 
 export default function OnboardingLayout() {
+  const Colors = useColors();
   const router = useRouter();
 
   return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, Text, StyleSheet, ViewStyle, TextStyle, TextInputProps } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
 interface InputProps extends TextInputProps {
@@ -19,6 +19,38 @@ export function Input({
   labelStyle,
   ...textInputProps
 }: InputProps) {
+  const Colors = useColors();
+
+  const styles = StyleSheet.create({
+    container: {
+      marginBottom: 16,
+    },
+    label: {
+      ...Typography.label,
+      marginBottom: 8,
+      color: Colors.text.primary,
+    },
+    input: {
+      backgroundColor: Colors.background.primary,
+      borderWidth: 1,
+      borderColor: Colors.border.light,
+      borderRadius: 12,
+      paddingVertical: 18,
+      paddingHorizontal: 16,
+      fontSize: 16,
+      color: Colors.text.primary,
+    },
+    inputError: {
+      borderColor: Colors.status.error,
+    },
+    errorText: {
+      ...Typography.errorText,
+      color: Colors.status.error,
+      marginTop: 4,
+      fontSize: 12,
+    },
+  });
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
@@ -39,32 +71,3 @@ export function Input({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  label: {
-    ...Typography.label,
-    marginBottom: 8,
-    color: Colors.text.primary,
-  },
-  input: {
-    backgroundColor: Colors.background.primary,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    borderRadius: 12,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: Colors.text.primary,
-  },
-  inputError: {
-    borderColor: Colors.status.error,
-  },
-  errorText: {
-    ...Typography.errorText,
-    marginTop: 4,
-    fontSize: 12,
-  },
-});

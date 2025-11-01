@@ -3,11 +3,11 @@ import { Stack, useGlobalSearchParams, usePathname, useRouter } from "expo-route
 import * as SplashScreen from 'expo-splash-screen';
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import { useEffect } from "react";
-import { AppState, StatusBar } from "react-native";
+import { AppState, StatusBar, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { UpdateBottomSheet } from "../components/UpdateBottomSheet";
-import { Colors } from "../constants/Colors";
+import { useColors } from "../constants/Colors";
 import { CategoriesProvider } from "../contexts/CategoriesContext";
 import { CustomQuotesProvider } from "../contexts/CustomQuotesContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
@@ -16,6 +16,7 @@ import { NotificationProvider } from "../contexts/NotificationContext";
 import { OnboardingProvider } from "../contexts/OnboardingContext";
 import { PremiumProvider } from "../contexts/PremiumContext";
 import { StreakProvider } from "../contexts/StreakContext";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import "../services/notificationService";
 import { normalizeScreenName } from "../utils/analytics";
 
@@ -41,7 +42,9 @@ function RootLayoutContent() {
   const { isUpdateSheetVisible, updateInfo, handleUpdate, handleLater } = useInAppUpdates();
   const posthog = usePostHog();
   const pathname = usePathname();
-  const params = useGlobalSearchParams();  
+  const params = useGlobalSearchParams();
+  const Colors = useColors();
+  const { effectiveColorScheme } = useTheme();
 
   // Track screen views in PostHog
   useEffect(() => {
@@ -68,6 +71,7 @@ function RootLayoutContent() {
 
   return (
     <>
+      <StatusBar barStyle={effectiveColorScheme === 'dark' ? 'light-content' : 'dark-content'} />
       <Stack
         screenOptions={{
           headerStyle: {
@@ -137,35 +141,36 @@ function RootLayoutContent() {
 export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PostHogProvider
-        apiKey="phc_4NPUazdcWH8ap7z40KAGmADw5yBlZZVtLng0i3e6a5u"
-        options={{
-          host: 'https://eu.i.posthog.com',
-          enableSessionReplay: true,
-        }}
-        autocapture
-      >
-        <KeyboardProvider>
-          <PremiumProvider>
-            <StreakProvider>
-              <CategoriesProvider>
-                <NotificationProvider>
-                  <OnboardingProvider>
-                    <FavoritesProvider>
-                      <CustomQuotesProvider>
-                        <InAppUpdatesProvider>
-                          <StatusBar barStyle={"dark-content"} />
-                          <RootLayoutContent />
-                        </InAppUpdatesProvider>
-                      </CustomQuotesProvider>
-                    </FavoritesProvider>
-                  </OnboardingProvider>
-                </NotificationProvider>
-              </CategoriesProvider>
-            </StreakProvider>
-          </PremiumProvider>
-        </KeyboardProvider>
-      </PostHogProvider>
+      <ThemeProvider>
+        <PostHogProvider
+          apiKey="phc_4NPUazdcWH8ap7z40KAGmADw5yBlZZVtLng0i3e6a5u"
+          options={{
+            host: 'https://eu.i.posthog.com',
+            enableSessionReplay: true,
+          }}
+          autocapture
+        >
+          <KeyboardProvider>
+            <PremiumProvider>
+              <StreakProvider>
+                <CategoriesProvider>
+                  <NotificationProvider>
+                    <OnboardingProvider>
+                      <FavoritesProvider>
+                        <CustomQuotesProvider>
+                          <InAppUpdatesProvider>
+                            <RootLayoutContent />
+                          </InAppUpdatesProvider>
+                        </CustomQuotesProvider>
+                      </FavoritesProvider>
+                    </OnboardingProvider>
+                  </NotificationProvider>
+                </CategoriesProvider>
+              </StreakProvider>
+            </PremiumProvider>
+          </KeyboardProvider>
+        </PostHogProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 });

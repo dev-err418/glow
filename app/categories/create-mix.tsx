@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useCategories } from '../../contexts/CategoriesContext';
 import { useCustomQuotes } from '../../contexts/CustomQuotesContext';
@@ -27,9 +27,57 @@ interface CategoryCheckboxProps {
   category: Category;
   isSelected: boolean;
   onToggle: () => void;
+  Colors: ReturnType<typeof useColors>;
 }
 
-function CategoryCheckbox({ category, isSelected, onToggle }: CategoryCheckboxProps) {
+function CategoryCheckbox({ category, isSelected, onToggle, Colors }: CategoryCheckboxProps) {
+  const styles = StyleSheet.create({
+    categoryCard: {
+      width: '48%',
+      backgroundColor: Colors.background.primary,
+      borderRadius: 16,
+      padding: 16,
+      minHeight: 100,
+      shadowColor: Colors.shadow.light,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+      position: 'relative',
+    },
+    categoryCardSelected: {
+      borderWidth: 2,
+      borderColor: Colors.secondary,
+    },
+    checkIconContainer: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      zIndex: 1,
+    },
+    categoryContent: {
+      flex: 1,
+      justifyContent: 'space-between',
+    },
+    categoryTitle: {
+      ...Typography.body,
+      color: Colors.text.primary,
+      marginBottom: 4,
+      flexWrap: 'wrap',
+    },
+    categorySubtitle: {
+      fontSize: 12,
+      color: Colors.text.secondary,
+      marginTop: 2,
+    },
+    iconContainer: {
+      alignSelf: 'flex-end',
+    },
+  });
+
   return (
     <TouchableOpacity
       style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
@@ -38,7 +86,7 @@ function CategoryCheckbox({ category, isSelected, onToggle }: CategoryCheckboxPr
     >
       {isSelected && (
         <View style={styles.checkIconContainer}>
-          <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+          <Ionicons name="checkmark-circle" size={20} color={Colors.secondary} />
         </View>
       )}
       <View style={styles.categoryContent}>
@@ -49,7 +97,7 @@ function CategoryCheckbox({ category, isSelected, onToggle }: CategoryCheckboxPr
           )}
         </View>
         <View style={styles.iconContainer}>
-          <Ionicons name={category.icon} size={24} color={Colors.primary} />
+          <Ionicons name={category.icon} size={24} color={Colors.secondary} />
         </View>
       </View>
     </TouchableOpacity>
@@ -57,6 +105,7 @@ function CategoryCheckbox({ category, isSelected, onToggle }: CategoryCheckboxPr
 }
 
 export default function CreateMixScreen() {
+  const Colors = useColors();
   const router = useRouter();
   const { selectedCategories: currentCategories, updateSelectedCategories } = useCategories();
   const { favorites } = useFavorites();
@@ -135,19 +184,100 @@ export default function CreateMixScreen() {
     </View>
   );
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background.default,
+    },
+    pageTitle: {
+      ...Typography.h1,
+      color: Colors.text.primary,
+      textAlign: 'center',
+      marginTop: 16,
+      marginBottom: 8,
+      paddingHorizontal: 20,
+    },
+    pageSubtitle: {
+      ...Typography.body,
+      color: Colors.text.secondary,
+      textAlign: 'center',
+      marginBottom: 24,
+      paddingHorizontal: 40,
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 80,
+    },
+    scrollContentEmpty: {
+      flexGrow: 1,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'space-between',
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 40,
+    },
+    emptySubtitle: {
+      ...Typography.body,
+      color: Colors.text.secondary,
+      textAlign: 'center',
+    },
+    buttonContainer: {
+      backgroundColor: Colors.background.default,
+      paddingHorizontal: 24,
+      paddingVertical: 24,
+      position: "absolute",
+      bottom: 0,
+      width: "100%"
+    },
+    saveButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: "100%",
+      backgroundColor: Colors.secondary,
+      borderRadius: 16,
+      paddingVertical: 18,
+      paddingHorizontal: 24,
+      shadowColor: Colors.shadow.medium,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    saveButtonText: {
+      ...Typography.body,
+      color: Colors.text.white,
+      fontSize: 16,
+      fontWeight: 600,
+    },
+    saveButtonDisabled: {
+      opacity: 0.5,
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      {/* Title */}
-      <Text style={styles.pageTitle}>Create my own mix</Text>
-
-      {/* Subtitle */}
-      <Text style={styles.pageSubtitle}>Select categories to mix together</Text>
-
       {/* Category List */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Title */}
+        <Text style={styles.pageTitle}>Create my own mix</Text>
+
+        {/* Subtitle */}
+        <Text style={styles.pageSubtitle}>Select categories to mix together</Text>
+
         <View style={styles.grid}>
           {AVAILABLE_CATEGORIES.map((category) => (
             <CategoryCheckbox
@@ -155,6 +285,7 @@ export default function CreateMixScreen() {
               category={category}
               isSelected={selectedCategories.includes(category.value)}
               onToggle={() => handleToggleCategory(category.value)}
+              Colors={Colors}
             />
           ))}
         </View>
@@ -179,126 +310,3 @@ export default function CreateMixScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  pageTitle: {
-    ...Typography.h1,
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 8,
-    paddingHorizontal: 20,
-  },
-  pageSubtitle: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 40,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  scrollContentEmpty: {
-    flexGrow: 1,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'space-between',
-  },
-  categoryCard: {
-    width: '48%',
-    backgroundColor: Colors.background.primary,
-    borderRadius: 16,
-    padding: 16,
-    minHeight: 100,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    position: 'relative',
-  },
-  categoryCardSelected: {
-    borderWidth: 2,
-    borderColor: Colors.primary,
-  },
-  checkIconContainer: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-  },
-  categoryContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  categoryTitle: {
-    ...Typography.body,
-    color: Colors.text.primary,
-    marginBottom: 4,
-    flexWrap: 'wrap',
-  },
-  categorySubtitle: {
-    fontSize: 12,
-    color: Colors.text.secondary,
-    marginTop: 2,
-  },
-  iconContainer: {
-    alignSelf: 'flex-end',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptySubtitle: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    backgroundColor: Colors.background.default,
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    position: "absolute",
-    bottom: 0,
-    width: "100%"
-  },
-  saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: "100%",
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  saveButtonText: {
-    ...Typography.body,
-    color: Colors.text.white,
-    fontSize: 16,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-});

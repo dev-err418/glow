@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 
 interface Particle {
   id: string;
@@ -15,6 +15,7 @@ interface ParticleTrailProps {
 }
 
 function SingleParticle({ x, y, delay, onComplete }: Particle & { onComplete?: () => void }) {
+  const Colors = useColors();
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
@@ -56,6 +57,24 @@ function SingleParticle({ x, y, delay, onComplete }: Particle & { onComplete?: (
     return () => clearTimeout(timeout);
   }, []);
 
+  const styles = StyleSheet.create({
+    particle: {
+      position: 'absolute',
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: Colors.primary,
+      shadowColor: Colors.primary,
+      shadowOffset: {
+        width: 0,
+        height: 0,
+      },
+      shadowOpacity: 0.8,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+  });
+
   return (
     <Animated.View
       style={[
@@ -84,6 +103,13 @@ export function ParticleTrail({ particles, onComplete }: ParticleTrailProps) {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 5,
+    },
+  });
+
   return (
     <View style={styles.container} pointerEvents="none">
       {particles.map((particle) => (
@@ -96,25 +122,3 @@ export function ParticleTrail({ particles, onComplete }: ParticleTrailProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 5,
-  },
-  particle: {
-    position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.primary,
-    shadowColor: Colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-});

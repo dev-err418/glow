@@ -4,35 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
 export default function MixModal() {
-  const router = useRouter();
-
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.back();
-          }}
-          style={styles.headerButton}
-        >
-            <Ionicons name="close" size={28} color={Colors.text.primary} />
-          </TouchableOpacity>
-          <Text style={styles.modalTitle}>Create my own mix</Text>
-          <View style={styles.headerButton} />
-        </View>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="color-palette" size={80} color={Colors.primary} />
-          <Text style={styles.emptyTitle}>Coming soon!</Text>
-          <Text style={styles.emptySubtitle}>Create custom mixes with your favorite categories</Text>
-        </View>
-    </SafeAreaView>
-  );
-}
+  const Colors = useColors();
 
 const styles = StyleSheet.create({
   container: {
@@ -74,3 +50,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.back();
+          }}
+          style={styles.headerButton}
+        >
+            <Ionicons name="close" size={28} color={Colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Create my own mix</Text>
+          <View style={styles.headerButton} />
+        </View>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="color-palette" size={80} color={Colors.primary} />
+          <Text style={styles.emptyTitle}>Coming soon!</Text>
+          <Text style={styles.emptySubtitle}>Create custom mixes with your favorite categories</Text>
+        </View>
+    </SafeAreaView>
+  );
+}

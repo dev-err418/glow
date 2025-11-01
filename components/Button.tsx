@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline';
 export type ButtonSize = 'small' | 'medium' | 'large';
@@ -26,6 +26,85 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
+  const Colors = useColors();
+
+  const styles = StyleSheet.create({
+    button: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 16,
+      shadowColor: Colors.shadow.medium,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+
+    // Variants
+    buttonPrimary: {
+      backgroundColor: Colors.secondary,
+    },
+    buttonSecondary: {
+      backgroundColor: Colors.primary,
+    },
+    buttonOutline: {
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: Colors.primary,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+
+    // Sizes
+    buttonSmall: {
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+    },
+    buttonMedium: {
+      paddingVertical: 18,
+      paddingHorizontal: 24,
+    },
+    buttonLarge: {
+      paddingVertical: 20,
+      paddingHorizontal: 40,
+    },
+
+    // Disabled state
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+
+    // Text styles
+    text: {
+      textAlign: 'center',
+    },
+    textPrimary: {
+      color: Colors.text.white,
+    },
+    textSecondary: {
+      color: Colors.text.white,
+    },
+    textOutline: {
+      color: Colors.primary,
+    },
+    textSmall: {
+      fontSize: 14,
+    },
+    textMedium: {
+      fontSize: 16,
+    },
+    textLarge: {
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    textDisabled: {
+      opacity: 1,
+    },
+  });
+
   const buttonStyles: (ViewStyle | false | undefined)[] = [
     styles.button,
     styles[`button${variant.charAt(0).toUpperCase() + variant.slice(1)}` as keyof typeof styles] as ViewStyle,
@@ -60,80 +139,3 @@ export function Button({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-
-  // Variants
-  buttonPrimary: {
-    backgroundColor: Colors.secondary,
-  },
-  buttonSecondary: {
-    backgroundColor: Colors.primary,
-  },
-  buttonOutline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-
-  // Sizes
-  buttonSmall: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  buttonMedium: {
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-  },
-  buttonLarge: {
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-  },
-
-  // Disabled state
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-
-  // Text styles
-  text: {
-    textAlign: 'center',
-  },
-  textPrimary: {
-    color: Colors.text.white,
-  },
-  textSecondary: {
-    color: Colors.text.white,
-  },
-  textOutline: {
-    color: Colors.primary,
-  },
-  textSmall: {
-    fontSize: 14,
-  },
-  textMedium: {
-    fontSize: 16,
-  },
-  textLarge: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  textDisabled: {
-    opacity: 1,
-  },
-});

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
 interface BadgeSelectorProps {
@@ -11,6 +11,57 @@ interface BadgeSelectorProps {
 }
 
 export function BadgeSelector({ label, selected, onPress, style }: BadgeSelectorProps) {
+  const Colors = useColors();
+
+  const styles = StyleSheet.create({
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.background.primary,
+      borderRadius: 30,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      marginBottom: 12,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      shadowColor: Colors.shadow.light,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    badgeSelected: {
+      borderColor: Colors.secondary,
+    },
+    iconContainer: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: Colors.background.secondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    icon: {
+      color: Colors.text.light,
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    iconSelected: {
+      color: Colors.secondary,
+    },
+    label: {
+      ...Typography.body,
+      fontSize: 16,
+      color: Colors.text.primary,
+    },
+    labelSelected: {
+    },
+  });
+
   return (
     <TouchableOpacity
       style={[
@@ -53,6 +104,15 @@ export function BadgeGroup({
   style,
   badgeStyle,
 }: BadgeGroupProps) {
+  const groupStyles = StyleSheet.create({
+    group: {
+      width: '100%',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+  });
+
   const handlePress = (value: string) => {
     if (multiSelect) {
       // Multi-select mode: toggle selection
@@ -72,7 +132,7 @@ export function BadgeGroup({
   };
 
   return (
-    <View style={[styles.group, style]}>
+    <View style={[groupStyles.group, style]}>
       {options.map((option) => (
         <BadgeSelector
           key={option.value}
@@ -85,56 +145,3 @@ export function BadgeGroup({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background.default,
-    borderRadius: 30,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginRight: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  badgeSelected: {
-    backgroundColor: Colors.background.primary,
-    borderColor: Colors.secondary,
-  },
-  iconContainer: {
-    width: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  icon: {
-    fontSize: 18,
-    color: Colors.text.light,
-  },
-  iconSelected: {
-    color: Colors.secondary,
-  },
-  label: {
-    ...Typography.body,
-    fontSize: 16,
-    color: Colors.text.primary,
-  },
-  labelSelected: {
-    color: Colors.text.primary,
-  },
-  group: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
-  },
-});

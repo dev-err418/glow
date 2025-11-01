@@ -5,7 +5,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { BadgeGroup } from '../../components/BadgeSelector';
 import { Button } from '../../components/Button';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
@@ -22,6 +22,57 @@ const CATEGORY_OPTIONS = [
 ];
 
 export default function CategoriesScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+  mascotContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  mascot: {
+    width: 120,
+    height: 120,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    ...Typography.h2,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    ...Typography.subtitle,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  badgeGroup: {
+    marginBottom: 24,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+  },
+  button: {
+    width: '100%',
+  },
+});
+
   const router = useRouter();
   const navigation = useNavigation();
   const { onboardingData, updateOnboardingData } = useOnboarding();
@@ -96,50 +147,3 @@ export default function CategoriesScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 100,
-  },
-  mascotContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  mascot: {
-    width: 120,
-    height: 120,
-  },
-  content: {
-    flex: 1,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    ...Typography.subtitle,
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  badgeGroup: {
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-  },
-  button: {
-    width: '100%',
-  },
-});

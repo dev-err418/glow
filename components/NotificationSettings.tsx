@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
 interface NotificationSettingsProps {
@@ -22,6 +22,8 @@ export function NotificationSettings({
   onStartTimeChange,
   onEndTimeChange,
 }: NotificationSettingsProps) {
+  const Colors = useColors();
+
   const handleIncrement = () => {
     if (count < 20) onCountChange(count + 1);
   };
@@ -29,6 +31,80 @@ export function NotificationSettings({
   const handleDecrement = () => {
     if (count > 0) onCountChange(count - 1);
   };
+
+  const formatTime = (date: Date) => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    const displayMinutes = minutes.toString().padStart(2, '0');
+    return `${displayHour}:${displayMinutes}${period}`;
+  };
+
+  const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    gap: 12,
+  },
+  card: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  label: {
+    ...Typography.body,
+    fontSize: 18,
+    color: Colors.text.primary,
+  },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  counterControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  button: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countText: {
+    ...Typography.h3,
+    fontSize: 32,
+    color: Colors.text.primary,
+    minWidth: 75,
+    textAlign: 'center',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  timePicker: {
+    height: 40,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginVertical: 16,
+  },
+});
 
   return (
     <View style={styles.container}>
@@ -95,68 +171,3 @@ export function NotificationSettings({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    gap: 12,
-  },
-  card: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  label: {
-    ...Typography.body,
-    fontSize: 18,
-    color: Colors.text.primary,
-  },
-  counterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  counterControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  button: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countText: {
-    ...Typography.h3,
-    fontSize: 32,
-    color: Colors.text.primary,
-    minWidth: 75,
-    textAlign: 'center',
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  timePicker: {
-    height: 40,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border.light,
-    marginVertical: 16,
-  },
-});

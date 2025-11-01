@@ -4,10 +4,55 @@ import React, { useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Button } from '../../components/Button';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
 export default function BenefitsScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 50,
+  },
+  mascotContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  mascot: {
+    width: 140,
+    height: 140,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    ...Typography.h2,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  benefitsContainer: {
+    marginBottom: 32,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+  },
+  button: {
+    width: '100%',
+  },
+});
+
   const router = useRouter();
   const [visibleBenefits, setVisibleBenefits] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -130,85 +175,49 @@ interface BenefitItemProps {
 }
 
 function BenefitItem({ emoji, title, description }: BenefitItemProps) {
+  const Colors = useColors();
+
+  const benefitStyles = StyleSheet.create({
+    benefitItem: {
+      flexDirection: 'row',
+      backgroundColor: Colors.background.primary,
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 16,
+      shadowColor: Colors.shadow.light,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    benefitEmoji: {
+      fontSize: 32,
+      marginRight: 16,
+    },
+    benefitTextContainer: {
+      flex: 1,
+    },
+    benefitTitle: {
+      ...Typography.h5,
+      color: Colors.text.primary,
+      marginBottom: 4,
+    },
+    benefitDescription: {
+      ...Typography.bodySmall,
+      color: Colors.text.secondary,
+    },
+  });
+
   return (
-    <View style={styles.benefitItem}>
-      <Text style={styles.benefitEmoji}>{emoji}</Text>
-      <View style={styles.benefitTextContainer}>
-        <Text style={styles.benefitTitle}>{title}</Text>
-        <Text style={styles.benefitDescription}>{description}</Text>
+    <View style={benefitStyles.benefitItem}>
+      <Text style={benefitStyles.benefitEmoji}>{emoji}</Text>
+      <View style={benefitStyles.benefitTextContainer}>
+        <Text style={benefitStyles.benefitTitle}>{title}</Text>
+        <Text style={benefitStyles.benefitDescription}>{description}</Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 50,
-  },
-  mascotContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  mascot: {
-    width: 140,
-    height: 140,
-  },
-  content: {
-    flex: 1,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  benefitsContainer: {
-    marginBottom: 32,
-  },
-  benefitItem: {
-    flexDirection: 'row',
-    backgroundColor: Colors.background.primary,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  benefitEmoji: {
-    fontSize: 32,
-    marginRight: 16,
-  },
-  benefitTextContainer: {
-    flex: 1,
-  },
-  benefitTitle: {
-    ...Typography.h5,
-    marginBottom: 4,
-  },
-  benefitDescription: {
-    ...Typography.bodySmall,
-    color: Colors.text.secondary,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-  },
-  button: {
-    width: '100%',
-  },
-});

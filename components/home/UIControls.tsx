@@ -7,7 +7,7 @@ import {
   Text,
   TouchableOpacity
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 
 interface UIControlsProps {
   uiOpacity: Animated.Value;
@@ -22,6 +22,8 @@ export function UIControls({
   onCategoriesPress,
   onSettingsPress,
 }: UIControlsProps) {
+  const Colors = useColors();
+
   const handleCategoriesPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onCategoriesPress();
@@ -31,6 +33,80 @@ export function UIControls({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSettingsPress();
   };
+
+  const styles = StyleSheet.create({
+    categoryBadgeWrapper: {
+      position: 'absolute',
+      top: 80,
+      alignSelf: 'center',
+      zIndex: 10,
+    },
+    categoryBadge: {
+      backgroundColor: Colors.secondary,
+      paddingHorizontal: 20,
+      justifyContent: 'center',
+      height: 50,
+      borderRadius: 20,
+      shadowColor: Colors.shadow.medium,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    categoryBadgeText: {
+      color: Colors.text.white,
+      fontSize: 18,
+      textTransform: 'capitalize',
+      fontWeight: '500',
+    },
+    categoriesButtonWrapper: {
+      position: 'absolute',
+      right: 25,
+      bottom: 25,
+      zIndex: 10,
+    },
+    categoriesButton: {
+      width: 55,
+      height: 55,
+      borderRadius: 30,
+      backgroundColor: Colors.secondary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: Colors.shadow.dark,
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 8,
+    },
+    settingsButtonWrapper: {
+      position: 'absolute',
+      right: 25,
+      top: 80,
+      zIndex: 10,
+    },
+    settingsButton: {
+      width: 55,
+      height: 55,
+      borderRadius: 30,
+      backgroundColor: Colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: Colors.shadow.dark,
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 8,
+    },
+  });
 
   return (
     <>
@@ -78,77 +154,3 @@ export function UIControls({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  categoryBadgeWrapper: {
-    position: 'absolute',
-    top: 80,
-    alignSelf: 'center',
-    zIndex: 10,
-  },
-  categoryBadge: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    height: 50,
-    borderRadius: 20,
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  categoryBadgeText: {
-    color: Colors.text.white,
-    fontSize: 18,
-    textTransform: 'capitalize',
-    fontWeight: '500',
-  },
-  categoriesButtonWrapper: {
-    position: 'absolute',
-    right: 25,
-    bottom: 25,
-    zIndex: 10,
-  },
-  categoriesButton: {
-    width: 55,
-    height: 55,
-    borderRadius: 30,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.shadow.dark,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  settingsButtonWrapper: {
-    position: 'absolute',
-    right: 25,
-    top: 80,
-    zIndex: 10,
-  },
-  settingsButton: {
-    width: 55,
-    height: 55,
-    borderRadius: 30,
-    backgroundColor: Colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.shadow.dark,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-});

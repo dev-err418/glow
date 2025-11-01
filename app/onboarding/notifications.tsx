@@ -5,12 +5,64 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../../components/Button';
 import { NotificationSettings } from '../../components/NotificationSettings';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
 export default function NotificationsScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 50,
+  },
+  title: {
+    ...Typography.h2,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    ...Typography.subtitle,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  animationContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  animation: {
+    width: '100%',
+    height: 150,
+  },
+  info: {
+    ...Typography.subtitle,
+    fontSize: 14,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 16,
+    color: Colors.text.secondary,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+  },
+  button: {
+    width: '100%',
+  },
+});
+
   const router = useRouter();
   const { completeOnboarding, updateOnboardingData } = useOnboarding();
   const {
@@ -123,51 +175,3 @@ export default function NotificationsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 50,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    ...Typography.subtitle,
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  animationContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  animation: {
-    width: '100%',
-    height: 150,
-  },
-  info: {
-    ...Typography.subtitle,
-    fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 16,
-    color: Colors.text.secondary,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-  },
-  button: {
-    width: '100%',
-  },
-});

@@ -4,12 +4,141 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Button } from '../../components/Button';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 export default function StreakIntroScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    alignItems: 'center',
+  },
+  mascotContainer: {
+    marginBottom: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mascotImage: {
+    width: 150,
+    height: 150,
+  },
+  title: {
+    ...Typography.h2,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    ...Typography.subtitle,
+    textAlign: 'center',
+    marginBottom: 40,
+    color: Colors.text.secondary,
+  },
+  calendarCard: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    marginBottom: 40,
+    width: '100%',
+  },
+  calendarContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  dayColumn: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  dayLabel: {
+    ...Typography.bodySmall,
+    fontSize: 14,
+    color: Colors.text.light,
+  },
+  dayLabelActive: {
+    color: Colors.text.primary,
+  },
+  dayBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.background.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayBoxActive: {
+    backgroundColor: Colors.secondary,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  calendarText: {
+    ...Typography.body,
+    fontSize: 14,
+    textAlign: 'center',
+    color: Colors.text.secondary,
+  },
+  statContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.primary,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statEmoji: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  statText: {
+    ...Typography.bodySmall,
+    flex: 1,
+    color: Colors.text.secondary,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+  },
+  button: {
+    width: '100%',
+  },
+});
+
   const router = useRouter();
 
   // Entrance animations
@@ -244,7 +373,7 @@ export default function StreakIntroScreen() {
                       <Ionicons
                         name="checkmark"
                         size={24}
-                        color={Colors.background.primary}
+                        color={Colors.text.white}
                       />
                     </Animated.View>
                   </Animated.View>
@@ -281,129 +410,3 @@ export default function StreakIntroScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    alignItems: 'center',
-  },
-  mascotContainer: {
-    marginBottom: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mascotImage: {
-    width: 150,
-    height: 150,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    ...Typography.subtitle,
-    textAlign: 'center',
-    marginBottom: 40,
-    color: Colors.text.secondary,
-  },
-  calendarCard: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    marginBottom: 40,
-    width: '100%',
-  },
-  calendarContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  dayColumn: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  dayLabel: {
-    ...Typography.bodySmall,
-    fontSize: 14,
-    color: Colors.text.light,
-  },
-  dayLabelActive: {
-    color: Colors.text.primary,
-  },
-  dayBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.background.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBoxActive: {
-    backgroundColor: Colors.primary,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  calendarText: {
-    ...Typography.body,
-    fontSize: 14,
-    textAlign: 'center',
-    color: Colors.text.secondary,
-  },
-  statContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background.primary,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statEmoji: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  statText: {
-    ...Typography.bodySmall,
-    flex: 1,
-    color: Colors.text.secondary,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-  },
-  button: {
-    width: '100%',
-  },
-});

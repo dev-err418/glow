@@ -6,7 +6,7 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacit
 import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedMascot } from '../../components/AnimatedMascot';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useCategories } from '../../contexts/CategoriesContext';
 import { useCustomQuotes } from '../../contexts/CustomQuotesContext';
@@ -24,8 +24,63 @@ interface CategoryCardProps {
 }
 
 function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subtitle }: CategoryCardProps) {
+  const Colors = useColors();
   const { isPremium, showPaywall } = usePremium();
   const shouldShowLock = isLocked && !isPremium;
+
+  const cardStyles = StyleSheet.create({
+    categoryCard: {
+      width: '48%',
+      backgroundColor: Colors.background.primary,
+      borderRadius: 16,
+      padding: 16,
+      minHeight: 100,
+      shadowColor: Colors.shadow.light,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+      position: 'relative',
+    },
+    lockIconContainer: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      zIndex: 1,
+    },
+    checkIconContainer: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      zIndex: 1,
+    },
+    categoryCardSelected: {
+      borderWidth: 2,
+      borderColor: Colors.secondary,
+    },
+    categoryContent: {
+      flex: 1,
+      justifyContent: 'space-between',
+    },
+    categoryTitle: {
+      ...Typography.body,
+      color: Colors.text.primary,
+      marginBottom: 4,
+      flexWrap: 'wrap',
+      fontWeight: "500"
+    },
+    categorySubtitle: {
+      fontSize: 12,
+      color: Colors.text.secondary,
+      marginTop: 2,
+    },
+    iconContainer: {
+      alignSelf: 'flex-end',
+    },
+  });
 
   const handlePress = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -49,29 +104,29 @@ function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subti
 
   return (
     <TouchableOpacity
-      style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+      style={[cardStyles.categoryCard, isSelected && cardStyles.categoryCardSelected]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
       {shouldShowLock && (
-        <View style={styles.lockIconContainer}>
+        <View style={cardStyles.lockIconContainer}>
           <Ionicons name="lock-closed" size={16} color={Colors.text.light} />
         </View>
       )}
       {isSelected && !shouldShowLock && (
-        <View style={styles.checkIconContainer}>
-          <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+        <View style={cardStyles.checkIconContainer}>
+          <Ionicons name="checkmark-circle" size={20} color={Colors.secondary} />
         </View>
       )}
-      <View style={styles.categoryContent}>
+      <View style={cardStyles.categoryContent}>
         <View>
-          <Text style={styles.categoryTitle}>{title}</Text>
+          <Text style={cardStyles.categoryTitle}>{title}</Text>
           {subtitle && (
-            <Text style={styles.categorySubtitle}>{subtitle}</Text>
+            <Text style={cardStyles.categorySubtitle}>{subtitle}</Text>
           )}
         </View>
-        <View style={styles.iconContainer}>
-          <Ionicons name={icon} size={24} color={Colors.primary} />
+        <View style={cardStyles.iconContainer}>
+          <Ionicons name={icon} size={24} color={Colors.secondary} />
         </View>
       </View>
     </TouchableOpacity>
@@ -79,6 +134,99 @@ function CategoryCard({ title, value, icon, isLocked, isSelected, onPress, subti
 }
 
 export default function CategoriesIndex() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.background.default,
+  },
+  headerButton: {
+    minWidth: 80,
+  },
+  unlockText: {
+    ...Typography.body,
+    color: Colors.secondary,
+    textAlign: 'right',
+    fontWeight: "500"
+  },
+  mascotWrapper: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  createMixButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.secondary,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    shadowColor: Colors.shadow.medium,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  createMixText: {
+    ...Typography.body,
+    color: Colors.text.white,
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: 600
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    ...Typography.h3,
+    color: Colors.text.primary,
+    marginBottom: 16,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  pageTitle: {
+    ...Typography.h1,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  mixInfoText: {
+    ...Typography.bodySmall,
+    fontSize: 13,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    // marginTop: 12,
+    marginBottom: 32,
+    paddingHorizontal: 24,
+  },
+});
+
   const router = useRouter();
   const { isPremium, showPaywall } = usePremium();
   const { selectedCategories, updateSelectedCategories } = useCategories();
@@ -228,8 +376,8 @@ export default function CategoriesIndex() {
               onPress={async () => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-                if (!isPremium) {
-                  // Show paywall for non-premium users
+                if (!isPremium && !__DEV__) {
+                  // Show paywall for non-premium users (skip in dev mode)
                   setIsProcessingPaywall(true);
                   try {
                     const result = await showPaywall();
@@ -243,7 +391,7 @@ export default function CategoriesIndex() {
                     setIsProcessingPaywall(false);
                   }
                 } else {
-                  // Premium users can access directly
+                  // Premium users or dev mode can access directly
                   router.push('/categories/create-mix');
                 }
               }}
@@ -328,143 +476,3 @@ export default function CategoriesIndex() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: Colors.background.default,
-  },
-  headerButton: {
-    minWidth: 80,
-  },
-  unlockText: {
-    ...Typography.body,
-    color: Colors.primary,
-    textAlign: 'right',
-    fontWeight: "500"
-  },
-  mascotWrapper: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  createMixButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    marginBottom: 16,
-    shadowColor: Colors.shadow.medium,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  createMixText: {
-    ...Typography.body,
-    color: Colors.text.white,
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: 600
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    ...Typography.h3,
-    marginBottom: 16,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'space-between',
-  },
-  categoryCard: {
-    width: '48%',
-    backgroundColor: Colors.background.primary,
-    borderRadius: 16,
-    padding: 16,
-    minHeight: 100,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    position: 'relative',
-  },
-  lockIconContainer: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-  },
-  checkIconContainer: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-  },
-  categoryCardSelected: {
-    borderWidth: 2,
-    borderColor: Colors.primary,
-  },
-  categoryContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  categoryTitle: {
-    ...Typography.body,
-    color: Colors.text.primary,
-    marginBottom: 4,
-    flexWrap: 'wrap',
-    fontWeight: "500"
-  },
-  categorySubtitle: {
-    fontSize: 12,
-    color: Colors.text.secondary,
-    marginTop: 2,
-  },
-  iconContainer: {
-    alignSelf: 'flex-end',
-  },
-  pageTitle: {
-    ...Typography.h1,
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  mixInfoText: {
-    ...Typography.bodySmall,
-    fontSize: 13,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    // marginTop: 12,
-    marginBottom: 32,
-    paddingHorizontal: 24,
-  },
-});

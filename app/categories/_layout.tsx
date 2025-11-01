@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 
 export default function CategoriesLayout() {
+  const Colors = useColors();
+
   return (
     <Stack
       screenOptions={{

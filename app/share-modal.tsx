@@ -19,10 +19,156 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ViewShot from 'react-native-view-shot';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
 export default function ShareModal() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.background.default,
+  },
+  headerButton: {
+    minWidth: 80,
+  },
+  modalTitle: {
+    ...Typography.h3,
+    flex: 1,
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 24,
+  },
+  viewShotWrapper: {
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 20,
+    },
+    shadowOpacity: 0.45,
+    shadowRadius: 40,
+    elevation: 24,
+  },
+  viewShotContainer: {
+    backgroundColor: 'transparent',
+  },
+  shareableCard: {
+    backgroundColor: Colors.background.default,
+    borderRadius: 30,
+    padding: 48,
+    width: 340,
+    height: 500,
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  quoteText: {
+    ...Typography.h2,
+    fontSize: 30,
+    lineHeight: 42,
+    textAlign: 'center',
+    color: Colors.text.primary,
+  },
+  mascotImage: {
+    width: 200,
+    height: 200,
+    position: 'absolute',
+    left: -40,
+    bottom: -60,
+    transform: [{rotate: "10deg"}]
+  },
+  badgeScroll: {
+    maxHeight: 50,
+    paddingHorizontal: 28,    
+    marginHorizontal: -20,
+  },
+  badgeScrollContent: {
+    gap: 8,
+    paddingRight: 28,
+  },
+  actionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.primary,
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    gap: 8,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  actionBadgeSelected: {
+    backgroundColor: Colors.background.primary,
+    borderColor: Colors.secondary,
+  },
+  badgeLabel: {
+    ...Typography.body,
+    fontSize: 15,
+    color: Colors.text.primary,
+  },
+  badgeLabelSelected: {
+    color: Colors.secondary,
+  },
+  sharingRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    marginTop: 12,
+  },
+  shareIconButton: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  shareIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.background.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    shadowColor: Colors.shadow.light,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shareIconLabel: {
+    ...Typography.body,
+    fontSize: 11,
+    color: Colors.text.primary,
+    textAlign: 'center',
+  },
+});
+
   const router = useRouter();
   const params = useLocalSearchParams<{ text: string; category: string }>();
   const viewShotRef = useRef<ViewShot>(null);
@@ -277,147 +423,3 @@ export default function ShareModal() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: Colors.background.default,
-  },
-  headerButton: {
-    minWidth: 80,
-  },
-  modalTitle: {
-    ...Typography.h3,
-    flex: 1,
-    textAlign: 'center',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 24,
-  },
-  viewShotWrapper: {
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 20,
-    },
-    shadowOpacity: 0.45,
-    shadowRadius: 40,
-    elevation: 24,
-  },
-  viewShotContainer: {
-    backgroundColor: 'transparent',
-  },
-  shareableCard: {
-    backgroundColor: Colors.background.default,
-    borderRadius: 30,
-    padding: 48,
-    width: 340,
-    height: 500,
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  quoteText: {
-    ...Typography.h2,
-    fontSize: 30,
-    lineHeight: 42,
-    textAlign: 'center',
-    color: Colors.text.primary,
-  },
-  mascotImage: {
-    width: 200,
-    height: 200,
-    position: 'absolute',
-    left: -40,
-    bottom: -60,
-    transform: [{rotate: "10deg"}]
-  },
-  badgeScroll: {
-    maxHeight: 50,
-    paddingHorizontal: 28,    
-    marginHorizontal: -20,
-  },
-  badgeScrollContent: {
-    gap: 8,
-    paddingRight: 28,
-  },
-  actionBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background.primary,
-    borderRadius: 30,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    gap: 8,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  actionBadgeSelected: {
-    backgroundColor: Colors.background.primary,
-    borderColor: Colors.secondary,
-  },
-  badgeLabel: {
-    ...Typography.body,
-    fontSize: 15,
-    color: Colors.text.primary,
-  },
-  badgeLabelSelected: {
-    color: Colors.secondary,
-  },
-  sharingRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 20,
-    marginTop: 12,
-  },
-  shareIconButton: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  shareIconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: Colors.background.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border.light,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  shareIconLabel: {
-    ...Typography.body,
-    fontSize: 11,
-    color: Colors.text.primary,
-    textAlign: 'center',
-  },
-});

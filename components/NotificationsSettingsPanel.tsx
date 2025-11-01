@@ -2,12 +2,13 @@ import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
 import React, { useEffect, useState } from 'react';
 import { Alert, Linking, StyleSheet, Switch, Text, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useNotifications } from '../contexts/NotificationContext';
 import { NotificationSettings } from './NotificationSettings';
 
 export function NotificationsSettingsPanel() {
+  const Colors = useColors();
   const {
     notificationsPerDay,
     setNotificationsPerDay,
@@ -120,6 +121,47 @@ export function NotificationsSettingsPanel() {
     checkPermissions();
   }, []);
 
+  const styles = StyleSheet.create({
+    container: {
+      gap: 12,
+    },
+    settingRow: {
+      backgroundColor: Colors.background.primary,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    settingInfo: {
+      flex: 1,
+      marginRight: 12,
+    },
+    settingLabel: {
+      ...Typography.body,
+      color: Colors.text.primary,
+      marginBottom: 4,
+    },
+    settingDescription: {
+      ...Typography.bodySmall,
+      fontSize: 13,
+      color: Colors.text.secondary,
+    },
+    settingsCard: {
+      backgroundColor: Colors.background.primary,
+      borderRadius: 12,
+      padding: 16,
+    },
+    info: {
+      ...Typography.subtitle,
+      fontSize: 13,
+      fontStyle: 'italic',
+      textAlign: 'center',
+      marginTop: 12,
+      color: Colors.text.secondary,
+    },
+  });
+
   return (
     <View style={styles.container}>
       {/* Daily Notifications Toggle */}
@@ -175,44 +217,3 @@ export function NotificationsSettingsPanel() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-  },
-  settingRow: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  settingInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  settingLabel: {
-    ...Typography.body,
-    color: Colors.text.primary,
-    marginBottom: 4,
-  },
-  settingDescription: {
-    ...Typography.bodySmall,
-    fontSize: 13,
-    color: Colors.text.secondary,
-  },
-  settingsCard: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: 12,
-    padding: 16,
-  },
-  info: {
-    ...Typography.subtitle,
-    fontSize: 13,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 12,
-    color: Colors.text.secondary,
-  },
-});

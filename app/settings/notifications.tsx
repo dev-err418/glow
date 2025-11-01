@@ -2,17 +2,10 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationsSettingsPanel } from '../../components/NotificationsSettingsPanel';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 
 export default function NotificationsSettingsScreen() {
-  return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <NotificationsSettingsPanel />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+  const Colors = useColors();
 
 const styles = StyleSheet.create({
   container: {
@@ -28,3 +21,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 });
+
+  return (
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <NotificationsSettingsPanel />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

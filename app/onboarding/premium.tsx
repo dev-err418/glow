@@ -6,12 +6,57 @@ import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } fr
 import Purchases from 'react-native-purchases';
 import { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { Button } from '../../components/Button';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { usePremium } from '../../contexts/PremiumContext';
 
 export default function PremiumScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mascotContainer: {
+    marginBottom: 40,
+  },
+  mascot: {
+    width: 150,
+    height: 150,
+  },
+  title: {
+    ...Typography.h2,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  subtitle: {
+    ...Typography.subtitle,
+    textAlign: 'center',
+    color: Colors.text.secondary,
+    paddingHorizontal: 20,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+  },
+  button: {
+    width: '100%',
+  },
+});
+
   const router = useRouter();
   const navigation = useNavigation();
   const { completeOnboarding, updateOnboardingData } = useOnboarding();
@@ -167,45 +212,3 @@ export default function PremiumScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mascotContainer: {
-    marginBottom: 40,
-  },
-  mascot: {
-    width: 150,
-    height: 150,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  subtitle: {
-    ...Typography.subtitle,
-    textAlign: 'center',
-    color: Colors.text.secondary,
-    paddingHorizontal: 20,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-  },
-  button: {
-    width: '100%',
-  },
-});

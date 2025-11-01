@@ -3,7 +3,7 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/botto
 import type { BottomSheetDefaultBackdropProps } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types';
 import React, { useCallback, useMemo } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
 interface UpdateBottomSheetProps {
@@ -14,6 +14,7 @@ interface UpdateBottomSheetProps {
 }
 
 export function UpdateBottomSheet({ isVisible, onUpdate, onLater, storeVersion }: UpdateBottomSheetProps) {
+  const Colors = useColors();
   const bottomSheetRef = React.useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => [550], []);
 
@@ -38,73 +39,7 @@ export function UpdateBottomSheet({ isVisible, onUpdate, onLater, storeVersion }
     []
   );
 
-  return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={-1}
-      snapPoints={snapPoints}
-      enablePanDownToClose={true}
-      backdropComponent={renderBackdrop}
-      onClose={onLater}
-      backgroundStyle={styles.bottomSheetBackground}
-      handleIndicatorStyle={styles.handleIndicator}
-    >
-      <BottomSheetView style={styles.contentContainer}>
-        {/* App Icon */}
-        <View style={styles.iconContainer}>
-          <Image
-            source={require('../assets/images/icon.png')}
-            style={styles.appIcon}
-          />
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>Update Available</Text>
-
-        {/* Description */}
-        <Text style={styles.description}>
-          A new version of Glow is available{storeVersion ? ` (v${storeVersion})` : ''}. Update now to enjoy the latest features, improvements, and bug fixes.
-        </Text>
-
-        {/* Features List */}
-        <View style={styles.featuresList}>
-          <View style={styles.featureItem}>
-            <Ionicons name="sparkles" size={20} color={Colors.primary} />
-            <Text style={styles.featureText}>New features & improvements</Text>
-          </View>
-          <View style={styles.featureItem}>
-            <Ionicons name="shield-checkmark" size={20} color={Colors.primary} />
-            <Text style={styles.featureText}>Bug fixes & performance</Text>
-          </View>
-          <View style={styles.featureItem}>
-            <Ionicons name="heart" size={20} color={Colors.primary} />
-            <Text style={styles.featureText}>Better user experience</Text>
-          </View>
-        </View>
-
-        {/* Update Button */}
-        <TouchableOpacity
-          style={styles.updateButton}
-          onPress={onUpdate}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.updateButtonText}>Update now</Text>
-        </TouchableOpacity>
-
-        {/* Later Button */}
-        <TouchableOpacity
-          style={styles.laterButton}
-          onPress={onLater}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.laterButtonText}>Maybe Later</Text>
-        </TouchableOpacity>
-      </BottomSheetView>
-    </BottomSheet>
-  );
-}
-
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
   bottomSheetBackground: {
     backgroundColor: Colors.background.default,
     borderTopLeftRadius: 24,
@@ -203,3 +138,69 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+  return (
+    <BottomSheet
+      ref={bottomSheetRef}
+      index={-1}
+      snapPoints={snapPoints}
+      enablePanDownToClose={true}
+      backdropComponent={renderBackdrop}
+      onClose={onLater}
+      backgroundStyle={styles.bottomSheetBackground}
+      handleIndicatorStyle={styles.handleIndicator}
+    >
+      <BottomSheetView style={styles.contentContainer}>
+        {/* App Icon */}
+        <View style={styles.iconContainer}>
+          <Image
+            source={require('../assets/images/icon.png')}
+            style={styles.appIcon}
+          />
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title}>Update Available</Text>
+
+        {/* Description */}
+        <Text style={styles.description}>
+          A new version of Glow is available{storeVersion ? ` (v${storeVersion})` : ''}. Update now to enjoy the latest features, improvements, and bug fixes.
+        </Text>
+
+        {/* Features List */}
+        <View style={styles.featuresList}>
+          <View style={styles.featureItem}>
+            <Ionicons name="sparkles" size={20} color={Colors.primary} />
+            <Text style={styles.featureText}>New features & improvements</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="shield-checkmark" size={20} color={Colors.primary} />
+            <Text style={styles.featureText}>Bug fixes & performance</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="heart" size={20} color={Colors.primary} />
+            <Text style={styles.featureText}>Better user experience</Text>
+          </View>
+        </View>
+
+        {/* Update Button */}
+        <TouchableOpacity
+          style={styles.updateButton}
+          onPress={onUpdate}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.updateButtonText}>Update now</Text>
+        </TouchableOpacity>
+
+        {/* Later Button */}
+        <TouchableOpacity
+          style={styles.laterButton}
+          onPress={onLater}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.laterButtonText}>Maybe Later</Text>
+        </TouchableOpacity>
+      </BottomSheetView>
+    </BottomSheet>
+  );
+}

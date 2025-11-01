@@ -2,15 +2,80 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import Purchases from 'react-native-purchases';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
+import { Button } from '../../components/Button';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { submitFeedback } from '../../services/supabaseService';
 
 export default function FeedbackScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.background.default,
+  },
+  headerButton: {
+    minWidth: 80,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    ...Typography.h2,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    ...Typography.subtitle,
+    textAlign: 'center',
+    marginBottom: 40,
+    color: Colors.text.secondary,
+  },
+  textArea: {
+    ...Typography.body,
+    backgroundColor: Colors.background.primary,
+    borderRadius: 12,
+    padding: 16,
+    color: Colors.text.primary,
+    minHeight: 180,
+  },
+  characterCount: {
+    ...Typography.bodySmall,
+    fontSize: 12,
+    color: Colors.text.light,
+    textAlign: 'right',
+    marginTop: 8,
+  },
+  buttonContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+  },
+  button: {
+    width: '100%',
+  },
+});
+
   const router = useRouter();
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,93 +172,18 @@ export default function FeedbackScreen() {
 
       <KeyboardStickyView offset={{ closed: 0, opened: 15 }}>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, isSubmitting && styles.buttonDisabled]}
+          <Button
+            variant="primary"
+            size="large"
             onPress={handleSend}
             disabled={isSubmitting}
-            activeOpacity={0.7}
+            loading={isSubmitting}
+            style={styles.button}
           >
-            {isSubmitting ? (
-              <ActivityIndicator color={Colors.text.white} size="small" />
-            ) : (
-              <Text style={styles.buttonText}>Send Feedback</Text>
-            )}
-          </TouchableOpacity>
+            Send Feedback
+          </Button>
         </View>
       </KeyboardStickyView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: Colors.background.default,
-  },
-  headerButton: {
-    minWidth: 80,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  content: {
-    flex: 1,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    ...Typography.subtitle,
-    textAlign: 'center',
-    marginBottom: 40,
-    color: Colors.text.secondary,
-  },
-  textArea: {
-    ...Typography.body,
-    backgroundColor: Colors.background.primary,
-    borderRadius: 12,
-    padding: 16,
-    color: Colors.text.primary,
-    minHeight: 180,
-  },
-  characterCount: {
-    ...Typography.bodySmall,
-    fontSize: 12,
-    color: Colors.text.light,
-    textAlign: 'right',
-    marginTop: 8,
-  },
-  buttonContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-  button: {
-    width: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    ...Typography.body,
-    color: Colors.text.white,
-  },
-});

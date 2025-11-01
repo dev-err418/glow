@@ -7,11 +7,72 @@ import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 
 export default function EditNameScreen() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.background.default,
+  },
+  headerButton: {
+    minWidth: 80,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  mascotContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  mascot: {
+    width: 120,
+    height: 120,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    ...Typography.h2,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  subtitle: {
+    ...Typography.subtitle,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  buttonContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+  },
+  button: {
+    width: '100%',
+  },
+});
+
   const router = useRouter();
   const { onboardingData, updateOnboardingData } = useOnboarding();
   const [name, setName] = useState(onboardingData.name);
@@ -97,60 +158,3 @@ export default function EditNameScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: Colors.background.default,
-  },
-  headerButton: {
-    minWidth: 80,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  mascotContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  mascot: {
-    width: 120,
-    height: 120,
-  },
-  content: {
-    flex: 1,
-  },
-  title: {
-    ...Typography.h2,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    ...Typography.subtitle,
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-  button: {
-    width: '100%',
-  },
-});

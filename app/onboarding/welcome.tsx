@@ -3,12 +3,76 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, View } from 'react-native';
 import { Button } from '../../components/Button';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
 const { height: screenHeight } = Dimensions.get('window');
 
 export default function Welcome() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+  },
+  topSection: {
+    height: screenHeight * 0.6,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  mascotContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40
+  },
+  mascotImage: {
+    width: screenHeight*0.35,
+    height: screenHeight*0.35,
+    zIndex: 0
+  },
+  bottomSection: {
+    position: 'absolute',
+    top: screenHeight * 0.55,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: Colors.background.default,
+    paddingHorizontal: 24,    
+    paddingBottom: 40,
+    zIndex: 2
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  title: {
+    marginBottom: 12,
+    color: Colors.text.primary,    
+  },
+  subtitle: {
+    marginBottom: 20,
+    color: Colors.text.secondary,
+  },
+  description: {
+    textAlign: 'center',
+    color: Colors.text.secondary,
+    paddingHorizontal: 8,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+    backgroundColor: 'transparent',
+  },
+});
+
   const router = useRouter();
   const mascotAnimation = useRef(new Animated.Value(screenHeight * 0.5)).current;
   const horizontalAnimation = useRef(new Animated.Value(0)).current;
@@ -270,65 +334,3 @@ export default function Welcome() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.primary,
-  },
-  topSection: {
-    height: screenHeight * 0.6,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  mascotContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 40
-  },
-  mascotImage: {
-    width: screenHeight*0.35,
-    height: screenHeight*0.35,
-    zIndex: 0
-  },
-  bottomSection: {
-    position: 'absolute',
-    top: screenHeight * 0.55,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: Colors.background.default,
-    paddingHorizontal: 24,    
-    paddingBottom: 40,
-    zIndex: 2
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  title: {
-    marginBottom: 12,
-    color: Colors.text.primary,    
-  },
-  subtitle: {
-    marginBottom: 20,
-    color: Colors.text.secondary,
-  },
-  description: {
-    textAlign: 'center',
-    color: Colors.text.secondary,
-    paddingHorizontal: 8,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    backgroundColor: 'transparent',
-  },
-});

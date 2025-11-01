@@ -7,10 +7,11 @@ import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedMascot } from '../../components/AnimatedMascot';
 import { StreakDisplay } from '../../components/StreakDisplay';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { usePremium } from '../../contexts/PremiumContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface SettingsRowProps {
   label: string;
@@ -21,31 +22,132 @@ interface SettingsRowProps {
 }
 
 function SettingsRow({ label, value, icon, onPress, showDivider = true }: SettingsRowProps) {
+  const Colors = useColors();
+
+  const rowStyles = StyleSheet.create({
+    settingRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+    },
+    settingLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    settingLabel: {
+      ...Typography.body,
+      color: Colors.text.primary,
+    },
+    settingRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    settingValue: {
+      ...Typography.body,
+      color: Colors.text.secondary,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: Colors.border.light,
+      marginLeft: 16,
+    },
+  });
+
   return (
     <>
       <TouchableOpacity
-        style={styles.settingRow}
+        style={rowStyles.settingRow}
         onPress={onPress}
         activeOpacity={0.7}
       >
-        <View style={styles.settingLeft}>
+        <View style={rowStyles.settingLeft}>
           <Ionicons name={icon} size={20} color={Colors.secondary} />
-          <Text style={styles.settingLabel}>{label}</Text>
+          <Text style={rowStyles.settingLabel}>{label}</Text>
         </View>
-        <View style={styles.settingRight}>
-          {value && <Text style={styles.settingValue}>{value}</Text>}
+        <View style={rowStyles.settingRight}>
+          {value && <Text style={rowStyles.settingValue}>{value}</Text>}
           <Ionicons name="chevron-forward" size={20} color={Colors.text.light} />
         </View>
       </TouchableOpacity>
-      {showDivider && <View style={styles.divider} />}
+      {showDivider && <View style={rowStyles.divider} />}
     </>
   );
 }
 
 export default function SettingsIndex() {
+  const Colors = useColors();
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.default,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.background.default,
+  },
+  headerButton: {
+    minWidth: 80,
+  },
+  mascotWrapper: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    ...Typography.h3,
+    color: Colors.text.primary,
+    marginBottom: 16,
+  },
+  pageTitle: {
+    ...Typography.h1,
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  settingsCard: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  userIdContainer: {
+    marginTop: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  userIdText: {
+    ...Typography.body,
+    fontSize: 11,
+    color: Colors.text.light,
+    fontFamily: 'monospace',
+    letterSpacing: 0.5,
+  },
+});
+
   const router = useRouter();
   const { onboardingData } = useOnboarding();
   const { customerInfo } = usePremium();
+  const { themeMode } = useTheme();
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -108,6 +210,19 @@ export default function SettingsIndex() {
     return userId.replace('$RCAnonymousID:', '');
   };
 
+  const getThemeDisplay = () => {
+    switch (themeMode) {
+      case 'system':
+        return 'System';
+      case 'light':
+        return 'Light';
+      case 'dark':
+        return 'Dark';
+      default:
+        return 'System';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -151,6 +266,12 @@ export default function SettingsIndex() {
               label="Gender"
               value={getGenderDisplay()}
               onPress={() => handleNavigate('/settings/edit-gender')}
+            />
+            <SettingsRow
+              icon="contrast-outline"
+              label="Theme"
+              value={getThemeDisplay()}
+              onPress={() => handleNavigate('/settings/theme')}
             />
             <SettingsRow
               icon="notifications-outline"
@@ -208,94 +329,3 @@ export default function SettingsIndex() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.default,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: Colors.background.default,
-  },
-  headerButton: {
-    minWidth: 80,
-  },
-  mascotWrapper: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    ...Typography.h3,
-    marginBottom: 16,
-  },
-  pageTitle: {
-    ...Typography.h1,
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  settingsCard: {
-    backgroundColor: Colors.background.primary,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  settingLabel: {
-    ...Typography.body,
-    color: Colors.text.primary,
-  },
-  settingRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  settingValue: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border.light,
-    marginLeft: 16,
-  },
-  userIdContainer: {
-    marginTop: 12,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  userIdText: {
-    ...Typography.body,
-    fontSize: 11,
-    color: Colors.text.light,
-    fontFamily: 'monospace',
-    letterSpacing: 0.5,
-  },
-});

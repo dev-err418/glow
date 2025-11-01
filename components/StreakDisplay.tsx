@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 import { useStreak } from '../contexts/StreakContext';
 
@@ -10,6 +10,7 @@ interface StreakDisplayProps {
 }
 
 export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
+  const Colors = useColors();
   const { streakDays, currentStreak } = useStreak();
   const checkmarkScale = useRef(new Animated.Value(1)).current;
   const dayBoxScale = useRef(new Animated.Value(1)).current;
@@ -89,6 +90,81 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
     }
   }, [animateNewDay]);
 
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.background.primary,
+      borderRadius: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 20,
+      shadowColor: Colors.shadow.light,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    streakCountContainer: {
+      alignItems: 'center',
+      marginRight: 20,
+      minWidth: 60,
+    },
+    streakCount: {
+      ...Typography.h2,
+      fontSize: 40,
+      lineHeight: 45,
+      color: Colors.secondary
+    },
+    streakLabel: {
+      ...Typography.bodySmall,
+      fontSize: 14,
+      color: Colors.secondary,
+      lineHeight: 14
+    },
+    calendarContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 6,
+    },
+    dayColumn: {
+      alignItems: 'center',
+      gap: 8,
+      flex: 1,
+    },
+    dayLabel: {
+      ...Typography.bodySmall,
+      fontSize: 12,
+      color: Colors.text.light,
+    },
+    dayLabelActive: {
+      color: Colors.text.primary,
+      fontWeight: 'bold',
+    },
+    dayBox: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: Colors.background.secondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayBoxToday: {
+      backgroundColor: Colors.secondary,
+      shadowColor: Colors.shadow.light,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+  });
+
   return (
     <View style={styles.container}>
       {/* Streak count on the left */}
@@ -144,78 +220,3 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.background.primary,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  streakCountContainer: {
-    alignItems: 'center',
-    marginRight: 20,
-    minWidth: 60,
-  },
-  streakCount: {
-    ...Typography.h2,
-    fontSize: 40,
-    lineHeight: 45,
-    color: Colors.primary    
-  },
-  streakLabel: {
-    ...Typography.bodySmall,
-    fontSize: 14,
-    color: Colors.primary,
-    lineHeight: 14
-  },
-  calendarContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 6,
-  },
-  dayColumn: {
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  dayLabel: {
-    ...Typography.bodySmall,
-    fontSize: 12,
-    color: Colors.text.light,
-  },
-  dayLabelActive: {
-    color: Colors.text.primary,
-    fontWeight: 'bold',
-  },
-  dayBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.background.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBoxToday: {
-    backgroundColor: Colors.primary,
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-});

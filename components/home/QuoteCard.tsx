@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   View
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useColors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -29,6 +29,7 @@ interface QuoteCardProps {
 }
 
 export function QuoteCard({ item, onLike, onShare, isFavorite, onTap }: QuoteCardProps) {
+  const Colors = useColors();
   const likeScaleAnim = useRef(new Animated.Value(1)).current;
   const lastTap = useRef<number>(0);
 
@@ -42,6 +43,40 @@ export function QuoteCard({ item, onLike, onShare, isFavorite, onTap }: QuoteCar
     }
     lastTap.current = now;
   };
+
+  const styles = StyleSheet.create({
+    quoteContainer: {
+      height: screenHeight,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 40,
+    },
+    quoteTextContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    quoteText: {
+      ...Typography.h2,
+      textAlign: 'center',
+      fontSize: 32,
+      lineHeight: 44,
+      color: Colors.text.primary,
+    },
+    actionButtonsContainer: {
+      position: 'absolute',
+      bottom: 180,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    actionButton: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
 
   return (
     <TouchableWithoutFeedback onPress={handleDoubleTap}>
@@ -76,7 +111,7 @@ export function QuoteCard({ item, onLike, onShare, isFavorite, onTap }: QuoteCar
               <Ionicons
                 name={isFavorite ? 'heart' : 'heart-outline'}
                 size={36}
-                color={isFavorite ? Colors.primary : Colors.text.primary}
+                color={isFavorite ? Colors.secondary : Colors.text.primary}
               />
             </Animated.View>
           </TouchableOpacity>
@@ -85,37 +120,3 @@ export function QuoteCard({ item, onLike, onShare, isFavorite, onTap }: QuoteCar
     </TouchableWithoutFeedback>
   );
 }
-
-const styles = StyleSheet.create({
-  quoteContainer: {
-    height: screenHeight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  quoteTextContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quoteText: {
-    ...Typography.h2,
-    textAlign: 'center',
-    fontSize: 32,
-    lineHeight: 44,
-    color: Colors.text.primary,
-  },
-  actionButtonsContainer: {
-    position: 'absolute',
-    bottom: 180,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});

@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Colors } from '../constants/Colors';
+import { useColors } from '../constants/Colors';
 import { Typography } from '../constants/Typography';
 
 interface RadioCardProps {
@@ -12,6 +12,7 @@ interface RadioCardProps {
 }
 
 export function RadioCard({ label, selected, onPress, style }: RadioCardProps) {
+  const Colors = useColors();
   const parts = label.split(' - ');
   const hasTwoParts = parts.length === 2;
 
@@ -19,6 +20,63 @@ export function RadioCard({ label, selected, onPress, style }: RadioCardProps) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
+
+  const styles = StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: Colors.background.primary,
+      borderRadius: 30,
+      paddingVertical: 20,
+      paddingHorizontal: 24,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      shadowColor: Colors.shadow.light,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    cardSelected: {
+      borderColor: Colors.secondary,
+    },
+    label: {
+      ...Typography.body,
+      fontSize: 16,
+      lineHeight: 20,
+      color: Colors.text.primary,
+      flex: 1,
+    },
+    labelSelected: {
+    },
+    labelSecondary: {
+      color: Colors.text.secondary,
+    },
+    radio: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: Colors.border.medium,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: Colors.background.primary,
+    },
+    radioSelected: {
+      borderColor: Colors.secondary,
+    },
+    radioInner: {
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      backgroundColor: Colors.secondary,
+    },
+  });
 
   return (
     <TouchableOpacity
@@ -65,6 +123,13 @@ export function RadioGroup({
   style,
   cardStyle,
 }: RadioGroupProps) {
+  const styles = StyleSheet.create({
+    group: {
+      flex: 1,
+      width: '100%',
+    },
+  });
+
   return (
     <View style={[styles.group, style]}>
       {options.map((option) => (
@@ -79,64 +144,3 @@ export function RadioGroup({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.background.primary,
-    borderRadius: 30,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    shadowColor: Colors.shadow.light,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardSelected: {
-    borderColor: Colors.secondary,
-  },
-  label: {
-    ...Typography.body,
-    fontSize: 16,
-    lineHeight: 20,
-    color: Colors.text.primary,
-    flex: 1,
-  },
-  labelSelected: {
-  },
-  labelSecondary: {
-    color: Colors.text.secondary,
-  },
-  radio: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: Colors.border.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background.primary,
-  },
-  radioSelected: {
-    borderColor: Colors.secondary,
-  },
-  radioInner: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: Colors.secondary,
-  },
-  group: {
-    flex: 1,
-    width: '100%',
-  },
-});
