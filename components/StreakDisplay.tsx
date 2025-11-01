@@ -25,7 +25,11 @@ export function StreakDisplay({ animateNewDay = false }: StreakDisplayProps) {
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
-      weekDates.push(date.toISOString().split('T')[0]);
+      // Format using local timezone to match StreakContext
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      weekDates.push(`${year}-${month}-${day}`);
     }
 
     return weekDates;

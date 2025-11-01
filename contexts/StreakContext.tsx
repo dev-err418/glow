@@ -121,8 +121,8 @@ export function StreakProvider({ children }: { children: React.ReactNode }) {
     let streak = 0;
 
     // Check if today or yesterday has activity
-    const todayDate = new Date(today);
-    const yesterdayDate = new Date(todayDate);
+    const todayDate = new Date();
+    const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = formatDateToLocal(yesterdayDate);
 
