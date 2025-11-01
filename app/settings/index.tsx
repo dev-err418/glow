@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
             />
             <SettingsRow
               icon="card-outline"
-              label="Manage subscription"
+              label="Customer center"
               onPress={handleManageSubscription}
             />
             <SettingsRow

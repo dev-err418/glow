@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, Appearance } from 'react-native';
 import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesOffering } from 'react-native-purchases';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { usePostHog } from 'posthog-react-native';
+import { useTheme } from './ThemeContext';
 
 interface PremiumContextType {
   isPremium: boolean;
@@ -19,6 +20,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const posthog = usePostHog();
+  const { effectiveColorScheme } = useTheme();
 
   useEffect(() => {
     initializePurchases();
@@ -73,7 +75,13 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   };
 
   const showPaywall = async (): Promise<PAYWALL_RESULT> => {
+    // Store the current system appearance
+    const originalAppearance = Appearance.getColorScheme();
+
     try {
+      // Temporarily set system appearance to match app's theme
+      Appearance.setColorScheme(effectiveColorScheme);
+
       const paywallResult = await RevenueCatUI.presentPaywallIfNeeded({
         requiredEntitlementIdentifier: 'Premium',
         options: {
@@ -101,6 +109,9 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error showing paywall:', error);
       return PAYWALL_RESULT.ERROR;
+    } finally {
+      // Restore the original system appearance
+      Appearance.setColorScheme(originalAppearance);
     }
   };
 
